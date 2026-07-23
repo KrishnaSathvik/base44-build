@@ -1,0 +1,48 @@
+{
+  "compilerOptions": {
+    /* Build mode: Vite handles emit; tsc is type-check only. */
+    "noEmit": true,
+
+    /* Language + module resolution tuned for Vite's bundler pipeline. */
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+
+    /* Ambient types available to the app. */
+    "types": ["vite/client", "node"],
+
+    /* Path alias mirrors vite.config.ts. In TS 7 paths resolve relative to
+       this tsconfig, so no baseUrl is needed (baseUrl was removed in TS 7). */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Strictness — the reason we converted. */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": [
+    "src",
+    "vite.config.ts",
+    "base44/.types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "base44/functions"
+  ]
+}
