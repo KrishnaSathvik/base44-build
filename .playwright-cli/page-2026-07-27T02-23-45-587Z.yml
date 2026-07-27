@@ -1,0 +1,22 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e12]:
+        - paragraph [ref=e13]: Stage One Review Updated
+        - paragraph [ref=e14]: Feedback portal
+      - generic [ref=e15]: Powered by Feedback Inbox
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - paragraph [ref=e18]: Feedback for Stage One Review Updated
+      - heading "Help us make Stage One Review Updated better." [level=1] [ref=e19]
+      - paragraph [ref=e20]: Local project for authenticated Stage 1 verification. It usually takes less than a minute.
+      - generic [ref=e21]:
+        - button "Report a problem Something is broken or not working as expected." [ref=e22] [cursor=pointer]:
+          - generic [ref=e33]:
+            - generic [ref=e34]: Report a problem
+            - generic [ref=e35]: Something is broken or not working as expected.
+        - button "Suggest an improvement An idea that would make the product more useful." [ref=e38] [cursor=pointer]:
+          - generic [ref=e42]:
+            - generic [ref=e43]: Suggest an improvement
+            - generic [ref=e44]: An idea that would make the product more useful.
+      - paragraph [ref=e47]: Your tracking link is private. No account is required.

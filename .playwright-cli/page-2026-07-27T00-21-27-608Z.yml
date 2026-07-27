@@ -1,0 +1,62 @@
+- generic [ref=e25]:
+  - banner [ref=e26]:
+    - generic [ref=e27]:
+      - link "Feedback Inbox" [ref=e29] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - paragraph [ref=e37]: Workspace
+          - paragraph [ref=e38]: Feedback operations
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - button "Notifications" [ref=e41] [cursor=pointer]
+            - tooltip "Notifications"
+          - paragraph [ref=e46]: stage1-owner-20260726@example.local
+  - complementary [ref=e47]:
+    - navigation [ref=e48]:
+      - link "Overview" [active] [ref=e49] [cursor=pointer]:
+        - /url: /app/overview
+      - link "Inbox" [ref=e55] [cursor=pointer]:
+        - /url: /app/inbox
+      - link "Issues" [ref=e59] [cursor=pointer]:
+        - /url: /app/issues
+      - link "Resolved" [ref=e62] [cursor=pointer]:
+        - /url: /app/resolved
+    - generic [ref=e66]:
+      - link "Settings" [ref=e67] [cursor=pointer]:
+        - /url: /app/settings
+      - button "Sign out" [ref=e71] [cursor=pointer]
+  - main [ref=e75]:
+    - generic [ref=e216]:
+      - generic [ref=e217]:
+        - generic [ref=e218]:
+          - paragraph [ref=e219]: Friday briefing
+          - heading "Everything is clear today." [level=1] [ref=e220]
+          - paragraph [ref=e221]: The highest-impact work in Stage One Review, ordered for review.
+        - button "Copy feedback link" [ref=e222] [cursor=pointer]
+      - generic [ref=e226]:
+        - generic [ref=e227]:
+          - generic [ref=e228]:
+            - heading "Needs attention" [level=2] [ref=e229]
+            - link "All issues" [ref=e230] [cursor=pointer]:
+              - /url: /app/issues
+          - paragraph [ref=e234]: No open issues. New reports will appear here.
+        - complementary [ref=e235]:
+          - generic [ref=e236]:
+            - heading "Live activity" [level=2] [ref=e237]
+            - generic [ref=e238]:
+              - generic [ref=e239]:
+                - paragraph [ref=e247]: Processing is connected
+                - paragraph [ref=e248]: New issues update in real time
+              - generic [ref=e249]:
+                - paragraph [ref=e253]: 0 open
+                - paragraph [ref=e254]: Across your current project
+              - generic [ref=e255]:
+                - paragraph [ref=e260]: 1 resolved
+                - paragraph [ref=e261]: Closed with public notes
+          - generic [ref=e262]:
+            - heading "Recently resolved" [level=2] [ref=e263]
+            - link "Checkout becomes unresponsive after applying a discount code on Safari, and this unusually long issue title should rema… Jul 26, 07:18 PM" [ref=e264] [cursor=pointer]:
+              - /url: /app/issues/bQfPPK4gVMP9lzLAztDz5
+              - generic [ref=e265]: Checkout becomes unresponsive after applying a discount code on Safari, and this unusually long issue title should rema…
+              - generic [ref=e266]: Jul 26, 07:18 PM

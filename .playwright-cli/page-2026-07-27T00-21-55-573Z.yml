@@ -1,0 +1,59 @@
+- generic [ref=e25]:
+  - banner [ref=e26]:
+    - generic [ref=e27]:
+      - link "Feedback Inbox" [ref=e29] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - paragraph [ref=e37]: Workspace
+          - paragraph [ref=e38]: Feedback operations
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - button "Notifications" [ref=e41] [cursor=pointer]
+            - tooltip "Notifications"
+          - paragraph [ref=e46]: stage1-owner-20260726@example.local
+  - complementary [ref=e47]:
+    - navigation [ref=e48]:
+      - link "Overview" [ref=e49] [cursor=pointer]:
+        - /url: /app/overview
+      - link "Inbox" [ref=e55] [cursor=pointer]:
+        - /url: /app/inbox
+      - link "Issues" [ref=e59] [cursor=pointer]:
+        - /url: /app/issues
+      - link "Resolved" [active] [ref=e62] [cursor=pointer]:
+        - /url: /app/resolved
+    - generic [ref=e66]:
+      - link "Settings" [ref=e67] [cursor=pointer]:
+        - /url: /app/settings
+      - button "Sign out" [ref=e71] [cursor=pointer]
+  - main [ref=e75]:
+    - generic [ref=e282]:
+      - generic [ref=e283]:
+        - generic [ref=e284]:
+          - paragraph [ref=e285]: Closed loop
+          - heading "Resolved" [level=1] [ref=e286]
+          - paragraph [ref=e287]: Issues closed with a public explanation.
+        - generic [ref=e288]:
+          - button "Filter" [ref=e289] [cursor=pointer]
+          - link [ref=e291] [cursor=pointer]:
+            - /url: /app/setup
+            - button "New project" [ref=e292]
+      - generic [ref=e294]:
+        - generic [ref=e295]: Issue
+        - generic [ref=e296]: Status
+      - link "FI-TPBESK Medium Checkout becomes unresponsive after applying a discount code on Safari, and this unusually long issue title should rema… 1 reports 1 affected Jul 26, 07:18 PM last seen Resolved" [ref=e298] [cursor=pointer]:
+        - /url: /app/issues/bQfPPK4gVMP9lzLAztDz5
+        - generic [ref=e299]:
+          - generic [ref=e300]: FI-TPBESK
+          - generic [ref=e301]: Medium
+        - paragraph [ref=e305]: Checkout becomes unresponsive after applying a discount code on Safari, and this unusually long issue title should rema…
+        - generic [ref=e306]:
+          - paragraph [ref=e307]: "1"
+          - paragraph [ref=e308]: reports
+        - generic [ref=e309]:
+          - paragraph [ref=e310]: "1"
+          - paragraph [ref=e311]: affected
+        - generic [ref=e312]:
+          - paragraph [ref=e313]: Jul 26, 07:18 PM
+          - paragraph [ref=e314]: last seen
+        - generic [ref=e315]: Resolved

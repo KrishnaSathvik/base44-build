@@ -1,0 +1,105 @@
+{
+  "name": "Issue",
+  "description": "A normalized product problem that groups one or more reports. Created and mutated only by backend functions (service role).",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "Project this issue belongs to"
+    },
+    "owner_id": {
+      "type": "string",
+      "description": "Owner email, copied from the project. Enables owner-scoped RLS reads."
+    },
+    "public_code": {
+      "type": "string",
+      "description": "Public issue code: FI- + 6 uppercase Crockford Base32 chars (e.g. FI-7K2M9A), unique within the project"
+    },
+    "title": {
+      "type": "string",
+      "description": "Normalized issue title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Issue description"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["ui_ux", "functionality", "performance", "authentication", "data", "content", "other"]
+    },
+    "product_area": { "type": "string" },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "default": "medium",
+      "description": "Issue severity"
+    },
+    "priority_score": {
+      "type": "number",
+      "description": "Deterministic priority score (docs/01 §15)"
+    },
+    "priority_explanation": { "type": "array", "items": { "type": "string" } },
+    "reproducibility": { "type": "string", "enum": ["confirmed", "likely", "unknown"] },
+    "core_workflow_blocked": { "type": "boolean" },
+    "was_reopened": { "type": "boolean" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "processing",
+        "unreviewed",
+        "needs_info",
+        "open",
+        "planned",
+        "in_progress",
+        "testing",
+        "resolved",
+        "reopened",
+        "duplicate",
+        "dismissed"
+      ],
+      "default": "open",
+      "description": "Issue status"
+    },
+    "report_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of linked reports"
+    },
+    "affected_user_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of distinct affected users"
+    },
+    "first_seen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the issue was first reported"
+    },
+    "last_seen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Most recent related activity"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the issue was resolved"
+    },
+    "public_resolution_note": {
+      "type": "string",
+      "description": "Public-facing resolution note shown to reporters"
+    }
+  },
+  "required": ["project_id", "owner_id", "public_code", "title", "status"],
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": {
+      "$or": [
+        { "data.owner_id": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

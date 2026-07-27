@@ -1,0 +1,65 @@
+{
+  "name": "ActivityEvent",
+  "description": "Append-only history for an issue or submission. Created only by backend functions. Events with a public_message are safe to surface to reporters.",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "Project this event belongs to"
+    },
+    "owner_id": {
+      "type": "string",
+      "description": "Owner email, copied from the project. Enables owner-scoped RLS reads."
+    },
+    "issue_id": {
+      "type": "string",
+      "description": "Related issue record id, if any"
+    },
+    "submission_id": {
+      "type": "string",
+      "description": "Related submission record id, if any"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Event kind, e.g. feedback_received, issue_created, issue_resolved"
+    },
+    "actor_type": {
+      "type": "string",
+      "enum": ["reporter", "owner", "system"],
+      "description": "Who triggered the event"
+    },
+    "actor_id": {
+      "type": "string",
+      "description": "Identifier of the actor (owner email or 'system')"
+    },
+    "public_message": {
+      "type": "string",
+      "description": "Reporter-safe message. Only events with this set are shown on the tracking page."
+    },
+    "internal_message": {
+      "type": "string",
+      "description": "Owner-only message. Never returned to reporters."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Structured event metadata"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Function-set creation timestamp"
+    }
+  },
+  "required": ["project_id", "owner_id", "event_type", "actor_type"],
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": {
+      "$or": [
+        { "data.owner_id": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

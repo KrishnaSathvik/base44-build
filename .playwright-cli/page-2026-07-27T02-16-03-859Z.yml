@@ -1,0 +1,91 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e6]:
+      - link "Feedback Inbox" [ref=f1e7] [cursor=pointer]:
+        - /url: /
+      - button "Notifications" [ref=f1e14] [cursor=pointer]
+  - main [ref=f1e18]:
+    - generic [ref=f1e197]:
+      - link "All issues" [ref=f1e198] [cursor=pointer]:
+        - /url: /app/issues
+      - generic [ref=f1e202]:
+        - generic [ref=f1e203]:
+          - generic [ref=f1e204]:
+            - generic [ref=f1e205]: FI-TPBESK
+            - generic [ref=f1e206]: Medium
+            - generic [ref=f1e209]: Resolved
+          - heading "Checkout becomes unresponsive after applying a discount code on Safari, and this unusually long issue title should rema…" [level=1] [ref=f1e210]
+          - paragraph [ref=f1e211]: Checkout becomes unresponsive after applying a discount code on Safari, and this unusually long issue title should remain readable throughout the workspace.
+        - generic [ref=f1e212]:
+          - generic [ref=f1e213]:
+            - paragraph [ref=f1e214]: "1"
+            - paragraph [ref=f1e215]: Reports
+          - generic [ref=f1e216]:
+            - paragraph [ref=f1e217]: "1"
+            - paragraph [ref=f1e218]: Affected
+          - generic [ref=f1e219]:
+            - paragraph [ref=f1e220]: "15"
+            - paragraph [ref=f1e221]: Priority
+          - generic [ref=f1e222]:
+            - paragraph [ref=f1e223]: Jul 26, 07:18 PM
+            - paragraph [ref=f1e224]: Last seen
+      - generic [ref=f1e225]:
+        - main [ref=f1e226]:
+          - generic [ref=f1e227]:
+            - paragraph [ref=f1e228]: Source evidence
+            - heading "Original user report" [level=2] [ref=f1e229]
+            - generic [ref=f1e230]:
+              - generic [ref=f1e231]:
+                - generic [ref=f1e232]: Bug
+                - generic [ref=f1e233]: Jul 26, 07:14 PM
+              - blockquote [ref=f1e234]: Checkout becomes unresponsive after applying a discount code on Safari, and this unusually long issue title should remain readable throughout the workspace.
+              - generic [ref=f1e235]:
+                - paragraph [ref=f1e236]: Expected behavior
+                - paragraph [ref=f1e237]: The discount should apply and checkout should remain interactive.
+          - generic [ref=f1e238]:
+            - paragraph [ref=f1e239]: Captured context
+            - heading "Environment" [level=2] [ref=f1e240]
+            - generic [ref=f1e241]:
+              - generic [ref=f1e246]:
+                - paragraph [ref=f1e247]: Page
+                - paragraph [ref=f1e248]: Not provided
+              - generic [ref=f1e254]:
+                - paragraph [ref=f1e255]: Reporter
+                - paragraph [ref=f1e256]: Anonymous
+            - paragraph [ref=f1e257]: Browser and device context will appear here when collection is enabled in the next stage.
+          - generic [ref=f1e258]:
+            - paragraph [ref=f1e259]: Attachments
+            - heading "Evidence" [level=2] [ref=f1e260]
+            - generic [ref=f1e261]:
+              - heading "No screenshot evidence" [level=2] [ref=f1e267]
+              - paragraph [ref=f1e268]: Screenshot capture is intentionally not active in this stage. Uploaded evidence will appear here without changing the source report.
+        - complementary [ref=f1e269]:
+          - generic [ref=f1e270]:
+            - heading "Activity" [level=2] [ref=f1e271]
+            - generic [ref=f1e272]:
+              - generic [ref=f1e273]:
+                - paragraph [ref=f1e276]: Your feedback was received.
+                - paragraph [ref=f1e277]: Jul 26, 07:14 PM
+              - generic [ref=f1e278]:
+                - paragraph [ref=f1e281]: Issue FI-TPBESK created from report.
+                - paragraph [ref=f1e282]: Jul 26, 07:14 PM
+              - generic [ref=f1e283]:
+                - paragraph [ref=f1e286]: Fixed the discount-code interaction. Checkout now remains responsive in Safari.
+                - paragraph [ref=f1e287]: Jul 26, 07:18 PM
+          - generic [ref=f1e288]:
+            - heading "Resolution" [level=2] [ref=f1e289]
+            - generic [ref=f1e290]:
+              - generic [ref=f1e291]: Resolved
+              - paragraph [ref=f1e295]: Fixed the discount-code interaction. Checkout now remains responsive in Safari.
+              - paragraph [ref=f1e296]: Jul 26, 07:18 PM
+  - navigation "Primary" [ref=f1e88]:
+    - link "Overview" [ref=f1e89] [cursor=pointer]:
+      - /url: /app/overview
+    - link "Inbox" [ref=f1e95] [cursor=pointer]:
+      - /url: /app/inbox
+    - link "Issues" [ref=f1e99] [cursor=pointer]:
+      - /url: /app/issues
+    - link "Resolved" [ref=f1e102] [cursor=pointer]:
+      - /url: /app/resolved
+    - link "Settings" [ref=f1e106] [cursor=pointer]:
+      - /url: /app/settings

@@ -1,0 +1,30 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e12]:
+      - paragraph [ref=e13]: TrailVerse Test
+      - paragraph [ref=e14]: Feedback portal
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - button "Choose another type" [ref=e60] [cursor=pointer]
+      - paragraph [ref=e63]: Report a problem
+      - heading "What happened?" [level=1] [ref=e64]
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - generic [ref=e67]: Describe the problem
+          - textbox "Describe the problem" [active] [ref=e69]:
+            - /placeholder: Tell us what you were doing and where things went wrong…
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e72]: What did you expect?
+            - generic [ref=e73]: Optional
+          - textbox "What did you expect?" [ref=e74]
+        - generic [ref=e75]:
+          - paragraph [ref=e76]: Screenshot
+          - generic [ref=e77]:
+            - paragraph [ref=e81]: Add a screenshot
+            - paragraph [ref=e82]: Available in the next stage
+        - group [ref=e83]:
+          - generic "Add context Optional" [ref=e84] [cursor=pointer]:
+            - text: Add context
+            - generic [ref=e85]: Optional
+        - button "Send feedback" [ref=e86] [cursor=pointer]

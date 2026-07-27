@@ -1,0 +1,26 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e12]:
+        - paragraph [ref=e13]: TrailVerse Test
+        - paragraph [ref=e14]: Feedback portal
+      - generic [ref=e15]: Powered by Feedback Inbox
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - paragraph [ref=e18]: Feedback for TrailVerse Test
+      - heading "Help us make TrailVerse Test better." [level=1] [ref=e19]
+      - paragraph [ref=e20]: A test project for verification It usually takes less than a minute.
+      - generic [ref=e21]:
+        - button "Report a problem Something is broken or not working as expected." [ref=e22] [cursor=pointer]:
+          - generic [ref=e33]:
+            - generic [ref=e34]: Report a problem
+            - generic [ref=e35]: Something is broken or not working as expected.
+        - button "Suggest an improvement An idea that would make the product more useful." [ref=e38] [cursor=pointer]:
+          - generic [ref=e42]:
+            - generic [ref=e43]: Suggest an improvement
+            - generic [ref=e44]: An idea that would make the product more useful.
+        - button "Share general feedback A thought, question, or anything else." [ref=e47] [cursor=pointer]:
+          - generic [ref=e51]:
+            - generic [ref=e52]: Share general feedback
+            - generic [ref=e53]: A thought, question, or anything else.
+      - paragraph [ref=e56]: Your tracking link is private. No account is required.

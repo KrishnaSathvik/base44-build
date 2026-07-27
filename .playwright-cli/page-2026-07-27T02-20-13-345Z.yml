@@ -1,0 +1,28 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - link "Feedback Inbox" [ref=f1e6] [cursor=pointer]:
+      - /url: /
+  - main [ref=f1e12]:
+    - generic [ref=f1e13]:
+      - generic [ref=f1e14]:
+        - generic [ref=f1e15]: FI-FETVBE
+        - generic [ref=f1e16]: Resolved
+      - heading "The account menu overlaps the checkout confirmation on narrow mobile screens and the full issue title must wrap without…" [level=1] [ref=f1e17]
+      - paragraph [ref=f1e18]: Only someone with this private link can view this page.
+    - generic [ref=f1e23]:
+      - main [ref=f1e24]:
+        - paragraph [ref=f1e25]: Original report
+        - blockquote [ref=f1e26]: The account menu overlaps the checkout confirmation on narrow mobile screens and the full issue title must wrap without clipping.
+        - paragraph [ref=f1e27]: Bug
+        - generic [ref=f1e28]:
+          - paragraph [ref=f1e29]: Resolution note
+          - paragraph [ref=f1e33]: Adjusted the mobile layout so the account menu no longer overlaps confirmation content.
+      - complementary [ref=f1e34]:
+        - heading "Public activity" [level=2] [ref=f1e35]
+        - generic [ref=f1e36]:
+          - generic [ref=f1e37]:
+            - paragraph [ref=f1e39]: Your feedback was received.
+            - paragraph [ref=f1e40]: Jul 26, 09:19 PM
+          - generic [ref=f1e41]:
+            - paragraph [ref=f1e43]: Adjusted the mobile layout so the account menu no longer overlaps confirmation content.
+            - paragraph [ref=f1e44]: Jul 26, 09:20 PM

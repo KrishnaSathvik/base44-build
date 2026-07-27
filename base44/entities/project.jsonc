@@ -1,0 +1,83 @@
+{
+  "name": "Project",
+  "description": "A product project owned by an authenticated owner. Public reporters submit feedback against its slug.",
+  "type": "object",
+  "properties": {
+    "owner_id": {
+      "type": "string",
+      "description": "Owner's email (mirrors created_by). RLS keys off created_by, which is server-injected and unspoofable."
+    },
+    "name": {
+      "type": "string",
+      "description": "Product name shown on the public portal"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-safe unique slug used in the public feedback link /f/:slug"
+    },
+    "product_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional link to the product"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description shown on the public portal"
+    },
+    "allow_anonymous": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether anonymous reporters may submit feedback"
+    },
+    "feedback_types_enabled": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["bug", "feature", "general"]
+      },
+      "default": ["bug", "feature", "general"],
+      "description": "Feedback types offered on the public portal"
+    },
+    "collect_reporter_email": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the public form offers an optional reporter email field"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the project is accepting reports"
+    }
+  },
+  "required": ["name", "slug"],
+  // Owner creates their own project (authenticated). Only the owner (created_by)
+  // or the service role (role: admin, used by backend functions) may read/manage it.
+  // Public reporters never read Project directly — they use the get-public-project
+  // function, which returns only safe branding fields.
+  "rls": {
+    // Any authenticated user may create their own project. Ownership is enforced
+    // on read/update/delete via created_by (server-injected, unspoofable).
+    // A templated user_condition cannot express "authenticated" — user_condition
+    // is equality-only with no {{...}} substitution — so `true` is the documented
+    // owner-scoped create pattern (see rls-examples: Todo App - Owner-only access).
+    "create": true,
+    "read": {
+      "$or": [
+        { "created_by": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "update": {
+      "$or": [
+        { "created_by": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "delete": {
+      "$or": [
+        { "created_by": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    }
+  }
+}

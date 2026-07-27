@@ -1,0 +1,112 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - link "Feedback Inbox" [ref=f1e6] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=f1e12]:
+        - link "How it works" [ref=f1e13] [cursor=pointer]:
+          - /url: "#how"
+        - link "Open app" [ref=f1e14] [cursor=pointer]:
+          - /url: /app
+  - main [ref=f1e15]:
+    - generic [ref=f1e16]:
+      - generic [ref=f1e17]:
+        - paragraph [ref=f1e18]: Evidence, organized
+        - heading "Feedback should tell you what to fix next." [level=1] [ref=f1e19]
+        - paragraph [ref=f1e20]: Collect reports through one simple link. Group repeated problems, preserve the evidence, and understand what is affecting users most.
+        - generic [ref=f1e21]:
+          - link "Create a feedback board" [ref=f1e22] [cursor=pointer]:
+            - /url: /app/setup
+          - link "View live demo" [ref=f1e25] [cursor=pointer]:
+            - /url: /demo
+        - paragraph [ref=f1e26]: One link · Private tracking · Evidence preserved
+      - generic [ref=f1e27]:
+        - paragraph [ref=f1e29]: Incoming reports
+        - generic [ref=f1e30]:
+          - generic [ref=f1e31]:
+            - generic [ref=f1e32]:
+              - paragraph [ref=f1e33]: BUG REPORT
+              - paragraph [ref=f1e34]: Checkout freezes after I add a coupon.
+            - generic [ref=f1e35]:
+              - paragraph [ref=f1e36]: GENERAL
+              - paragraph [ref=f1e37]: The discount box stopped responding on mobile.
+            - generic [ref=f1e38]:
+              - paragraph [ref=f1e39]: BUG REPORT
+              - paragraph [ref=f1e40]: Apply code does nothing in Safari.
+          - generic [ref=f1e41]:
+            - paragraph [ref=f1e42]: GROUPED ISSUE
+            - paragraph [ref=f1e43]: Coupon action freezes checkout
+            - generic [ref=f1e44]:
+              - paragraph [ref=f1e45]: 3 REPORTS · 3 AFFECTED
+              - paragraph [ref=f1e48]: HIGH ATTENTION
+        - generic [ref=f1e49]:
+          - generic [ref=f1e50]: SOURCE PRESERVED
+          - generic [ref=f1e51]: ISSUE FI-7K2M9A
+    - generic [ref=f1e53]:
+      - generic [ref=f1e54]:
+        - paragraph [ref=f1e55]: The transformation
+        - heading "Raw language becomes a clear issue—without losing the source." [level=2] [ref=f1e56]
+      - generic [ref=f1e57]:
+        - generic [ref=f1e58]:
+          - text: "01"
+          - heading "Collect" [level=3] [ref=f1e59]
+          - paragraph [ref=f1e60]: Share one focused link for problems, ideas, and general feedback.
+        - generic [ref=f1e61]:
+          - text: "02"
+          - heading "Organize" [level=3] [ref=f1e62]
+          - paragraph [ref=f1e63]: Repeated signals become one issue with every report attached.
+        - generic [ref=f1e64]:
+          - text: "03"
+          - heading "Act" [level=3] [ref=f1e65]
+          - paragraph [ref=f1e66]: See impact, preserve context, and close the loop publicly.
+    - generic [ref=f1e68]:
+      - generic [ref=f1e69]:
+        - paragraph [ref=f1e70]: Evidence first
+        - heading "The answer stays connected to the words that led there." [level=2] [ref=f1e71]
+        - paragraph [ref=f1e72]: Normalized issues are useful only when the original evidence remains readable. Every finding keeps its source report, environment, and activity close at hand.
+      - generic [ref=f1e73]:
+        - generic [ref=f1e74]:
+          - generic [ref=f1e75]:
+            - paragraph [ref=f1e76]: FI-7K2M9A
+            - paragraph [ref=f1e77]: Coupon action freezes checkout
+          - generic [ref=f1e78]: HIGH
+        - generic [ref=f1e79]:
+          - paragraph [ref=f1e80]: Original evidence
+          - blockquote [ref=f1e81]: “Apply code does nothing in Safari. I had to restart checkout.”
+          - generic [ref=f1e82]:
+            - generic [ref=f1e83]:
+              - paragraph [ref=f1e84]: "3"
+              - paragraph [ref=f1e85]: Reports
+            - generic [ref=f1e86]:
+              - paragraph [ref=f1e87]: "3"
+              - paragraph [ref=f1e88]: Affected
+            - generic [ref=f1e89]:
+              - paragraph [ref=f1e90]: Today
+              - paragraph [ref=f1e91]: Last seen
+          - generic [ref=f1e92]: Source evidence remains attached to the issue.
+    - generic [ref=f1e101]:
+      - generic [ref=f1e102]:
+        - paragraph [ref=f1e103]: Simple on purpose
+        - heading "A feedback form people will actually finish." [level=2] [ref=f1e104]
+        - paragraph [ref=f1e105]: Reporters choose what they want to share, answer only relevant questions, and receive a private link to follow the result.
+        - list [ref=f1e106]:
+          - listitem [ref=f1e107]: No account required
+          - listitem [ref=f1e111]: Clear, progressive questions
+          - listitem [ref=f1e115]: Private status tracking
+      - generic [ref=f1e119]:
+        - generic [ref=f1e126]:
+          - paragraph [ref=f1e127]: Share feedback
+          - paragraph [ref=f1e128]: Usually less than a minute
+        - generic [ref=f1e129]:
+          - generic [ref=f1e130]: Report a problem
+          - generic [ref=f1e144]: Suggest an improvement
+          - generic [ref=f1e151]: Share general feedback
+    - generic [ref=f1e158]:
+      - heading "Turn the next report into something your team can act on." [level=2] [ref=f1e163]
+      - link "Create a feedback board" [ref=f1e164] [cursor=pointer]:
+        - /url: /app/setup
+  - contentinfo [ref=f1e167]:
+    - generic [ref=f1e168]:
+      - link "Feedback Inbox" [ref=f1e169] [cursor=pointer]:
+        - /url: /
+      - paragraph [ref=f1e175]: Built for clear product decisions.

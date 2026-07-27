@@ -1,0 +1,43 @@
+[backend] Loaded functions: access-tracking-page, resolve-issue, get-public-project, submit-feedback
+[backend] Loaded entities: user, activityevent, feedbacksubmission, issuereport, issue, project, reporteraccess
+[backend] Backend running on http://localhost:4400
+Open your app using the frontend dev server URL
+[frontend] 
+[frontend] > base44-app@0.0.0 dev
+[frontend] > vite
+[frontend] 
+[frontend]   [32m[1mVITE[22m v6.4.3[39m  [2mready in [0m[1m231[22m[2m[0m ms[22m
+[frontend]   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+[frontend] [2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[backend] "/" is not supported in local development, passing call to production
+(node:37726) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[frontend] [2m11:28:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/app/AppLayout.tsx, /src/pages/OwnerIssuesPage.tsx, /src/pages/OwnerSetupPage.tsx, /src/app/AuthPanel.tsx, /src/pages/PublicPortalPage.tsx, /src/pages/TrackingPage.tsx, /src/pages/OwnerIssueDetailPage.tsx[22m
+[frontend] [2m11:28:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/vite-env.d.ts[22m
+[frontend] [2m11:31:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/app/AppLayout.tsx, /src/pages/OwnerIssuesPage.tsx, /src/pages/OwnerSetupPage.tsx, /src/app/AuthPanel.tsx, /src/pages/PublicPortalPage.tsx, /src/pages/TrackingPage.tsx, /src/pages/OwnerIssueDetailPage.tsx[22m
+[backend] "/api/apps/6a627102d65aedec9330ed4c/auth/me" is not supported in local development, passing call to production
+[backend] "/api/apps/6a627102d65aedec9330ed4c/me" is not supported in local development, passing call to production
+[backend] "/api/apps/6a627102d65aedec9330ed4c/users/me" is not supported in local development, passing call to production
+[backend] 
+In order to complete registration use this verification code: 282049
+
+[backend] Spawning function "get-public-project" on port 50607
+[backend] [get-public-project] Starting function from file:///Users/krishnasathvikmantripragada/base44-build/base44/functions/get-public-project/entry.ts
+[backend] [get-public-project] Listening on http://localhost:50607
+[backend] Spawning function "submit-feedback" on port 50700
+[backend] [submit-feedback] Starting function from file:///Users/krishnasathvikmantripragada/base44-build/base44/functions/submit-feedback/entry.ts
+[backend] [submit-feedback] Listening on http://localhost:50700
+[backend] Spawning function "resolve-issue" on port 50788
+[backend] [resolve-issue] Starting function from file:///Users/krishnasathvikmantripragada/base44-build/base44/functions/resolve-issue/entry.ts
+[backend] [resolve-issue] Listening on http://localhost:50788
+[backend] Spawning function "access-tracking-page" on port 50813
+[backend] [access-tracking-page] Starting function from file:///Users/krishnasathvikmantripragada/base44-build/base44/functions/access-tracking-page/entry.ts
+[backend] [access-tracking-page] Listening on http://localhost:50813
+[backend] 
+In order to complete registration use this verification code: 680236
+
+[backend] Stopping function: get-public-project
+[backend] Stopping function: submit-feedback
+[backend] Stopping function: resolve-issue
+[backend] Stopping function: access-tracking-page
+[frontend] Frontend dev server exited with code null

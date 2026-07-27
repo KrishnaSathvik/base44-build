@@ -1,0 +1,51 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e6]:
+      - link "Feedback Inbox" [ref=f1e7] [cursor=pointer]:
+        - /url: /
+      - button "Notifications" [ref=f1e14] [cursor=pointer]
+  - main [ref=f1e18]:
+    - generic [ref=f1e110]:
+      - generic [ref=f1e111]:
+        - generic [ref=f1e112]:
+          - paragraph [ref=f1e113]: Friday briefing
+          - heading "Everything is clear today." [level=1] [ref=f1e114]
+          - paragraph [ref=f1e115]: The highest-impact work in Stage One Review Updated, ordered for review.
+        - button "Copy feedback link" [ref=f1e116] [cursor=pointer]
+      - generic [ref=f1e120]:
+        - generic [ref=f1e121]:
+          - generic [ref=f1e122]:
+            - heading "Needs attention" [level=2] [ref=f1e123]
+            - link "All issues" [ref=f1e124] [cursor=pointer]:
+              - /url: /app/issues
+          - paragraph [ref=f1e128]: No open issues. New reports will appear here.
+        - complementary [ref=f1e129]:
+          - generic [ref=f1e130]:
+            - heading "Live activity" [level=2] [ref=f1e131]
+            - generic [ref=f1e132]:
+              - generic [ref=f1e133]:
+                - paragraph [ref=f1e141]: Processing is connected
+                - paragraph [ref=f1e142]: New issues update in real time
+              - generic [ref=f1e143]:
+                - paragraph [ref=f1e147]: 0 open
+                - paragraph [ref=f1e148]: Across your current project
+              - generic [ref=f1e149]:
+                - paragraph [ref=f1e154]: 1 resolved
+                - paragraph [ref=f1e155]: Closed with public notes
+          - generic [ref=f1e156]:
+            - heading "Recently resolved" [level=2] [ref=f1e157]
+            - link "Checkout becomes unresponsive after applying a discount code on Safari, and this unusually long issue title should rema… Jul 26, 07:18 PM" [ref=f1e158] [cursor=pointer]:
+              - /url: /app/issues/bQfPPK4gVMP9lzLAztDz5
+              - generic [ref=f1e159]: Checkout becomes unresponsive after applying a discount code on Safari, and this unusually long issue title should rema…
+              - generic [ref=f1e160]: Jul 26, 07:18 PM
+  - navigation "Primary" [ref=f1e88]:
+    - link "Overview" [active] [ref=f1e89] [cursor=pointer]:
+      - /url: /app/overview
+    - link "Inbox" [ref=f1e95] [cursor=pointer]:
+      - /url: /app/inbox
+    - link "Issues" [ref=f1e99] [cursor=pointer]:
+      - /url: /app/issues
+    - link "Resolved" [ref=f1e102] [cursor=pointer]:
+      - /url: /app/resolved
+    - link "Settings" [ref=f1e106] [cursor=pointer]:
+      - /url: /app/settings

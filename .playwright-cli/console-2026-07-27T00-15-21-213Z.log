@@ -1,0 +1,17 @@
+[     159ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=2effa7bb:21608
+[     206ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:4400/api/apps/6a627102d65aedec9330ed4c/entities/User/me:0
+[     206ms] [ERROR] [Base44 SDK Error] 401: Request failed with status code 401 @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4477
+[     206ms] [ERROR] Error data: {
+  "error": "Unauthorized"
+} @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4480
+[     207ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:4400/api/apps/6a627102d65aedec9330ed4c/entities/User/me:0
+[     207ms] [ERROR] [Base44 SDK Error] 401: Request failed with status code 401 @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4477
+[     207ms] [ERROR] Error data: {
+  "error": "Unauthorized"
+} @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4480
+[   18256ms] [LOG] connect BowsxHnu2Ebd1rExAAAB @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:8741
+[  494025ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=2effa7bb:21608
+[ 7189688ms] [LOG] connect FHqpqd7fETdHBvmbAAAD @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:8741
+[ 7555704ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=2effa7bb:21608
+[ 7630142ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=2effa7bb:21608
+[ 7743950ms] [LOG] connect 00mPwJJEfLZCXf0YAAAF @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:8741

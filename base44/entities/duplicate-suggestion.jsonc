@@ -1,0 +1,32 @@
+{
+  "name": "DuplicateSuggestion",
+  "description": "Owner-reviewable medium-confidence relationship between a report and an existing issue.",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string" },
+    "owner_id": { "type": "string" },
+    "submission_id": { "type": "string" },
+    "source_issue_id": { "type": "string" },
+    "candidate_issue_id": { "type": "string" },
+    "similarity_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "matching_reasons": { "type": "array", "items": { "type": "string" } },
+    "conflicting_evidence": { "type": "array", "items": { "type": "string" } },
+    "threshold_version": { "type": "string" },
+    "status": { "type": "string", "enum": ["pending", "accepted", "rejected"], "default": "pending" },
+    "reviewed_by": { "type": "string" },
+    "reviewed_at": { "type": "string", "format": "date-time" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["project_id", "owner_id", "submission_id", "source_issue_id", "candidate_issue_id", "status"],
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": {
+      "$or": [
+        { "data.owner_id": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

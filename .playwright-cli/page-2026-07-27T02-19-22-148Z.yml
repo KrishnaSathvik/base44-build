@@ -1,0 +1,41 @@
+- generic [ref=f1e297]:
+  - banner [ref=f1e298]:
+    - generic [ref=f1e300]:
+      - link "Feedback Inbox" [ref=f1e301] [cursor=pointer]:
+        - /url: /
+      - button "Notifications" [ref=f1e308] [cursor=pointer]
+  - main [ref=f1e312]:
+    - generic [ref=f1e413]:
+      - generic [ref=f1e414]:
+        - generic [ref=f1e415]:
+          - paragraph [ref=f1e416]: Working queue
+          - heading "Issues" [level=1] [ref=f1e417]
+          - paragraph [ref=f1e418]: Normalized problems, ordered by the work they demand.
+        - generic [ref=f1e419]:
+          - button "Filter" [ref=f1e420] [cursor=pointer]
+          - link [ref=f1e422] [cursor=pointer]:
+            - /url: /app/setup
+            - button "New project" [ref=f1e423]
+      - generic [ref=f1e425]:
+        - generic [ref=f1e426]: Issue
+        - generic [ref=f1e427]: Status
+      - link "FI-FETVBE Medium The account menu overlaps the checkout confirmation on narrow mobile screens and the full issue title must wrap without… 1 reports · 1 affected Open" [ref=f1e429] [cursor=pointer]:
+        - /url: /app/issues/k1YDqjnMZgm_-hvqr6PM4
+        - generic:
+          - generic [ref=f1e430]: FI-FETVBE
+          - generic [ref=f1e431]: Medium
+        - generic [ref=f1e434]:
+          - paragraph [ref=f1e435]: The account menu overlaps the checkout confirmation on narrow mobile screens and the full issue title must wrap without…
+          - paragraph [ref=f1e436]: 1 reports · 1 affected
+        - generic: Open
+  - navigation "Primary" [ref=f1e438]:
+    - link "Overview" [ref=f1e439] [cursor=pointer]:
+      - /url: /app/overview
+    - link "Inbox" [ref=f1e445] [cursor=pointer]:
+      - /url: /app/inbox
+    - link "Issues" [ref=f1e449] [cursor=pointer]:
+      - /url: /app/issues
+    - link "Resolved" [ref=f1e452] [cursor=pointer]:
+      - /url: /app/resolved
+    - link "Settings" [ref=f1e456] [cursor=pointer]:
+      - /url: /app/settings

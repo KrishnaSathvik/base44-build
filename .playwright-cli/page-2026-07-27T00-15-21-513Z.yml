@@ -1,0 +1,15 @@
+- generic [ref=e4]:
+  - link "Feedback Inbox" [ref=e6] [cursor=pointer]:
+    - /url: /
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e14]: Email
+      - textbox "Email" [ref=e16]
+    - generic [ref=e17]:
+      - generic [ref=e18]: Password
+      - textbox "Password" [ref=e20]
+    - button "Sign in" [ref=e21] [cursor=pointer]
+    - button "Continue with Google" [ref=e22] [cursor=pointer]
+    - paragraph [ref=e23]:
+      - text: No account yet?
+      - button "Create one" [ref=e24] [cursor=pointer]

@@ -1,0 +1,52 @@
+{
+  "name": "ReporterAccess",
+  "description": "Private tracking grant for a submission. Only the SHA-256 hash of the token is stored. Accessed exclusively through backend functions (service role) — never read by the owner or public directly.",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "Project this grant belongs to"
+    },
+    "owner_id": {
+      "type": "string",
+      "description": "Owner email, copied from the project"
+    },
+    "submission_id": {
+      "type": "string",
+      "description": "The FeedbackSubmission this token tracks"
+    },
+    "token_hash": {
+      "type": "string",
+      "description": "SHA-256 hash (hex) of the raw tracking token. The raw token is returned to the reporter only once and never stored."
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Token expiry (default 30 days from creation)"
+    },
+    "email_updates_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the reporter opted into email updates"
+    },
+    "last_accessed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time the tracking page was opened with this token"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Function-set creation timestamp"
+    }
+  },
+  "required": ["project_id", "submission_id", "token_hash"],
+  // Never client-readable. All access is via backend functions using the service
+  // role. No owner or public read path exists.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

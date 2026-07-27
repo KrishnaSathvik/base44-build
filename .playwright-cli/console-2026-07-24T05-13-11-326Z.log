@@ -1,0 +1,10 @@
+[    6622ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://127.0.0.1:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=424bb3a4:21608
+[    6885ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://base44.app/api/apps/6a627102d65aedec9330ed4c/entities/User/me:0
+[    6886ms] [ERROR] [Base44 SDK Error] 401: Authentication required to view users @ http://127.0.0.1:5173/node_modules/.vite/deps/@base44_sdk.js?v=424bb3a4:4477
+[    6886ms] [ERROR] Error data: {
+  "message": "Authentication required to view users",
+  "detail": "You must be logged in to perform this operation.",
+  "traceback": null,
+  "extra_data": null,
+  "request_id": null
+} @ http://127.0.0.1:5173/node_modules/.vite/deps/@base44_sdk.js?v=424bb3a4:4480

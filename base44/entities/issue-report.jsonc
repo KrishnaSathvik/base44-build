@@ -1,0 +1,56 @@
+{
+  "name": "IssueReport",
+  "description": "Link between a FeedbackSubmission and an Issue. Created only by backend functions.",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "Project this link belongs to"
+    },
+    "owner_id": {
+      "type": "string",
+      "description": "Owner email, copied from the project. Enables owner-scoped RLS reads."
+    },
+    "issue_id": {
+      "type": "string",
+      "description": "The Issue record id"
+    },
+    "submission_id": {
+      "type": "string",
+      "description": "The FeedbackSubmission record id"
+    },
+    "similarity_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "matching_reasons": { "type": "array", "items": { "type": "string" } },
+    "conflicting_evidence": { "type": "array", "items": { "type": "string" } },
+    "threshold_version": { "type": "string" },
+    "grouping_method": {
+      "type": "string",
+      "enum": ["manual_initial", "automatic", "suggested", "manual"],
+      "default": "manual_initial",
+      "description": "How this report was linked. This slice uses manual_initial (the report that created the issue)."
+    },
+    "review_status": {
+      "type": "string",
+      "enum": ["accepted", "pending", "rejected"],
+      "default": "accepted",
+      "description": "Review state of the link"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Function-set creation timestamp"
+    }
+  },
+  "required": ["project_id", "owner_id", "issue_id", "submission_id"],
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": {
+      "$or": [
+        { "data.owner_id": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

@@ -1,0 +1,30 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e12]:
+      - paragraph [ref=e13]: Stage One Review
+      - paragraph [ref=e14]: Feedback portal
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - button "Choose another type" [ref=e63] [cursor=pointer]
+      - paragraph [ref=e66]: Report a problem
+      - heading "What happened?" [level=1] [ref=e67]
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]: Describe the problem
+          - textbox "Describe the problem" [active] [ref=e72]:
+            - /placeholder: Tell us what you were doing and where things went wrong…
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]: What did you expect?
+            - generic [ref=e76]: Optional
+          - textbox "What did you expect?" [ref=e77]
+        - generic [ref=e78]:
+          - paragraph [ref=e79]: Screenshot
+          - generic [ref=e80]:
+            - paragraph [ref=e84]: Add a screenshot
+            - paragraph [ref=e85]: Available in the next stage
+        - group [ref=e86]:
+          - generic "Add context Optional" [ref=e87] [cursor=pointer]:
+            - text: Add context
+            - generic [ref=e88]: Optional
+        - button "Send feedback" [ref=e89] [cursor=pointer]

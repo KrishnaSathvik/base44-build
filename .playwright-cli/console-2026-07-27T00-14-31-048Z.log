@@ -1,0 +1,30 @@
+[     196ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=2effa7bb:21608
+[     245ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:4400/api/apps/6a627102d65aedec9330ed4c/entities/User/me:0
+[     245ms] [ERROR] [Base44 SDK Error] 401: Request failed with status code 401 @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4477
+[     245ms] [ERROR] Error data: {
+  "error": "Unauthorized"
+} @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4480
+[  401003ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=2effa7bb:21608
+[  401105ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:4400/api/apps/6a627102d65aedec9330ed4c/entities/User/me:0
+[  401106ms] [ERROR] [Base44 SDK Error] 401: Request failed with status code 401 @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4477
+[  401106ms] [ERROR] Error data: {
+  "error": "Unauthorized"
+} @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4480
+[  544184ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=2effa7bb:21608
+[  544231ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:4400/api/apps/6a627102d65aedec9330ed4c/entities/User/me:0
+[  544232ms] [ERROR] [Base44 SDK Error] 401: Request failed with status code 401 @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4477
+[  544232ms] [ERROR] Error data: {
+  "error": "Unauthorized"
+} @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4480
+[ 7605867ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=2effa7bb:21608
+[ 7605958ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:4400/api/apps/6a627102d65aedec9330ed4c/entities/User/me:0
+[ 7605959ms] [ERROR] [Base44 SDK Error] 401: Request failed with status code 401 @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4477
+[ 7605959ms] [ERROR] Error data: {
+  "error": "Unauthorized"
+} @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4480
+[ 7680346ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-PNGJSGSD.js?v=2effa7bb:21608
+[ 7680419ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:4400/api/apps/6a627102d65aedec9330ed4c/entities/User/me:0
+[ 7680419ms] [ERROR] [Base44 SDK Error] 401: Request failed with status code 401 @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4477
+[ 7680419ms] [ERROR] Error data: {
+  "error": "Unauthorized"
+} @ http://localhost:5173/node_modules/.vite/deps/@base44_sdk.js?v=70691c2a:4480

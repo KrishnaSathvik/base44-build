@@ -1,0 +1,16 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e12]:
+      - paragraph [ref=e13]: Stage One Review Updated
+      - paragraph [ref=e14]: Feedback portal
+  - main [ref=e16]:
+    - generic [ref=e80]:
+      - heading "Your feedback is in" [level=1] [ref=e85]
+      - paragraph [ref=e86]: The team can now review the original report. Keep the private link below to follow what happens next.
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - generic [ref=e89]: Private tracking
+          - generic [ref=e90]: FI-DE5C6C
+        - paragraph [ref=e91]: http://localhost:5173/track/1ThlQkLvxbxiquAklOF0PBRIO2dh_yiUqs73aaRoSiQ
+        - link "Open tracking page" [ref=e92] [cursor=pointer]:
+          - /url: /track/1ThlQkLvxbxiquAklOF0PBRIO2dh_yiUqs73aaRoSiQ
