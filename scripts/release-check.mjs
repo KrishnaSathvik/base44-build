@@ -12,6 +12,7 @@ run('Frontend tests','npm',['test']);
 run('Production build','npm',['run','build']);
 run('Brand validation','node',['scripts/brand-check.mjs']);
 run('Official domain validation','node',['scripts/official-domain-check.mjs']);
+run('Automation function bundle validation','node',['scripts/check-function-bundles.mjs']);
 const functionEntries=[];for(const dir of readdirSync('base44/functions',{withFileTypes:true}))if(dir.isDirectory()&&existsSync(join('base44/functions',dir.name,'entry.ts')))functionEntries.push(join('base44/functions',dir.name,'entry.ts'));
 run('Backend Deno checks','deno',['check',...functionEntries]);
 run('Backend Deno tests','deno',['test','--allow-env','base44/shared']);

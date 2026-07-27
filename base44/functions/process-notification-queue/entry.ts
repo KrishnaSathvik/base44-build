@@ -1,9 +1,9 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
-import { dispatchNotificationDelivery } from "../../shared/notification-dispatch.ts";
-import { reconcileDuplicateDeliveries, reconcileRecentNotifications } from "../../shared/notification-reconciliation.ts";
-import { sendingLeaseExpired, type Row } from "../../shared/notifications.ts";
-import { error, errorMessage, json } from "../../shared/response.ts";
-import { resolveBackendConfiguration } from "../../shared/configuration.ts";
+import { dispatchNotificationDelivery } from "./shared/notification-dispatch.ts";
+import { reconcileDuplicateDeliveries, reconcileRecentNotifications } from "./shared/notification-reconciliation.ts";
+import { sendingLeaseExpired, type Row } from "./shared/notifications.ts";
+import { error, errorMessage, json } from "./shared/response.ts";
+import { resolveBackendConfiguration } from "./shared/configuration.ts";
 
 const BATCH_SIZE = 20;
 

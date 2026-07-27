@@ -1,9 +1,9 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
-import { dispatchNotificationDelivery } from "../../shared/notification-dispatch.ts";
-import { ownerOwnsProject } from "../../shared/reporter-workflow.ts";
-import { error, errorMessage, json } from "../../shared/response.ts";
-import { resolveBackendConfiguration } from "../../shared/configuration.ts";
+import { dispatchNotificationDelivery } from "./shared/notification-dispatch.ts";
+import { ownerOwnsProject } from "./shared/reporter-workflow.ts";
+import { error, errorMessage, json } from "./shared/response.ts";
+import { resolveBackendConfiguration } from "./shared/configuration.ts";
 
 function automationDeliveryId(body: any): string | null {
   const values = [body?.payload?.data?.id, body?.data?.id, body?.event?.data?.id, body?.event?.entity_id, body?.event?.entityId, body?.entity?.id, body?.record?.id, body?.entity_id, body?.entityId];

@@ -1,6 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
-import { error, errorMessage, json } from "../../shared/response.ts";
+import { error, errorMessage, json } from "./shared/response.ts";
 import {
   ACTIVE_STATUSES,
   DUPLICATE_THRESHOLD_VERSION,
@@ -10,8 +10,8 @@ import {
   enforceDuplicateThreshold,
   pagePath,
   termOverlap,
-} from "../../shared/feedback-intelligence.ts";
-import { createIssueForSubmission, moveSubmission, recalculateIssue } from "../../shared/issue-operations.ts";
+} from "./shared/feedback-intelligence.ts";
+import { createIssueForSubmission, moveSubmission, recalculateIssue } from "./shared/issue-operations.ts";
 
 type Row = Record<string, any>;
 

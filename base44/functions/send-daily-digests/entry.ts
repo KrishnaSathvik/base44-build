@@ -1,6 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
-import { bestEffortEnqueue, digestIsDue, digestShouldQueue, localDateRangeUtc, notificationDedupeKey, type Row } from "../../shared/notifications.ts";
-import { error, errorMessage, json } from "../../shared/response.ts";
+import { bestEffortEnqueue, digestIsDue, digestShouldQueue, localDateRangeUtc, notificationDedupeKey, type Row } from "./shared/notifications.ts";
+import { error, errorMessage, json } from "./shared/response.ts";
 
 const PROJECT_BATCH_SIZE = 25;
 const occurredSince = (row: Row, since: number) => (Date.parse(row.created_at ?? row.created_date ?? "") || 0) >= since;
