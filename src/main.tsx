@@ -3,6 +3,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router-dom';
 import { queryClient } from '@/lib/queryClient';
 import { router } from '@/router';
+import { AppErrorBoundary } from '@/app/AppErrorBoundary';
+import { NetworkStateProvider } from '@/app/NetworkStateProvider';
+import { PwaUpdatePrompt } from '@/app/PwaUpdatePrompt';
 import '@/index.css';
 
 const rootElement = document.getElementById('root');
@@ -11,7 +14,10 @@ if (!rootElement) {
 }
 
 ReactDOM.createRoot(rootElement).render(
-  <QueryClientProvider client={queryClient}>
-    <RouterProvider router={router} />
-  </QueryClientProvider>,
+  <AppErrorBoundary><NetworkStateProvider><QueryClientProvider client={queryClient}>
+    <RouterProvider router={router} /><PwaUpdatePrompt />
+  </QueryClientProvider></NetworkStateProvider></AppErrorBoundary>,
 );
+
+const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]') ?? document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'canonical' }));
+canonical.href = `${window.location.origin}/`;

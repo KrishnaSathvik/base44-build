@@ -3,6 +3,7 @@ import { z } from "npm:zod";
 import { dispatchNotificationDelivery } from "../../shared/notification-dispatch.ts";
 import { ownerOwnsProject } from "../../shared/reporter-workflow.ts";
 import { error, errorMessage, json } from "../../shared/response.ts";
+import { resolveBackendConfiguration } from "../../shared/configuration.ts";
 
 function automationDeliveryId(body: any): string | null {
   const values = [body?.payload?.data?.id, body?.data?.id, body?.event?.data?.id, body?.event?.entity_id, body?.event?.entityId, body?.entity?.id, body?.record?.id, body?.entity_id, body?.entityId];
@@ -23,9 +24,9 @@ Deno.serve(async (req) => {
       const project = delivery ? await sr.entities.Project.get(delivery.project_id).catch(() => null) : null;
       if (!delivery || !ownerOwnsProject(owner, project)) return error("Delivery not found", 404);
     }
-    const appBaseUrl = Deno.env.get("APP_BASE_URL") ?? new URL(req.url).origin;
+    const config = resolveBackendConfiguration({ appBaseUrl: Deno.env.get("APP_BASE_URL"), notificationIntegrationEnabled: Deno.env.get("NOTIFICATION_INTEGRATION_ENABLED"), requestUrl: req.url });
     const delivery = await dispatchNotificationDelivery(sr, deliveryId, {
-      appBaseUrl, runtimeDeliveryEnabled: Deno.env.get("NOTIFICATION_INTEGRATION_ENABLED") === "true",
+      appBaseUrl: config.appBaseUrl, runtimeDeliveryEnabled: config.notificationIntegrationEnabled,
       emailAdapter: { send: (input) => base44.integrations.Core.SendEmail(input) },
     });
     return json({ success: true, status: delivery.status });

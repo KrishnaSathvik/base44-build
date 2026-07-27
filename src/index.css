@@ -10,7 +10,7 @@
     --secondary: 48 11% 93%; --secondary-foreground: 0 0% 8%; --muted: 48 11% 93%; --muted-foreground: 60 2% 42%;
     --accent: 48 11% 93%; --accent-foreground: 0 0% 8%; --destructive: 0 84% 59%; --destructive-foreground: 0 0% 100%;
     --border: 50 8% 85%; --input: 50 8% 85%; --ring: 0 0% 8%; --radius: .5rem;
-    --canvas: #f6f5f1; --surface: #ffffff; --surface-subtle: #f0efea; --ink: #151515; --ink-muted: #6d6d68; --ink-faint: #92928c;
+    --canvas: #f6f5f1; --surface: #ffffff; --surface-subtle: #f0efea; --ink: #151515; --ink-muted: #595954; --ink-faint: #65655f;
     --line: #dddcd6; --line-strong: #bebdb6; --critical: #ef3e3e; --critical-soft: #fff0ee; --warning: #a76008; --warning-soft: #fff6e8;
     --success: #237a4b; --success-soft: #ebf7f0; --info: #315e8c; --info-soft: #edf4fa;
   }
@@ -37,4 +37,5 @@
 .report-slip:nth-child(2) { animation-delay: .12s; }
 .report-slip:nth-child(3) { animation-delay: .24s; }
 .issue-result { animation: issue-in .55s .42s both; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0ms !important; } }
+@media (prefers-reduced-motion: reduce) { .report-slip, .issue-result { animation: none !important; opacity: 1 !important; transform: none !important; } }

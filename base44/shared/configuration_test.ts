@@ -1,0 +1,4 @@
+import { assertEquals, assertThrows } from "jsr:@std/assert";
+import { resolveBackendConfiguration, validateAppBaseUrl } from "./configuration.ts";
+Deno.test("production requires an absolute HTTPS non-local APP_BASE_URL",()=>{assertThrows(()=>validateAppBaseUrl(undefined,true));assertThrows(()=>validateAppBaseUrl("http://example.com",true));assertThrows(()=>validateAppBaseUrl("https://localhost",true));assertEquals(validateAppBaseUrl("https://feedback.example",true),"https://feedback.example");});
+Deno.test("notifications remain disabled unless explicitly enabled",()=>{assertEquals(resolveBackendConfiguration({appBaseUrl:"https://feedback.example",requestUrl:"https://functions.base44.app/x"}).notificationIntegrationEnabled,false);assertEquals(resolveBackendConfiguration({appBaseUrl:"http://localhost:5173",notificationIntegrationEnabled:"true",requestUrl:"http://localhost:4400/x"}).notificationIntegrationEnabled,true);});

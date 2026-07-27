@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
 import { PublicPortalPage } from '@/pages/PublicPortalPage';
+import { NetworkStateProvider } from '@/app/NetworkStateProvider';
 
 vi.mock('@/lib/api', () => ({
   getPublicProject: vi.fn().mockResolvedValue({ slug:'acme', name:'Acme', description:null, productUrl:null, allowAnonymous:true, feedbackTypesEnabled:['bug','feature','general'], collectReporterEmail:true, isActive:true }),
@@ -32,3 +33,5 @@ test('allows browser context and page URL to be removed before submission', asyn
   expect(screen.getByText('Browser and device context removed.')).toBeVisible();
   expect(screen.getByText('Page URL removed.')).toBeVisible();
 });
+
+test('blocks submission honestly while offline and keeps the deliberate submit control disabled',async()=>{Object.defineProperty(navigator,'onLine',{configurable:true,value:false});const queryClient=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<NetworkStateProvider><QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/f/acme']}><Routes><Route path="/f/:projectSlug" element={<PublicPortalPage/>}/></Routes></MemoryRouter></QueryClientProvider></NetworkStateProvider>);fireEvent.click(await screen.findByRole('button',{name:/report a problem/i}));expect(screen.getByRole('button',{name:/send feedback/i})).toBeDisabled();expect(screen.getByText(/draft is saved on this device/i)).toBeVisible();Object.defineProperty(navigator,'onLine',{configurable:true,value:true});});

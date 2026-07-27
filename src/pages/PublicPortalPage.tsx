@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +10,11 @@ import { apiErrorMessage, getPublicProject, processFeedback, submitFeedback, upl
 import type { FeedbackType, SubmitFeedbackResult } from '@/lib/types';
 import type { PendingScreenshot } from '@/lib/attachments';
 import { collectEnvironmentContext } from '@/lib/environment';
+import type { EnvironmentContext } from '@/lib/environment';
+import { discardFeedbackDraft, draftAttachmentFromFile, fileFromDraftAttachment, loadFeedbackDraft, saveFeedbackDraft } from '@/lib/feedbackDraft';
+import { validateScreenshotSelection } from '@/lib/attachments';
+import { useNetworkState } from '@/app/NetworkStateProvider';
+import { PageMetadata } from '@/app/PageMetadata';
 import { BrandMark } from '@/components/Brand';
 import { ScreenshotUploader } from '@/components/ScreenshotUploader';
 import { Button, Checkbox, Field, InlineError, Input, Skeleton, Textarea } from '@/components/ui';
@@ -24,16 +29,27 @@ type FormValues=z.infer<typeof schema>;
 
 export function PublicPortalPage(){
   const {projectSlug=''}=useParams();
+  const networkState=useNetworkState();
   const [type,setType]=useState<FeedbackType|null>(null);
-  const [submissionKey]=useState(()=>crypto.randomUUID());
+  const [submissionKey,setSubmissionKey]=useState<string>(()=>crypto.randomUUID());
   const [result,setResult]=useState<SubmitFeedbackResult|null>(null);
   const [submitError,setSubmitError]=useState<string|null>(null);
   const [screenshots,setScreenshots]=useState<PendingScreenshot[]>([]);
-  const [environment]=useState(collectEnvironmentContext);
+  const [environment,setEnvironment]=useState(collectEnvironmentContext);
   const [includeEnvironment,setIncludeEnvironment]=useState(true);
   const [includePage,setIncludePage]=useState(true);
+  const [draftRestored,setDraftRestored]=useState(false);
   const projectQuery=useQuery({queryKey:['public-project',projectSlug],queryFn:()=>getPublicProject(projectSlug),retry:false});
-  const {register,handleSubmit,setValue,formState:{errors,isSubmitting}}=useForm<FormValues>({resolver:zodResolver(schema),defaultValues:{pageUrl:environment.pageUrl ?? ''}});
+  const {register,handleSubmit,setValue,reset,control,getValues,formState:{errors,isSubmitting}}=useForm<FormValues>({resolver:zodResolver(schema),defaultValues:{description:'',expectedBehavior:'',pageUrl:environment.pageUrl ?? '',reporterEmail:'',emailUpdatesEnabled:false,website:''}});
+  const values=useWatch({control});
+
+  useEffect(()=>{let active=true;void loadFeedbackDraft(projectSlug).then(draft=>{if(!active||!draft)return;setType(draft.type);setSubmissionKey(draft.submissionKey);setIncludeEnvironment(draft.includeEnvironment);setIncludePage(draft.includePage);setEnvironment(draft.context as EnvironmentContext);reset({description:draft.description,expectedBehavior:draft.expectedBehavior,pageUrl:draft.pageUrl,reporterEmail:draft.reporterEmail,emailUpdatesEnabled:draft.emailUpdatesEnabled,website:''});setScreenshots(draft.attachments.map(attachment=>{const file=fileFromDraftAttachment(attachment);return{key:attachment.key,file,source:attachment.source,width:attachment.width,height:attachment.height,previewUrl:URL.createObjectURL(file),status:'ready' as const,progress:0};}));setDraftRestored(true);});return()=>{active=false;};},[projectSlug,reset]);
+
+  useEffect(()=>{const hasWork=!!type||!!values.description||!!values.expectedBehavior||!!values.reporterEmail||screenshots.length>0;if(!hasWork)return;const timer=window.setTimeout(()=>{void saveFeedbackDraft({projectSlug,type,description:values.description??'',expectedBehavior:values.expectedBehavior??'',pageUrl:values.pageUrl??'',reporterEmail:values.reporterEmail??'',emailUpdatesEnabled:values.emailUpdatesEnabled??false,includePage,includeEnvironment,context:environment as Record<string,string|number|undefined>,attachments:screenshots.map(draftAttachmentFromFile),submissionKey,lastUpdated:Date.now()}).catch(()=>undefined);},400);return()=>window.clearTimeout(timer);},[environment,includeEnvironment,includePage,projectSlug,screenshots,submissionKey,type,values.description,values.emailUpdatesEnabled,values.expectedBehavior,values.pageUrl,values.reporterEmail]);
+
+  useEffect(()=>{const persist=()=>{const current=getValues();void saveFeedbackDraft({projectSlug,type,description:current.description??'',expectedBehavior:current.expectedBehavior??'',pageUrl:current.pageUrl??'',reporterEmail:current.reporterEmail??'',emailUpdatesEnabled:current.emailUpdatesEnabled??false,includePage,includeEnvironment,context:environment as Record<string,string|number|undefined>,attachments:screenshots.map(draftAttachmentFromFile),submissionKey,lastUpdated:Date.now()}).catch(()=>undefined);};window.addEventListener('feedback-inbox:before-update',persist);return()=>window.removeEventListener('feedback-inbox:before-update',persist);},[environment,getValues,includeEnvironment,includePage,projectSlug,screenshots,submissionKey,type]);
+
+  useEffect(()=>{if(networkState==='reconnecting')void projectQuery.refetch();},[networkState,projectQuery.refetch]);
 
   async function uploadOne(item:PendingScreenshot):Promise<string>{
     setScreenshots(current=>current.map(entry=>entry.key===item.key?{...entry,status:'uploading',progress:20,error:undefined}:entry));
@@ -52,6 +68,8 @@ export function PublicPortalPage(){
 
   async function onSubmit(values:FormValues){
     if(!type)return;
+    if(networkState!=='online'){setSubmitError('You are offline. Your complete draft is saved and will be ready to submit after reconnection.');return;}
+    const invalid=validateScreenshotSelection(0,screenshots.map(item=>item.file));if(invalid){setSubmitError(invalid);return;}
     setSubmitError(null);
     try{
       const attachmentIds:string[]=[];
@@ -68,6 +86,7 @@ export function PublicPortalPage(){
       });
       if(!submitted.success)throw new Error('The report was not accepted.');
       setResult(submitted);
+      await discardFeedbackDraft(projectSlug);
       if(!submitted.duplicate&&submitted.submissionRef){void processFeedback(submitted.submissionRef).catch(()=>undefined);}
     }catch(err){setSubmitError(apiErrorMessage(err));}
   }
@@ -82,7 +101,7 @@ export function PublicPortalPage(){
   }
 
   const enabledTypes=project.feedbackTypesEnabled ?? ['bug','feature','general'];
-  return <PortalFrame productName={project.name}><div className="mx-auto max-w-2xl py-10 sm:py-16">{!type ? <>
+  return <PortalFrame productName={project.name}><PageMetadata title={`Feedback for ${project.name}`} description={`Share private product feedback with the ${project.name} team.`}/><div className="mx-auto max-w-2xl py-10 sm:py-16">{draftRestored&&<div role="status" className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-line bg-surface p-4 text-sm"><span>Your unfinished feedback was restored.</span><button type="button" className="min-h-11 text-xs font-medium" onClick={()=>{void discardFeedbackDraft(projectSlug);screenshots.forEach(item=>URL.revokeObjectURL(item.previewUrl));setScreenshots([]);setType(null);reset({description:'',expectedBehavior:'',pageUrl:environment.pageUrl??'',reporterEmail:'',emailUpdatesEnabled:false,website:''});setSubmissionKey(crypto.randomUUID());setDraftRestored(false);}}>Discard draft</button></div>}{!type ? <>
     <p className="fi-eyebrow">Feedback for {project.name}</p><h1 className="fi-display mt-4 text-4xl font-medium leading-tight sm:text-5xl">Help us make {project.name} better.</h1>
     <p className="mt-5 max-w-xl text-[15px] leading-7 text-ink-muted">{project.description || `Report a problem or share an idea with the ${project.name} team.`} It usually takes less than a minute.</p>
     <div className="mt-10 border-t border-line">{TYPES.filter(option=>enabledTypes.includes(option.value)).map(({value,title,hint,icon:Icon})=><button key={value} type="button" onClick={()=>setType(value)} className="group grid min-h-[104px] w-full grid-cols-[44px_1fr_auto] items-center gap-4 border-b border-line py-4 text-left"><span className="flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted group-hover:border-ink group-hover:text-ink"><Icon className="h-5 w-5"/></span><span><span className="block text-[15px] font-medium">{title}</span><span className="mt-1 block text-sm leading-5 text-ink-muted">{hint}</span></span><ArrowRight className="h-4 w-4 text-ink-faint transition group-hover:translate-x-1"/></button>)}</div>
@@ -101,7 +120,8 @@ export function PublicPortalPage(){
       {project.collectReporterEmail !== false && <details className="rounded-lg border border-line bg-surface"><summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 text-sm font-medium">Contact details <span className="text-xs font-normal text-ink-faint">Optional</span></summary><div className="space-y-5 border-t border-line p-4"><Field label="Email" htmlFor="reporterEmail" hint="Only used for updates" error={errors.reporterEmail?.message}><Input id="reporterEmail" type="email" autoComplete="email" {...register('reporterEmail')}/></Field><Checkbox label="Email me when the product team replies or changes this issue." {...register('emailUpdatesEnabled')}/><p className="text-xs leading-5 text-ink-faint">Email is optional and is never used for marketing. Your private tracking link works without email consent.</p></div></details>}
       <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" {...register('website')}/>
       {submitError&&<InlineError>{submitError}</InlineError>}
-      <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">{isSubmitting?'Uploading and sending…':'Send feedback'}<ArrowRight className="h-4 w-4"/></Button>
+      {networkState!=='online'&&<p role="status" className="rounded-lg border border-warning/30 bg-warning-soft p-4 text-sm text-warning">You are offline. This draft is saved on this device and can be submitted deliberately after reconnection.</p>}
+      <Button type="submit" disabled={isSubmitting||networkState!=='online'} className="w-full sm:w-auto">{isSubmitting?'Uploading and sending…':'Send feedback'}<ArrowRight className="h-4 w-4"/></Button>
     </form>
   </>}</div></PortalFrame>;
 }

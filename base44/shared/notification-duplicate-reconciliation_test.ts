@@ -1,0 +1,8 @@
+import { assertEquals } from "jsr:@std/assert";
+import { reconcileDuplicateDeliveries } from "./notification-reconciliation.ts";
+
+function store(deliveries: any[]) { const events:any[]=[]; return { events, sr:{entities:{NotificationDelivery:{list:()=>Promise.resolve(deliveries),update:(id:string,patch:any)=>{Object.assign(deliveries.find(row=>row.id===id),patch);return Promise.resolve({});}},ActivityEvent:{create:(row:any)=>{events.push(row);return Promise.resolve(row);}}}}}; }
+
+Deno.test("duplicate reconciliation keeps one canonical unsent delivery and skips redundant rows",async()=>{const deliveries=[{id:"a",project_id:"p",owner_id:"o",dedupe_key:"same",status:"pending",created_at:"2026-01-01T00:00:00Z"},{id:"b",project_id:"p",owner_id:"o",dedupe_key:"same",status:"failed",created_at:"2026-01-01T00:01:00Z"}];const fake=store(deliveries);const result=await reconcileDuplicateDeliveries(fake.sr,new Date("2026-01-02T00:00:00Z"));assertEquals(result,{groups:1,skipped:1});assertEquals(deliveries[0].status,"pending");assertEquals(deliveries[1].status,"skipped");assertEquals(fake.events[0].metadata.skippedCount,1);});
+
+Deno.test("sent delivery is canonical and is never rewritten or resent",async()=>{const deliveries=[{id:"sent",project_id:"p",owner_id:"o",dedupe_key:"same",status:"sent",created_at:"2026-01-01T00:02:00Z"},{id:"pending",project_id:"p",owner_id:"o",dedupe_key:"same",status:"pending",created_at:"2026-01-01T00:00:00Z"}];const fake=store(deliveries);await reconcileDuplicateDeliveries(fake.sr);assertEquals(deliveries[0].status,"sent");assertEquals(deliveries[1].status,"skipped");});

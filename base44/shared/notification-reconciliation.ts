@@ -2,6 +2,39 @@ import { bestEffortEnqueue, notificationDedupeKey, safeExcerpt, type Notificatio
 
 function createdAt(row: Row): number { return Date.parse(row.created_at ?? row.created_date ?? "") || 0; }
 
+export async function reconcileDuplicateDeliveries(sr: any, now = new Date(), limit = 500): Promise<{ groups: number; skipped: number }> {
+  const deliveries = await sr.entities.NotificationDelivery.list("created_at", limit);
+  const groups = new Map<string, Row[]>();
+  for (const delivery of deliveries) {
+    if (!delivery.project_id || !delivery.dedupe_key) continue;
+    const key = `${delivery.project_id}\u0000${delivery.dedupe_key}`;
+    groups.set(key, [...(groups.get(key) ?? []), delivery]);
+  }
+  let duplicateGroups = 0; let skipped = 0;
+  for (const rows of groups.values()) {
+    if (rows.length < 2) continue;
+    const sent = rows.filter(row => row.status === "sent").sort((a, b) => createdAt(a) - createdAt(b));
+    const unsent = rows.filter(row => row.status !== "sent" && row.status !== "skipped");
+    if (unsent.length < 2 && sent.length === 0) continue;
+    const canonical = sent[0] ?? [...unsent].sort((a, b) => createdAt(a) - createdAt(b))[0];
+    if (!canonical) continue;
+    const redundant = rows.filter(row => row.id !== canonical.id && row.status !== "sent" && row.status !== "skipped");
+    if (!redundant.length) continue;
+    duplicateGroups += 1;
+    for (const row of redundant) {
+      await sr.entities.NotificationDelivery.update(row.id, { status: "skipped", last_error_code: "duplicate_delivery", last_error_message: "Redundant delivery suppressed by reconciliation.", updated_at: now.toISOString() });
+      skipped += 1;
+    }
+    await sr.entities.ActivityEvent.create({
+      project_id: canonical.project_id, owner_id: canonical.owner_id, issue_id: canonical.issue_id,
+      event_type: "notification_duplicates_reconciled", actor_type: "system", actor_id: "system",
+      internal_message: "Redundant notification deliveries were suppressed.",
+      metadata: { canonicalDeliveryId: canonical.id, skippedCount: redundant.length }, created_at: now.toISOString(),
+    });
+  }
+  return { groups: duplicateGroups, skipped };
+}
+
 export async function reconcileRecentNotifications(sr: any, now = new Date(), limit = 100): Promise<number> {
   const recentAfter = now.getTime() - 48 * 60 * 60_000;
   const events = (await sr.entities.ActivityEvent.list("-created_at", limit)).filter((event: Row) => createdAt(event) >= recentAfter);

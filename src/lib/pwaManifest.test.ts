@@ -1,0 +1,3 @@
+import { expect, test } from 'vitest';
+import { pwaManifest } from '@/lib/pwaManifest';
+test('manifest has the approved install identity and icons',()=>{expect(pwaManifest).toMatchObject({name:'Feedback Inbox',short_name:'Feedback',display:'standalone',start_url:'/',scope:'/',theme_color:'#F6F5F1',background_color:'#F6F5F1'});expect(pwaManifest.icons.map(icon=>icon.src)).toContain('/icon-192.png');expect(pwaManifest.icons.map(icon=>icon.src)).toContain('/icon-512.png');});

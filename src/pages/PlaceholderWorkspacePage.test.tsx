@@ -10,6 +10,7 @@ vi.mock('@/lib/api', () => ({
   updateProjectSettings: vi.fn(),
   updateNotificationSettings: vi.fn(),
   listMyNotificationDeliveries: vi.fn().mockResolvedValue([]), retryNotification:vi.fn(),
+  listMyAttachments:vi.fn().mockResolvedValue([]),listMySubmissions:vi.fn().mockResolvedValue([]),
 }));
 
 test('renders editable persisted project settings', async () => {

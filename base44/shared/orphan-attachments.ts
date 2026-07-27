@@ -1,0 +1,3 @@
+import type { Row } from "./notifications.ts";
+export function identifyOrphanAttachments(attachments: Row[], submissions: Row[], now = new Date(), graceMs = 24 * 60 * 60_000): Row[] { const submissionIds = new Set(submissions.map(row => row.id)); return attachments.filter(row => row.upload_status !== "deleted" && !submissionIds.has(row.submission_id) && Date.parse(row.created_at ?? row.created_date ?? "") <= now.getTime() - graceMs); }
+export function logicalAttachmentDeletionPatch(now = new Date()): Row { return { upload_status: "deleted", file_uri: "access-denied", updated_at: now.toISOString() }; }
