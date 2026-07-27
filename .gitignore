@@ -5,10 +5,12 @@ node_modules
 dist
 output/playwright/
 playwright-report/
+.playwright-cli/
 
 # Environment
 .env
 .env.*
+!.env.example
 *.local
 
 # Editor

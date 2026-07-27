@@ -4,8 +4,18 @@ import path from 'path';
 import { VitePWA } from 'vite-plugin-pwa';
 import { pwaManifest } from './src/lib/pwaManifest';
 
+function metadataBaseUrl() {
+  const value = process.env.APP_BASE_URL?.trim();
+  if (!value) return '';
+  const url = new URL(value);
+  if (url.protocol !== 'https:' || ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) || url.username || url.password || url.search || url.hash) {
+    throw new Error('APP_BASE_URL must be an absolute public HTTPS URL without credentials, query parameters, or fragments.');
+  }
+  return url.origin;
+}
+
 export default defineConfig({
-  plugins: [react(), VitePWA({
+  plugins: [{ name: 'product-metadata-urls', transformIndexHtml(html) { const base = metadataBaseUrl(); return html.replaceAll('__APP_BASE_URL__/', base ? `${base}/` : '/'); } }, react(), VitePWA({
     registerType: 'prompt',
     includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png', 'og-image.png'],
     manifest: pwaManifest,

@@ -1,4 +1,4 @@
-# Feedback Inbox
+# VensaOS
 ## End-to-End UI/UX Flows and Competition Build Blueprint
 
 **Document:** 3 of 3  
@@ -22,8 +22,8 @@ This document translates the product and design direction into:
 
 Use it together with:
 
-1. `01_feedback_inbox_product_backend.md`
-2. `02_feedback_inbox_design_references.md`
+1. `01_product_backend.md`
+2. `02_design_references.md`
 
 ---
 
@@ -112,7 +112,7 @@ Route behavior:
 
 ```mermaid
 flowchart TD
-    A["Feedback Inbox"] --> B["Marketing"]
+    A["VensaOS"] --> B["Marketing"]
     A --> C["Owner app"]
     A --> D["Public portal"]
     A --> E["Tracking"]
@@ -1328,7 +1328,7 @@ Do not let analytics delay the competition MVP.
 
 ```mermaid
 journey
-    title Feedback Inbox competition experience
+    title VensaOS competition experience
     section Reporter
       Opens one feedback link: 5: Reporter
       Describes a problem: 5: Reporter

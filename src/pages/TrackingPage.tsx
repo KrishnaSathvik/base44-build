@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Clock3, Link2Off, LockKeyhole, MessageSquareText, Monitor, RotateCcw } from 'lucide-react';
 import { accessTrackingPage, addReporterFollowUp, apiErrorMessage, confirmResolution, disableReporterEmailConsent, getReporterAttachmentAccess, uploadFollowUpAttachment } from '@/lib/api';
 import { formatTime, statusLabel, typeLabel } from '@/lib/format';
-import { Brand, BrandMark } from '@/components/Brand';
+import { BrandMark } from '@/components/Brand';
 import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
 import { ScreenshotUploader } from '@/components/ScreenshotUploader';
 import { Button, InlineError, Skeleton, StatusBadge, Textarea } from '@/components/ui';
@@ -37,4 +37,4 @@ export function TrackingPage(){
 }
 function size(width:number|null,height:number|null){return width&&height?`${width} × ${height}`:'Not submitted';}
 function Context({label,value,wide}:{label:string;value:string;wide?:boolean}){return <div className={`bg-surface p-4 ${wide?'sm:col-span-2':''}`}><p className="fi-mono text-[9px] uppercase text-ink-faint">{label}</p><p className="mt-2 break-all text-sm text-ink-muted">{value||'Not submitted'}</p></div>;}
-function Frame({children}:{children:React.ReactNode}){return <div className="min-h-screen bg-canvas"><header className="border-b border-line"><div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6"><Brand/><BrandMark className="hidden h-5 w-5 opacity-60 sm:block"/></div></header><main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-16">{children}</main></div>}
+function Frame({children}:{children:React.ReactNode}){return <div className="min-h-screen bg-canvas"><header className="border-b border-line"><div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6"><div><p className="text-sm font-medium">Track your feedback</p><p className="mt-1 text-xs text-ink-faint">Updates are securely provided through VensaOS.</p></div><span className="inline-flex items-center gap-2 text-xs text-ink-faint"><BrandMark className="h-5 w-5" decorative/>Powered by VensaOS</span></div></header><main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-16">{children}</main></div>}

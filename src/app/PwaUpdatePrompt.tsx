@@ -15,7 +15,7 @@ export function PwaUpdatePrompt() {
     await updateRef.current?.(true);
   };
   return <section role="dialog" aria-modal="false" aria-labelledby="pwa-update-title" className="fixed bottom-4 right-4 z-[80] max-w-sm rounded-lg border border-line bg-surface p-4 shadow-sheet">
-    <p id="pwa-update-title" className="text-sm font-medium">A new version of Feedback Inbox is ready.</p>
+    <p id="pwa-update-title" className="text-sm font-medium">A new version of VensaOS is ready.</p>
     <div className="mt-4 flex gap-2"><Button onClick={() => void update()}>Update now</Button><Button variant="ghost" onClick={() => setNeedsRefresh(false)}>Later</Button></div>
   </section>;
 }

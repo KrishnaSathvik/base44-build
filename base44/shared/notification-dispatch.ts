@@ -74,7 +74,7 @@ export async function dispatchNotificationDelivery(sr: any, deliveryId: string, 
       templateKey: delivery.template_key, payload: delivery.payload ?? {}, publicCode: issue?.public_code,
       trackingUrl, ownerUrl: delivery.recipient_type === "owner" && issue ? `${options.appBaseUrl.replace(/\/$/, "")}/app/issues/${issue.id}` : undefined,
     });
-    const provider = await options.emailAdapter.send({ to: recipient, subject: rendered.subject, body: rendered.html, from_name: "Feedback Inbox" });
+    const provider = await options.emailAdapter.send({ to: recipient, subject: rendered.subject, body: rendered.html, from_name: "VensaOS" });
     // Provider acceptance and this update cannot be one atomic transaction. A
     // crash between them can cause a retry to send twice; external email is at-least-once.
     const sent = await sr.entities.NotificationDelivery.update(delivery.id, {

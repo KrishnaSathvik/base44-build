@@ -36,7 +36,7 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 async function runVerification() {
-  console.log("Feedback Inbox vertical-slice verification\n");
+  console.log("VensaOS vertical-slice verification\n");
   const projectSlug = `test-project-${Date.now()}`;
   let submission: any;
   let duplicate: any;

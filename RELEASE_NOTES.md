@@ -1,6 +1,10 @@
-# Feedback Inbox release candidate
+# VensaOS release candidate
 
 This release candidate adds installable PWA behavior, project-scoped offline public drafts, account/project-scoped owner snapshots, route-level bundles, deterministic demo maintenance, automated accessibility smoke checks, and release gates.
+
+## VensaOS rebrand
+
+The public product brand is now VensaOS, positioned as a feedback intelligence platform for product teams. The landing page, application shell, authentication and setup, public portal attribution, tracking, demo, email templates, metadata, manifest, resilience UI, documentation, and release automation use the new brand. Stable Base44 entities, functions, fields, routes, automation identifiers, application identity, and tracking formats are intentionally unchanged.
 
 ## Known storage limitation
 

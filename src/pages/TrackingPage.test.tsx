@@ -16,4 +16,6 @@ test('shows a designed invalid tracking-link state', async () => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/track/bad']}><Routes><Route path="/track/:token" element={<TrackingPage />} /></Routes></MemoryRouter></QueryClientProvider>);
   expect(await screen.findByRole('heading', { name: 'This tracking link is not valid' })).toBeVisible();
+  expect(screen.getByText('Updates are securely provided through VensaOS.')).toBeVisible();
+  expect(screen.getByText('Powered by VensaOS')).toBeVisible();
 });

@@ -1,4 +1,11 @@
-# Feedback Inbox
+# VensaOS
+
+## Branding decision
+
+VensaOS is the public product brand and is positioned as a feedback intelligence platform. It is not a literal operating system.
+
+The phrase “feedback inbox” may remain when it generically describes the workflow. Stable Base44 entities, function directories, database fields, API contracts, automation identifiers, routes, and tracking-token formats retain their existing technical names to avoid schema and migration risk.
+
 ## Technical Decisions
 
 **Document:** 4 of 4
@@ -17,7 +24,7 @@ wins. Do not expand product scope here.
 Scaffold:        Official Base44 React/Vite template
 Language:        TypeScript, strict mode
 Styling:         Tailwind CSS with the design tokens from document 02
-Components:      Radix / shadcn primitives, customized to the Feedback Inbox design
+Components:      Radix / shadcn primitives, customized to the VensaOS design
 Routing:         React Router
 Server data:     TanStack Query
 Forms:           React Hook Form + Zod
@@ -71,7 +78,7 @@ Critical Playwright flows:
 
 ## 4. Priority Formula
 
-Locked in `docs/01_feedback_inbox_product_backend.md` §15. Summary:
+Locked in `docs/01_product_backend.md` §15. Summary:
 
 ```text
 priorityScore = min(

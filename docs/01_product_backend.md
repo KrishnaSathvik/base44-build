@@ -1,16 +1,16 @@
-# Feedback Inbox
+# VensaOS
 ## Product, Features, End-to-End Flows, Base44 Backend, and Competition Setup
 
 **Document:** 1 of 3  
 **Status:** Competition working specification  
 **Last verified:** July 22, 2026  
-**Working product name:** Feedback Inbox
+**Public product name:** VensaOS
 
 ---
 
 ## 1. Product Summary
 
-Feedback Inbox gives product teams one public link for collecting bug reports, feature requests, and general feedback.
+VensaOS gives product teams one public link for collecting bug reports, feature requests, and general feedback.
 
 Instead of leaving every response as an isolated form submission, the backend:
 
@@ -40,7 +40,7 @@ Product feedback commonly arrives through direct messages, email, social comment
 
 The main problem is not merely collecting more feedback. The real problem is converting fragmented feedback into a trustworthy, prioritized issue queue.
 
-Feedback Inbox is intentionally smaller than Jira, Linear, Productboard, Canny, or a complete support platform. It focuses on one workflow:
+VensaOS is intentionally smaller than Jira, Linear, Productboard, Canny, or a complete support platform. It focuses on one workflow:
 
 ```mermaid
 flowchart LR
@@ -117,7 +117,7 @@ A collaborator invited by the project owner. Team collaboration is not required 
 - Configure public portal basics
 - Copy public feedback URL
 - Overview dashboard
-- Feedback inbox
+- feedback inbox
 - Issue list
 - Issue detail view
 - Merge and unmerge report relationships
@@ -353,7 +353,7 @@ flowchart LR
 ## 10. Recommended Repository Structure
 
 ```text
-feedback-inbox/
+vensaos/
 ├── src/
 │   ├── app/
 │   ├── api/base44Client.ts
@@ -998,8 +998,8 @@ Choose the React/Vite template when prompted.
 ### Option B — Add Base44 to an existing Vite project
 
 ```bash
-npm create vite@latest feedback-inbox -- --template react-ts
-cd feedback-inbox
+npm create vite@latest vensaos -- --template react-ts
+cd vensaos
 npm install
 npm install -g base44@latest
 base44 create
@@ -1012,7 +1012,7 @@ Choose **Create a basic project** when prompted.
 
 ```jsonc
 {
-  "name": "feedback-inbox",
+  "name": "vensaos",
   "description": "Evidence-based product feedback inbox",
   "site": {
     "outputDirectory": "dist",

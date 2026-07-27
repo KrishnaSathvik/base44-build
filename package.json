@@ -1,5 +1,6 @@
 {
-  "name": "base44-app",
+  "name": "vensaos",
+  "description": "Feedback intelligence for product teams",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,6 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "brand:check": "npm run build --silent && node scripts/brand-check.mjs",
     "demo:seed": "npx base44 exec < scripts/demo/seed-demo.ts",
     "demo:reset": "npx base44 exec < scripts/demo/reset-demo.ts",
     "demo:verify": "npx base44 exec < scripts/demo/verify-demo.ts",

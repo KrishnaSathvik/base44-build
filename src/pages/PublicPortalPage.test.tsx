@@ -22,6 +22,9 @@ test('reveals the bug form after selecting report a problem', async () => {
   expect(screen.getByLabelText('Describe the problem')).toHaveFocus();
   expect(screen.getByText('Context attached')).toBeVisible();
   expect(screen.getByLabelText('Email me when the product team replies or changes this issue.')).not.toBeChecked();
+  expect(screen.getByText('Acme')).toBeVisible();
+  expect(screen.getByText('Powered by VensaOS')).toBeVisible();
+  expect(screen.getByText('Acme').compareDocumentPosition(screen.getByText('Powered by VensaOS')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });
 
 test('allows browser context and page URL to be removed before submission', async () => {

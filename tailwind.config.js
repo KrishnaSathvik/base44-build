@@ -17,7 +17,7 @@ export default {
         sheet: '0 18px 48px rgba(21,21,21,.12), 0 2px 8px rgba(21,21,21,.06)',
       },
       colors: {
-        // Feedback Inbox tokens (docs/02)
+        // VensaOS tokens (docs/02)
         canvas: 'var(--canvas)',
         surface: 'var(--surface)',
         'surface-subtle': 'var(--surface-subtle)',

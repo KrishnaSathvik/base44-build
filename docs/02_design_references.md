@@ -1,4 +1,4 @@
-# Feedback Inbox
+# VensaOS
 ## Design References and Visual Direction
 
 **Document:** 2 of 3  
@@ -9,7 +9,7 @@
 
 ## 1. Design Goal
 
-Feedback Inbox should feel like a premium editorial evidence workspace where messy user feedback becomes clear product intelligence.
+VensaOS should feel like a premium editorial evidence workspace where messy user feedback becomes clear product intelligence.
 
 It must not resemble:
 
@@ -48,7 +48,7 @@ The approved visual combination is:
 
 These are references, not templates to copy.
 
-| Reference direction | Use in Feedback Inbox |
+| Reference direction | Use in VensaOS |
 |---|---|
 | Delphi | Strong hierarchy, editorial composition, confident typography |
 | Dimension | Product workspace shell, navigation, focused multi-panel work |
@@ -266,7 +266,7 @@ Main panels should use borders and canvas contrast.
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
-│ Feedback Inbox     Project / Environment            Search     User │
+│ VensaOS     Project / Environment            Search     User │
 ├──────────────┬─────────────────────────────────┬────────────────────┤
 │ Navigation   │ Working queue                   │ Evidence / detail  │
 │              │                                 │                    │
@@ -412,7 +412,7 @@ Use IBM Plex Mono and a quiet outlined container.
 
 ---
 
-## 10. Feedback Inbox Direction
+## 10. VensaOS Direction
 
 Each row should feel like a concise finding, not a spreadsheet record.
 
@@ -874,7 +874,7 @@ Prioritize these polished surfaces:
 3. Public feedback form
 4. Submission confirmation
 5. Owner overview
-6. Feedback inbox
+6. feedback inbox
 7. Issue detail with grouping explanation
 8. Reporter tracking page
 9. Project setup and public-link settings
@@ -894,7 +894,7 @@ Do not spend competition time on:
 
 ## 24. Final Visual Definition
 
-> Feedback Inbox is a warm, paper-toned, evidence-first product workspace with strong typography, white working surfaces, black primary actions, architectural red annotations, hairline borders, restrained motion, and precise technical metadata.
+> VensaOS is a warm, paper-toned, evidence-first product workspace with strong typography, white working surfaces, black primary actions, architectural red annotations, hairline borders, restrained motion, and precise technical metadata.
 
 Every design decision should help users move from:
 

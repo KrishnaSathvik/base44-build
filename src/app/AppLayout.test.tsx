@@ -11,4 +11,6 @@ vi.mock('@/lib/api',()=>({listMyProjects:vi.fn().mockResolvedValue([]),listMyIss
 test('uses a full-screen mobile issue detail without primary bottom navigation', () => {
   const queryClient=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/app/issues/issue-1']}><AppLayout /></MemoryRouter></QueryClientProvider>);
   expect(screen.queryByRole('navigation', { name: 'Primary' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'VensaOS' })).toBeVisible();
+  expect(screen.getByText('VensaOS workspace')).toBeVisible();
 });

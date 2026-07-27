@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button, Field, Input, Panel } from '@/components/ui';
 import { Brand } from '@/components/Brand';
+import { PageMetadata } from '@/app/PageMetadata';
 
 type Mode = 'login' | 'register' | 'verify';
 
@@ -70,8 +71,11 @@ export function AuthPanel() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
+      <PageMetadata title={mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Verify Your Email'} description="Sign in to your VensaOS workspace." />
       <Panel className="w-full max-w-sm p-8">
         <div className="mb-6"><Brand /></div>
+        <h1 className="fi-display mb-2 text-2xl font-medium">{mode === 'login' ? 'Welcome to VensaOS' : mode === 'register' ? 'Create your VensaOS account' : 'Verify your email'}</h1>
+        <p className="mb-6 text-sm text-ink-muted">{mode === 'verify' ? 'Enter your one-time code to continue.' : 'Feedback intelligence for product teams.'}</p>
 
         {mode === 'verify' ? (
           <form

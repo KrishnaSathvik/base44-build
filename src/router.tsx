@@ -4,6 +4,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { OwnerRouteSkeleton, PublicRouteSkeleton } from '@/app/RouteSkeleton';
 import { RouteError } from '@/app/RouteError';
 import { PageMetadata } from '@/app/PageMetadata';
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '@/lib/brand';
 
 const AppLayout = lazy(() => import('@/app/AppLayout').then(module => ({ default: module.AppLayout })));
 const LandingPage = lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -18,12 +19,12 @@ const OwnerOverviewPage = lazy(() => import('@/pages/OwnerOverviewPage').then(mo
 const PlaceholderWorkspacePage = lazy(() => import('@/pages/PlaceholderWorkspacePage').then(module => ({ default: module.PlaceholderWorkspacePage })));
 const OwnerInboxPage = lazy(() => import('@/pages/OwnerInboxPage').then(module => ({ default: module.OwnerInboxPage })));
 const OwnerResolvedPage = lazy(() => import('@/pages/OwnerResolvedPage').then(module => ({ default: module.OwnerResolvedPage })));
-const publicView = (element: ReactNode, title='Feedback Inbox', description='Collect feedback, preserve the evidence, and understand what to fix next.') => <Suspense fallback={<PublicRouteSkeleton />}><PageMetadata title={title} description={description}/>{element}</Suspense>;
-const ownerView = (element: ReactNode, title='Workspace') => <Suspense fallback={<OwnerRouteSkeleton />}><PageMetadata title={title} description="Private Feedback Inbox owner workspace."/>{element}</Suspense>;
+const publicView = (element: ReactNode, title=DEFAULT_TITLE, description=DEFAULT_DESCRIPTION) => <Suspense fallback={<PublicRouteSkeleton />}><PageMetadata title={title} description={description}/>{element}</Suspense>;
+const ownerView = (element: ReactNode, title='Overview') => <Suspense fallback={<OwnerRouteSkeleton />}><PageMetadata title={title} description="Private VensaOS owner workspace."/>{element}</Suspense>;
 
 export const router = createBrowserRouter([
   { path: '/', element: publicView(<LandingPage />), errorElement: <RouteError /> },
-  { path: '/demo', element: publicView(<DemoPage />,'Representative demo'), errorElement: <RouteError /> },
+  { path: '/demo', element: publicView(<DemoPage />,'Demo'), errorElement: <RouteError /> },
   {
     path: '/app',
     element: ownerView(<AppLayout />), errorElement: <RouteError />,
@@ -31,14 +32,14 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/app/overview" replace /> },
       { path: 'overview', element: ownerView(<OwnerOverviewPage />,'Overview') },
       { path: 'inbox', element: ownerView(<OwnerInboxPage />,'Inbox') },
-      { path: 'setup', element: ownerView(<OwnerSetupPage />,'Set up a board') },
+      { path: 'setup', element: ownerView(<OwnerSetupPage />,'Set Up Your Workspace') },
       { path: 'issues', element: ownerView(<OwnerIssuesPage />,'Issues') },
-      { path: 'issues/:issueId', element: ownerView(<OwnerIssueDetailPage />,'Issue detail') },
-      { path: 'resolved', element: ownerView(<OwnerResolvedPage />,'Resolved issues') },
+      { path: 'issues/:issueId', element: ownerView(<OwnerIssueDetailPage />,'Issues') },
+      { path: 'resolved', element: ownerView(<OwnerResolvedPage />,'Resolved') },
       { path: 'settings', element: ownerView(<PlaceholderWorkspacePage />,'Settings') },
     ],
   },
-  { path: '/f/:projectSlug', element: publicView(<PublicPortalPage />), errorElement: <RouteError /> },
-  { path: '/track/:token', element: publicView(<TrackingPage />,'Track feedback','Use a private link to follow a feedback report.'), errorElement: <RouteError /> },
+  { path: '/f/:projectSlug', element: publicView(<PublicPortalPage />,'Submit Feedback'), errorElement: <RouteError /> },
+  { path: '/track/:token', element: publicView(<TrackingPage />,'Track Your Feedback','Use a private link to follow a feedback report.'), errorElement: <RouteError /> },
   { path: '*', element: publicView(<NotFoundPage />), errorElement: <RouteError /> },
 ]);

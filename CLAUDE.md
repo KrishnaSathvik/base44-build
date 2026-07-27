@@ -1,6 +1,6 @@
-# CLAUDE.md — Feedback Inbox
+# CLAUDE.md — VensaOS
 
-Agent instructions for building **Feedback Inbox**, a Base44-backed React PWA for
+Agent instructions for building **VensaOS**, a Base44-backed React PWA for
 the Base44 Dev Build-Off. Keep this file concise; it references the specs rather
 than duplicating them.
 
@@ -8,9 +8,9 @@ than duplicating them.
 
 Read these before implementing. They win over anything remembered:
 
-1. `docs/01_feedback_inbox_product_backend.md` — product, entities, functions, priority formula
-2. `docs/02_feedback_inbox_design_references.md` — design system, tokens, visual direction
-3. `docs/03_feedback_inbox_uiux_flows.md` — routes, screen flows, build order
+1. `docs/01_product_backend.md` — product, entities, functions, priority formula
+2. `docs/02_design_references.md` — design system, tokens, visual direction
+3. `docs/03_uiux_flows.md` — routes, screen flows, build order
 4. `docs/04_technical_decisions.md` — locked stack, AI contracts, IDs, idempotency, tokens, PWA, testing
 
 ## Locked Stack

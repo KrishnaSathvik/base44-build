@@ -89,9 +89,9 @@ export function OwnerSetupPage() {
 
   return (
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-7">
-      <h1 className="fi-display text-2xl font-semibold text-ink">Create a feedback project</h1>
+      <h1 className="fi-display text-2xl font-semibold text-ink">Set up your VensaOS workspace</h1>
       <p className="mt-1 text-sm text-ink-muted">
-        One public link for bug reports, feature requests, and general feedback.
+        Create a feedback board for your product.
       </p>
       <Panel className="mt-6 p-5">
         <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
