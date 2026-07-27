@@ -1,0 +1,40 @@
+{
+  "name": "NotificationDelivery",
+  "description": "Owner-scoped email outbox and delivery history. Trusted backend functions are the only writers.",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string" },
+    "owner_id": { "type": "string" },
+    "issue_id": { "type": "string" },
+    "submission_id": { "type": "string" },
+    "activity_event_id": { "type": "string" },
+    "reporter_message_id": { "type": "string" },
+    "recipient_type": { "type": "string", "enum": ["owner", "reporter"] },
+    "template_key": {
+      "type": "string",
+      "enum": ["owner_critical_issue", "owner_reporter_reply", "reporter_information_requested", "reporter_status_update", "reporter_issue_resolved", "reporter_issue_reopened", "owner_daily_digest"]
+    },
+    "channel": { "type": "string", "enum": ["email"], "default": "email" },
+    "dedupe_key": { "type": "string", "description": "Deterministic source-event delivery key" },
+    "status": { "type": "string", "enum": ["pending", "sending", "sent", "failed", "skipped", "dead_letter"], "default": "pending" },
+    "attempt_count": { "type": "integer", "minimum": 0, "default": 0 },
+    "next_attempt_at": { "type": "string", "format": "date-time" },
+    "last_attempt_at": { "type": "string", "format": "date-time" },
+    "sending_started_at": { "type": "string", "format": "date-time" },
+    "lease_expires_at": { "type": "string", "format": "date-time" },
+    "sent_at": { "type": "string", "format": "date-time" },
+    "last_error_code": { "type": "string" },
+    "last_error_message": { "type": "string", "description": "Sanitized operational failure only" },
+    "provider_message_id": { "type": "string" },
+    "payload": { "type": "object", "description": "Safe template inputs; never contains addresses, tokens, or provider output" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["project_id", "owner_id", "recipient_type", "template_key", "channel", "dedupe_key", "status"],
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "$or": [{ "data.owner_id": "{{user.email}}" }, { "user_condition": { "role": "admin" } }] },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

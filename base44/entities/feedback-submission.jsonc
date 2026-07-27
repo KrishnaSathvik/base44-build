@@ -51,6 +51,15 @@
       "format": "email",
       "description": "Optional reporter email. Never returned through the public tracking response."
     },
+    "reporter_email_updates_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Reporter consent for workflow email. Email presence alone is not consent."
+    },
+    "reporter_email_consent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "processing_status": {
       "type": "string",
       "enum": ["pending", "processing", "completed", "failed"],

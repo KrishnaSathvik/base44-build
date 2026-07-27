@@ -47,6 +47,32 @@
       "type": "boolean",
       "default": true,
       "description": "Whether the project is accepting reports"
+    },
+    "notification_delivery_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Master safety switch for external notification delivery"
+    },
+    "critical_alerts_enabled": { "type": "boolean", "default": true },
+    "owner_reply_alerts_enabled": { "type": "boolean", "default": true },
+    "reporter_status_emails_enabled": { "type": "boolean", "default": true },
+    "daily_digest_enabled": { "type": "boolean", "default": false },
+    "daily_digest_include_empty": { "type": "boolean", "default": false },
+    "digest_timezone": {
+      "type": "string",
+      "default": "UTC",
+      "description": "IANA timezone used to determine daily digest delivery"
+    },
+    "digest_hour_local": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 23,
+      "default": 9
+    },
+    "last_digest_scan_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Worker cursor used to rotate bounded project batches"
     }
   },
   "required": ["name", "slug"],

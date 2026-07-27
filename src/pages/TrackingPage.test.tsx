@@ -9,6 +9,7 @@ vi.mock('@/lib/api', () => ({
   apiErrorMessage: vi.fn(() => 'Invalid or unknown tracking link'),
   getReporterAttachmentAccess: vi.fn(),
   addReporterFollowUp: vi.fn(), confirmResolution: vi.fn(), uploadFollowUpAttachment: vi.fn(),
+  disableReporterEmailConsent:vi.fn(),
 }));
 
 test('shows a designed invalid tracking-link state', async () => {

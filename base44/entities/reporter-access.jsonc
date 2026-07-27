@@ -19,6 +19,15 @@
       "type": "string",
       "description": "SHA-256 hash (hex) of the raw tracking token. The raw token is returned to the reporter only once and never stored."
     },
+    "purpose": {
+      "type": "string",
+      "enum": ["initial_tracking", "email_notification"],
+      "default": "initial_tracking"
+    },
+    "notification_delivery_id": {
+      "type": "string",
+      "description": "Delivery that created this email tracking grant, if applicable"
+    },
     "expires_at": {
       "type": "string",
       "format": "date-time",
@@ -33,6 +42,11 @@
       "type": "string",
       "format": "date-time",
       "description": "Last time the tracking page was opened with this token"
+    },
+    "revoked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Set when an unused email grant is revoked after failed delivery"
     },
     "created_at": {
       "type": "string",

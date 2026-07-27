@@ -45,6 +45,8 @@ export async function buildTrackingProjection(sr: any, submission: Row, issue: R
     status: issue.status,
     publicResolutionNote: issue.public_resolution_note ?? null,
     resolutionConfirmationStatus: issue.resolution_confirmation_status ?? "not_requested",
+    emailUpdatesEnabled: submission.reporter_email_updates_enabled === true,
+    canManageEmailUpdates: !!submission.reporter_email,
     publicMessages: messages,
     publicActivityEvents,
     createdAt: submission.created_at ?? submission.created_date ?? null,

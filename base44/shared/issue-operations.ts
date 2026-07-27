@@ -1,6 +1,8 @@
 import { randomIssueCode } from "./crypto.ts";
 import { computePriority, type Reproducibility, type Severity } from "./priority.ts";
 import { normalizeTitle } from "./text.ts";
+import { bestEffortEnqueue, criticalAlertReasons, notificationDedupeKey, safeExcerpt } from "./notifications.ts";
+import { criticalPayload } from "./notification-reconciliation.ts";
 
 // Base44's generated registry is available to the frontend build, while hosted
 // functions expose dynamic entity collections. Keep this adapter localized.
@@ -69,7 +71,7 @@ export async function createIssueForSubmission(
   return recalculateIssue(sr, issue.id);
 }
 
-export async function recalculateIssue(sr: ServiceClient, issueId: string): Promise<Row> {
+export async function recalculateIssue(sr: ServiceClient, issueId: string, options: { reopened?: boolean } = {}): Promise<Row> {
   const issue = await sr.entities.Issue.get(issueId);
   const links = (await sr.entities.IssueReport.filter({ issue_id: issueId })).filter((row: Row) => row.review_status === "accepted");
   const submissions = await Promise.all(links.map((link: Row) => sr.entities.FeedbackSubmission.get(link.submission_id)));
@@ -97,7 +99,7 @@ export async function recalculateIssue(sr: ServiceClient, issueId: string): Prom
     reopened: issue.was_reopened === true || issue.status === "reopened",
   });
   const affected = new Set(submissions.map((row: Row) => row.reporter_email_hash || `anonymous:${row.id}`)).size;
-  const updated = await sr.entities.Issue.update(issueId, {
+  let updated = await sr.entities.Issue.update(issueId, {
     severity,
     reproducibility,
     core_workflow_blocked: submissions.some((row: Row) => row.ai_core_workflow_blocked === true),
@@ -117,6 +119,25 @@ export async function recalculateIssue(sr: ServiceClient, issueId: string): Prom
       created_at: new Date().toISOString(),
     });
   }
+  const alertReasons = criticalAlertReasons(issue, updated, options.reopened === true);
+  if (alertReasons.length) updated = await recordCriticalAlert(sr, updated, alertReasons.join("; "));
+  return updated;
+}
+
+export async function recordCriticalAlert(sr: ServiceClient, issue: Row, reason: string): Promise<Row> {
+  const nowIso = new Date().toISOString(); const version = Number(issue.critical_alert_version ?? 0) + 1;
+  const updated = await sr.entities.Issue.update(issue.id, { critical_alert_version: version, last_critical_alert_at: nowIso });
+  const event = await sr.entities.ActivityEvent.create({
+    project_id: issue.project_id, owner_id: issue.owner_id, issue_id: issue.id, event_type: "issue_critical_alert",
+    actor_type: "system", actor_id: "system", internal_message: "A critical owner alert condition was detected.",
+    metadata: { criticalAlertVersion: version, reason: safeExcerpt(reason, 300) }, created_at: nowIso,
+  });
+  const project = await sr.entities.Project.get(issue.project_id).catch(() => null);
+  if (project) await bestEffortEnqueue(sr, {
+    project, issue: updated, templateKey: "owner_critical_issue", recipientType: "owner",
+    dedupeKey: notificationDedupeKey("critical", [issue.id, String(version)]), activityEventId: event.id,
+    payload: criticalPayload(project, updated, reason),
+  });
   return updated;
 }
 

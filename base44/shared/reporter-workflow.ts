@@ -7,6 +7,7 @@ export async function loadTrackingContext(sr: any, token: string): Promise<{ gra
   const tokenHash = await sha256Hex(token);
   const grant = (await sr.entities.ReporterAccess.filter({ token_hash: tokenHash }))[0];
   if (!grant) throw new TrackingAccessError("Invalid or unknown tracking link", 404);
+  if (grant.revoked_at) throw new TrackingAccessError("This tracking link has been revoked", 410);
   if (accessGrantIsExpired(grant.expires_at)) throw new TrackingAccessError("This tracking link has expired", 410);
   const submission = await sr.entities.FeedbackSubmission.get(grant.submission_id).catch(() => null);
   if (!submission || submission.project_id !== grant.project_id) throw new TrackingAccessError("Report not found", 404);

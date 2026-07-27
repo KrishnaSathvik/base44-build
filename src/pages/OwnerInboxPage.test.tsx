@@ -15,6 +15,7 @@ vi.mock('@/lib/api', () => ({
   listMySubmissions: vi.fn(), listMyIssues: vi.fn(), listMyIssueReports: vi.fn(), listMyDuplicateSuggestions: vi.fn(),
   listMyAttachments: vi.fn(), getAttachmentAccess: vi.fn(), processFeedback: vi.fn(), reviewGrouping: vi.fn(),
   listMyReporterMessages: vi.fn(), markOwnerMessagesRead: vi.fn(),
+  listMyNotificationDeliveries: vi.fn().mockResolvedValue([]),
 }));
 
 function renderInbox() {

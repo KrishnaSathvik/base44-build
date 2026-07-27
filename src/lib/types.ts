@@ -11,6 +11,41 @@ export type FeedbackAttachment = EntityRecord['FeedbackAttachment'];
 export type IssueStatus = 'unreviewed' | 'needs_info' | 'open' | 'planned' | 'in_progress' | 'testing' | 'resolved' | 'reopened' | 'duplicate' | 'dismissed';
 export type ResolutionConfirmationStatus = 'not_requested' | 'pending' | 'confirmed' | 'not_fixed';
 
+export interface NotificationProjectSettings {
+  notification_delivery_enabled?: boolean;
+  critical_alerts_enabled?: boolean;
+  owner_reply_alerts_enabled?: boolean;
+  reporter_status_emails_enabled?: boolean;
+  daily_digest_enabled?: boolean;
+  daily_digest_include_empty?: boolean;
+  digest_timezone?: string;
+  digest_hour_local?: number;
+}
+export type NotificationProject = Project & NotificationProjectSettings;
+
+export interface NotificationDelivery {
+  id: string;
+  project_id: string;
+  owner_id: string;
+  issue_id?: string;
+  submission_id?: string;
+  activity_event_id?: string;
+  reporter_message_id?: string;
+  recipient_type: 'owner' | 'reporter';
+  template_key: 'owner_critical_issue' | 'owner_reporter_reply' | 'reporter_information_requested' | 'reporter_status_update' | 'reporter_issue_resolved' | 'reporter_issue_reopened' | 'owner_daily_digest';
+  channel: 'email';
+  dedupe_key: string;
+  status: 'pending' | 'sending' | 'sent' | 'failed' | 'skipped' | 'dead_letter';
+  attempt_count?: number;
+  next_attempt_at?: string;
+  last_attempt_at?: string;
+  sent_at?: string;
+  last_error_code?: string;
+  last_error_message?: string;
+  created_at?: string;
+  created_date?: string;
+}
+
 export type WorkflowIssue = Issue & {
   status: IssueStatus;
   status_reason?: string;
@@ -168,4 +203,6 @@ export interface TrackingView {
   ownAttachments: TrackingAttachment[];
   publicMessages: TrackingMessage[];
   publicActivityEvents: TrackingActivity[];
+  emailUpdatesEnabled?: boolean;
+  canManageEmailUpdates?: boolean;
 }

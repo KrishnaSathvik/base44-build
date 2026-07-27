@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
 import { assertTransition, isIssueStatus, transitionEventType, transitionRequirementError, transitionTimestamps } from "../../shared/issue-state-machine.ts";
 import { recalculateIssue } from "../../shared/issue-operations.ts";
+import { bestEffortEnqueue, notificationDedupeKey, reporterEmailEligible, safeExcerpt, type NotificationTemplate } from "../../shared/notifications.ts";
 import { ownerOwnsProject, validateDuplicateTarget } from "../../shared/reporter-workflow.ts";
 import { error, errorMessage, json } from "../../shared/response.ts";
 
@@ -21,14 +22,24 @@ async function ownerEmail(base44: any): Promise<string | null> {
   try { return (await base44.auth.me())?.email ?? null; } catch { return null; }
 }
 
-async function createMessageForSubmissions(sr: any, issue: Row, owner: string, body: string, messageType: string, visibility: "public" | "internal", nowIso: string) {
+async function createMessageForSubmissions(sr: any, issue: Row, owner: string, body: string, messageType: string, visibility: "public" | "internal", nowIso: string): Promise<Row[]> {
   const links = (await sr.entities.IssueReport.filter({ issue_id: issue.id })).filter((row: Row) => row.review_status !== "rejected");
   const targets = visibility === "public" ? links : links.slice(0, 1);
-  for (const link of targets) await sr.entities.ReporterMessage.create({
+  const messages: Row[] = [];
+  for (const link of targets) messages.push(await sr.entities.ReporterMessage.create({
     project_id: issue.project_id, owner_id: owner, submission_id: link.submission_id, issue_id: issue.id,
     sender_type: "owner", sender_user_id: owner, message_type: messageType, body, visibility,
     is_read_by_owner: true, is_read_by_reporter: false, created_at: nowIso,
-  });
+  }));
+  return messages;
+}
+
+function reporterTemplate(status: string): NotificationTemplate | null {
+  if (status === "needs_info") return "reporter_information_requested";
+  if (status === "resolved") return "reporter_issue_resolved";
+  if (status === "reopened") return "reporter_issue_reopened";
+  if (["planned", "in_progress", "testing"].includes(status)) return "reporter_status_update";
+  return null;
 }
 
 Deno.serve(async (req) => {
@@ -66,6 +77,7 @@ Deno.serve(async (req) => {
 
     const nowIso = new Date().toISOString();
     let updated = issue;
+    let sourceEvent: Row | null = null;
     if (!noteOnly) {
       const patch = transitionTimestamps(issue.status, targetStatus, nowIso, issue);
       Object.assign(patch, {
@@ -76,22 +88,39 @@ Deno.serve(async (req) => {
       if (targetStatus === "resolved") patch.public_resolution_note = input.publicMessage;
       if (targetStatus === "duplicate") patch.duplicate_of_issue_id = duplicateTarget!.id;
       updated = await sr.entities.Issue.update(issue.id, patch);
-      await sr.entities.ActivityEvent.create({
+      sourceEvent = await sr.entities.ActivityEvent.create({
         project_id: issue.project_id, owner_id: owner, issue_id: issue.id,
         event_type: transitionEventType(issue.status, targetStatus), actor_type: "owner", actor_id: owner,
         public_message: targetStatus === "resolved" ? input.publicMessage : undefined,
         internal_message: `Status changed from ${issue.status} to ${targetStatus}.`,
         metadata: { fromStatus: issue.status, toStatus: targetStatus, canonicalPublicCode: duplicateTarget?.public_code }, created_at: nowIso,
       });
-      if (["resolved", "reopened"].includes(targetStatus)) updated = await recalculateIssue(sr, issue.id);
+      if (["resolved", "reopened"].includes(targetStatus)) updated = await recalculateIssue(sr, issue.id, { reopened: targetStatus === "reopened" });
     }
 
     if (input.publicMessage) {
       const messageType = targetStatus === "needs_info" ? "request_information" : targetStatus === "resolved" ? "resolution_note" : "public_update";
-      await createMessageForSubmissions(sr, issue, owner, input.publicMessage, messageType, "public", nowIso);
+      const messages = await createMessageForSubmissions(sr, issue, owner, input.publicMessage, messageType, "public", nowIso);
       if (!noteOnly && ["needs_info", "resolved"].includes(targetStatus)) {
         // The transition event already represents this deliberate public message.
-      } else await sr.entities.ActivityEvent.create({ project_id: issue.project_id, owner_id: owner, issue_id: issue.id, event_type: "public_update_added", actor_type: "owner", actor_id: owner, public_message: input.publicMessage, created_at: nowIso });
+      } else sourceEvent = await sr.entities.ActivityEvent.create({ project_id: issue.project_id, owner_id: owner, issue_id: issue.id, event_type: "public_update_added", actor_type: "owner", actor_id: owner, public_message: input.publicMessage, created_at: nowIso });
+      const template = reporterTemplate(targetStatus);
+      if (template && sourceEvent) for (const message of messages) {
+        const submission = await sr.entities.FeedbackSubmission.get(message.submission_id).catch(() => null);
+        if (submission) {
+          const delivery = await bestEffortEnqueue(sr, {
+          project, issue: updated, submission, templateKey: template, recipientType: "reporter",
+          dedupeKey: notificationDedupeKey("reporter_status", [sourceEvent.id, submission.id]),
+          activityEventId: sourceEvent.id, reporterMessageId: message.id,
+          payload: { productName: project.name, issueTitle: updated.title, status: updated.status, message: safeExcerpt(input.publicMessage) },
+          });
+          if (!delivery && !reporterEmailEligible(project, submission)) await sr.entities.ActivityEvent.create({
+            project_id: issue.project_id, owner_id: owner, issue_id: issue.id, submission_id: submission.id,
+            event_type: "notification_skipped", actor_type: "system", actor_id: "system",
+            internal_message: "Reporter did not opt in", metadata: { templateKey: template, reason: "reporter_consent_missing" }, created_at: nowIso,
+          });
+        }
+      }
     }
     if (input.internalNote) {
       await createMessageForSubmissions(sr, issue, owner, input.internalNote, "public_update", "internal", nowIso);

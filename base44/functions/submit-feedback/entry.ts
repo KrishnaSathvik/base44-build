@@ -98,6 +98,8 @@ Deno.serve(async (req) => {
     }
 
     const nowIso = new Date().toISOString();
+    const reporterEmail = project.collect_reporter_email === false ? undefined : input.reporterEmail;
+    const reporterConsent = !!reporterEmail && input.emailUpdatesEnabled === true;
 
     // 3. Create the submission (original text preserved verbatim).
     const submission = await sr.entities.FeedbackSubmission.create({
@@ -109,8 +111,10 @@ Deno.serve(async (req) => {
       expected_behavior: input.expectedBehavior,
       reproduction_steps: input.reproductionSteps,
       page_url: input.pageUrl,
-      reporter_email: project.collect_reporter_email === false ? undefined : input.reporterEmail,
+      reporter_email: reporterEmail,
       reporter_email_hash: input.reporterEmail ? await sha256Hex(input.reporterEmail.trim().toLowerCase()) : undefined,
+      reporter_email_updates_enabled: reporterConsent,
+      reporter_email_consent_at: reporterConsent ? nowIso : undefined,
       browser_name: input.browserName,
       browser_version: input.browserVersion,
       operating_system: input.operatingSystem,
@@ -139,11 +143,11 @@ Deno.serve(async (req) => {
       owner_id: ownerId,
       submission_id: submission.id,
       token_hash: tokenHash,
+      purpose: "initial_tracking",
       expires_at: new Date(Date.now() + TOKEN_TTL_MS).toISOString(),
       email_updates_enabled:
         project.collect_reporter_email !== false &&
-        input.emailUpdatesEnabled === true &&
-        !!input.reporterEmail,
+        reporterConsent,
       created_at: nowIso,
     });
 

@@ -3,10 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
 import { TrackingPage } from '@/pages/TrackingPage';
-import { addReporterFollowUp, confirmResolution } from '@/lib/api';
+import { addReporterFollowUp, confirmResolution, disableReporterEmailConsent } from '@/lib/api';
 
-const baseView={feedbackType:'bug' as const,originalDescription:'Checkout freezes',publicIssueCode:'FI-123ABC',issueTitle:'Checkout freeze',status:'resolved' as const,publicResolutionNote:'Released a fix.',resolutionConfirmationStatus:'pending' as const,createdAt:'2026-01-01T00:00:00Z',resolvedAt:'2026-01-02T00:00:00Z',reopenedAt:null,originalContext:null,ownAttachments:[],publicActivityEvents:[],publicMessages:[{senderLabel:'Product team' as const,messageType:'resolution_note' as const,body:'Released a fix.',createdAt:'2026-01-02T00:00:00Z',ownAttachments:[]}]};
-vi.mock('@/lib/api',()=>({accessTrackingPage:vi.fn(()=>Promise.resolve(baseView)),getReporterAttachmentAccess:vi.fn(),uploadFollowUpAttachment:vi.fn(),addReporterFollowUp:vi.fn(),confirmResolution:vi.fn(),apiErrorMessage:vi.fn((error:Error)=>error.message)}));
+const baseView={feedbackType:'bug' as const,originalDescription:'Checkout freezes',publicIssueCode:'FI-123ABC',issueTitle:'Checkout freeze',status:'resolved' as const,publicResolutionNote:'Released a fix.',resolutionConfirmationStatus:'pending' as const,createdAt:'2026-01-01T00:00:00Z',resolvedAt:'2026-01-02T00:00:00Z',reopenedAt:null,originalContext:null,ownAttachments:[],publicActivityEvents:[],emailUpdatesEnabled:true,canManageEmailUpdates:true,publicMessages:[{senderLabel:'Product team' as const,messageType:'resolution_note' as const,body:'Released a fix.',createdAt:'2026-01-02T00:00:00Z',ownAttachments:[]}]};
+vi.mock('@/lib/api',()=>({accessTrackingPage:vi.fn(()=>Promise.resolve(baseView)),getReporterAttachmentAccess:vi.fn(),uploadFollowUpAttachment:vi.fn(),addReporterFollowUp:vi.fn(),confirmResolution:vi.fn(),disableReporterEmailConsent:vi.fn(),apiErrorMessage:vi.fn((error:Error)=>error.message)}));
 
 function renderPage(){const client=new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}});return render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/track/token-a']}><Routes><Route path="/track/:token" element={<TrackingPage/>}/></Routes></MemoryRouter></QueryClientProvider>);}
 
@@ -30,4 +30,8 @@ test('requires an explanation and reopens a not-fixed resolution',async()=>{
  fireEvent.change(screen.getByLabelText('If it is not fixed, what happened?'),{target:{value:'The button still hangs.'}});
  fireEvent.click(screen.getByRole('button',{name:'Reopen as not fixed'}));
  await waitFor(()=>expect(confirmResolution).toHaveBeenCalledWith(expect.objectContaining({choice:'not_fixed',explanation:'The button still hangs.'})));
+});
+
+test('lets a reporter disable future workflow emails',async()=>{
+ vi.mocked(disableReporterEmailConsent).mockResolvedValue({...baseView,emailUpdatesEnabled:false});renderPage();await screen.findByText('Email updates: On');fireEvent.click(screen.getByRole('button',{name:'Disable email updates'}));await waitFor(()=>expect(disableReporterEmailConsent).toHaveBeenCalledWith('token-a'));expect(await screen.findByText('Email updates: Off')).toBeVisible();
 });

@@ -7,7 +7,7 @@ import { Badge, Button, EmptyState, InlineError, Select, Skeleton } from '@/comp
 import { formatTime, severityLabel, typeLabel } from '@/lib/format';
 import {
   listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMySubmissions,
-  getAttachmentAccess, listMyAttachments, listMyReporterMessages, markOwnerMessagesRead, processFeedback, reviewGrouping,
+  getAttachmentAccess, listMyAttachments, listMyNotificationDeliveries, listMyReporterMessages, markOwnerMessagesRead, processFeedback, reviewGrouping,
 } from '@/lib/api';
 import type { DuplicateSuggestion, FeedbackAttachment, IntelligenceIssue, IntelligenceIssueReport, IntelligenceSubmission, ReporterMessage } from '@/lib/types';
 import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
@@ -40,6 +40,8 @@ export function OwnerInboxPage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const query = useQuery({ queryKey: ['inbox'], queryFn: loadInbox });
+  const deliveries=useQuery({queryKey:['notification-deliveries'],queryFn:listMyNotificationDeliveries});
+  const deliveryFailures=deliveries.data?.filter(item=>item.status==='failed'||item.status==='dead_letter').length??0;
 
   useEffect(() => {
     const refresh = () => { void queryClient.invalidateQueries({ queryKey: ['inbox'] }); void queryClient.invalidateQueries({ queryKey: ['issues'] }); };
@@ -70,6 +72,7 @@ export function OwnerInboxPage() {
 
   return <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-7 md:py-10">
     <header className="border-b border-line pb-7"><p className="fi-eyebrow">Report queue</p><h1 className="fi-display mt-3 text-4xl font-medium">Inbox</h1><p className="mt-2 text-sm text-ink-muted">Review intelligence, grouping evidence, and reports that still need a decision.</p></header>
+    {deliveryFailures>0&&<div role="status" className="mt-5 flex items-center justify-between gap-4 rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm"><span>{deliveryFailures} notification {deliveryFailures===1?'delivery needs':'deliveries need'} operational attention.</span><Link className="font-medium" to="/app/settings#notifications">Review notifications</Link></div>}
     <div className="flex gap-2 overflow-x-auto border-b border-line py-4" aria-label="Inbox filters">{FILTERS.map((item) => <button key={item.value} type="button" onClick={() => setFilter(item.value)} className={`min-h-10 shrink-0 rounded-md px-3 text-xs ${filter === item.value ? 'bg-ink text-white' : 'text-ink-muted hover:bg-surface'}`}>{item.label}</button>)}</div>
     {query.isLoading ? <div className="grid gap-6 py-6 lg:grid-cols-[380px_1fr]"><Skeleton className="h-[520px]"/><Skeleton className="h-[520px]"/></div> : query.isError ? <div className="py-8"><InlineError>Inbox data could not be loaded. Check your connection and retry.</InlineError></div> : !filtered.length ? <EmptyState icon={<Inbox className="h-5 w-5"/>} title="No reports in this view" description="New, failed, and reviewable reports will appear here without exposing them outside your project."/> : <div className="grid min-h-[620px] lg:grid-cols-[380px_minmax(0,1fr)]">
       <div className="border-line lg:border-r">{filtered.map((submission) => <ReportRow key={submission.id} submission={submission} data={query.data!} selected={submission.id === selectedId} onSelect={() => setSelectedId(submission.id)}/>)}</div>

@@ -15,6 +15,7 @@ vi.mock('@/lib/api', () => ({
   getReporterAttachmentAccess: vi.fn().mockResolvedValue({signedUrl:'https://signed.invalid/mine',expiresAt:'2026-01-01T00:05:00Z'}),
   apiErrorMessage: vi.fn(),
   addReporterFollowUp: vi.fn(), confirmResolution: vi.fn(), uploadFollowUpAttachment: vi.fn(),
+  disableReporterEmailConsent:vi.fn(),
 }));
 
 test('reporter sees only attachments projected for their tracking token', async () => {

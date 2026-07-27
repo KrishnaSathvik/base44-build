@@ -103,7 +103,9 @@
     },
     "resolution_confirmed_at": { "type": "string", "format": "date-time" },
     "last_owner_activity_at": { "type": "string", "format": "date-time" },
-    "last_reporter_activity_at": { "type": "string", "format": "date-time" }
+    "last_reporter_activity_at": { "type": "string", "format": "date-time" },
+    "critical_alert_version": { "type": "integer", "minimum": 0, "default": 0 },
+    "last_critical_alert_at": { "type": "string", "format": "date-time" }
   },
   "required": ["project_id", "owner_id", "public_code", "title", "status"],
   "rls": {

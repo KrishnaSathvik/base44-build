@@ -6,6 +6,7 @@ import { recalculateIssue } from "../../shared/issue-operations.ts";
 import { findIdempotentMessage, followUpAttachmentBelongsToReporter, followUpNextStatus, loadTrackingContext, TrackingAccessError } from "../../shared/reporter-workflow.ts";
 import { buildTrackingProjection } from "../../shared/tracking-projection.ts";
 import { error, errorMessage, json } from "../../shared/response.ts";
+import { bestEffortEnqueue, notificationDedupeKey, safeExcerpt } from "../../shared/notifications.ts";
 
 const schema = z.object({
   token: z.string().min(1), idempotencyKey: z.string().uuid(), body: z.string().trim().min(1).max(5000),
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
     if (nextStatus !== issue.status && isIssueStatus(issue.status) && isIssueStatus(nextStatus)) Object.assign(issuePatch, transitionTimestamps(issue.status, nextStatus, nowIso, issue));
     if (rejectingFix) Object.assign(issuePatch, { resolution_confirmation_status: "not_fixed", was_reopened: true });
     await sr.entities.Issue.update(issue.id, issuePatch);
-    await sr.entities.ActivityEvent.create({
+    const followUpEvent = await sr.entities.ActivityEvent.create({
       project_id: issue.project_id, owner_id: issue.owner_id, issue_id: issue.id, submission_id: submission.id,
       event_type: "reporter_follow_up", actor_type: "reporter", actor_id: "reporter",
       public_message: rejectingFix ? "The reporter said the fix did not work." : "The reporter added a follow-up.",
@@ -57,7 +58,14 @@ Deno.serve(async (req) => {
       event_type: rejectingFix ? "issue_reopened" : "issue_status_changed", actor_type: "system", actor_id: "system",
       public_message: rejectingFix ? "The issue was reopened." : "The issue is open for review.", metadata: { fromStatus: issue.status, toStatus: nextStatus }, created_at: nowIso,
     });
-    if (rejectingFix) await recalculateIssue(sr, issue.id);
+    const project = await sr.entities.Project.get(issue.project_id).catch(() => null);
+    if (project) await bestEffortEnqueue(sr, {
+      project, issue, templateKey: "owner_reporter_reply", recipientType: "owner",
+      dedupeKey: notificationDedupeKey("reporter_reply", [message.id, issue.owner_id]),
+      activityEventId: followUpEvent.id, reporterMessageId: message.id,
+      payload: { productName: project.name, issueTitle: issue.title, status: nextStatus, message: safeExcerpt(parsed.data.body) },
+    });
+    if (rejectingFix) await recalculateIssue(sr, issue.id, { reopened: true });
     return json({ success: true, duplicate: false, tracking: await buildTrackingProjection(sr, submission, await sr.entities.Issue.get(issue.id)) });
   } catch (err) {
     if (err instanceof TrackingAccessError) return error(err.message, err.status);

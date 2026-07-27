@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
-import { OwnerIssueDetailPage } from '@/pages/OwnerIssueDetailPage';
+import { deliveryIndicator, OwnerIssueDetailPage } from '@/pages/OwnerIssueDetailPage';
 
 vi.mock('@/api/base44Client',()=>({base44:{entities:{Issue:{subscribe:vi.fn(()=>()=>undefined)},ReporterMessage:{subscribe:vi.fn(()=>()=>undefined)},ActivityEvent:{subscribe:vi.fn(()=>()=>undefined)}}}}));
 vi.mock('@/lib/api',()=>({
@@ -14,6 +14,7 @@ vi.mock('@/lib/api',()=>({
   {id:'reply',project_id:'p1',owner_id:'owner',submission_id:'s1',issue_id:'issue-1',sender_type:'reporter',message_type:'reporter_follow_up',body:'Unread reply',visibility:'public',is_read_by_owner:false},
  ]),
  getAttachmentAccess:vi.fn(),getAttachmentsForSubmission:vi.fn(),getSubmission:vi.fn(),markOwnerMessagesRead:vi.fn(),updateIssueStatus:vi.fn(),
+ listMyNotificationDeliveries:vi.fn().mockResolvedValue([]),
 }));
 
 test('distinguishes public, internal, and unread reporter messages',async()=>{
@@ -21,3 +22,5 @@ test('distinguishes public, internal, and unread reporter messages',async()=>{
  expect(await screen.findByText('Reporter-visible update')).toBeVisible();expect(screen.getByText('Owner-only investigation')).toBeVisible();expect(screen.getByText('Unread reply')).toBeVisible();
  expect(screen.getAllByText('Internal note')[0]).toBeVisible();expect(screen.getByText('Reporter message')).toBeVisible();expect(screen.getByLabelText('Unread')).toBeVisible();
 });
+
+test('maps restrained issue delivery indicators',()=>{expect(deliveryIndicator('pending')).toBe('Email queued');expect(deliveryIndicator('sent')).toBe('Email sent');expect(deliveryIndicator('failed')).toBe('Email failed');expect(deliveryIndicator('skipped','preference_disabled')).toBe('Reporter did not opt in');});
