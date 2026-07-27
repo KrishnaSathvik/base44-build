@@ -7,6 +7,7 @@ export type FeedbackSubmission = EntityRecord['FeedbackSubmission'];
 export type Issue = EntityRecord['Issue'];
 export type IssueReport = EntityRecord['IssueReport'];
 export type ActivityEvent = EntityRecord['ActivityEvent'];
+export type FeedbackAttachment = EntityRecord['FeedbackAttachment'];
 
 export interface DuplicateSuggestion {
   id: string;
@@ -71,6 +72,27 @@ export interface SubmitFeedbackResult {
   trackingUrl?: string | null;
 }
 
+export interface AttachmentAccess { signedUrl: string; expiresAt: string }
+export interface TrackingAttachment {
+  accessKey: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+}
+export interface TrackingContext {
+  browserName: string | null;
+  browserVersion: string | null;
+  operatingSystem: string | null;
+  deviceType: string | null;
+  screenWidth: number | null;
+  screenHeight: number | null;
+  viewportWidth: number | null;
+  viewportHeight: number | null;
+  pageUrl: string | null;
+}
+
 export interface PublicProject {
   slug: string;
   name: string;
@@ -89,12 +111,14 @@ export interface TrackingActivity {
 }
 
 export interface TrackingView {
-  submissionRef: string;
   reportType: FeedbackType;
   originalDescription: string;
   publicCode: string | null;
   issueTitle: string | null;
   status: string;
   publicResolutionNote: string | null;
+  submittedAt: string | null;
+  context: TrackingContext | null;
+  attachments: TrackingAttachment[];
   activity: TrackingActivity[];
 }

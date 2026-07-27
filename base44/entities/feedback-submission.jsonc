@@ -40,6 +40,12 @@
     "device_type": { "type": "string" },
     "screen_width": { "type": "integer", "minimum": 0 },
     "screen_height": { "type": "integer", "minimum": 0 },
+    "viewport_width": { "type": "integer", "minimum": 0 },
+    "viewport_height": { "type": "integer", "minimum": 0 },
+    "context_included": {
+      "type": "boolean",
+      "description": "Whether the reporter reviewed and retained optional browser/device context"
+    },
     "reporter_email": {
       "type": "string",
       "format": "email",

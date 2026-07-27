@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { OwnerInboxPage } from '@/pages/OwnerInboxPage';
-import { listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMySubmissions, processFeedback, reviewGrouping } from '@/lib/api';
+import { listMyAttachments, listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMySubmissions, processFeedback, reviewGrouping } from '@/lib/api';
 
 vi.mock('@/api/base44Client', () => ({
   base44: { entities: {
@@ -12,7 +12,7 @@ vi.mock('@/api/base44Client', () => ({
 }));
 vi.mock('@/lib/api', () => ({
   listMySubmissions: vi.fn(), listMyIssues: vi.fn(), listMyIssueReports: vi.fn(), listMyDuplicateSuggestions: vi.fn(),
-  processFeedback: vi.fn(), reviewGrouping: vi.fn(),
+  listMyAttachments: vi.fn(), getAttachmentAccess: vi.fn(), processFeedback: vi.fn(), reviewGrouping: vi.fn(),
 }));
 
 function renderInbox() {
@@ -21,6 +21,7 @@ function renderInbox() {
 }
 
 test('shows explainable duplicate evidence and accepts a suggestion', async () => {
+  vi.mocked(listMyAttachments).mockResolvedValue([]);
   vi.mocked(listMySubmissions).mockResolvedValue([{ id: 'report-1', project_id: 'p1', owner_id: 'owner@test.dev', type: 'bug', description: 'Send button freezes on checkout', processing_status: 'completed', ai_summary: 'Checkout send button freezes', ai_severity: 'high', ai_product_area: 'Checkout', ai_category: 'functionality', ai_confidence: .91 } as never]);
   vi.mocked(listMyIssues).mockResolvedValue([
     { id: 'source', public_code: 'FI-SOURCE', title: 'Checkout send button freezes', status: 'unreviewed', report_count: 1 } as never,
@@ -38,6 +39,7 @@ test('shows explainable duplicate evidence and accepts a suggestion', async () =
 });
 
 test('keeps failed evidence reviewable and exposes retry', async () => {
+  vi.mocked(listMyAttachments).mockResolvedValue([]);
   vi.mocked(listMySubmissions).mockResolvedValue([{ id: 'report-failed', project_id: 'p1', owner_id: 'owner@test.dev', type: 'general', description: 'Original evidence stays visible', processing_status: 'failed', processing_error: 'Invalid classifier output' } as never]);
   vi.mocked(listMyIssues).mockResolvedValue([]);
   vi.mocked(listMyIssueReports).mockResolvedValue([]);

@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
 import { json, error, errorMessage } from "../../shared/response.ts";
 import { sha256Hex } from "../../shared/crypto.ts";
+import { accessGrantIsExpired } from "../../shared/attachment-security.ts";
 
 const payloadSchema = z.object({
   token: z.string().min(1),
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
     if (!grant) {
       return error("Invalid or unknown tracking link", 404);
     }
-    if (grant.expires_at && new Date(grant.expires_at).getTime() < Date.now()) {
+    if (accessGrantIsExpired(grant.expires_at)) {
       return error("This tracking link has expired", 410);
     }
 
@@ -56,6 +57,7 @@ Deno.serve(async (req) => {
 
     const links = await sr.entities.IssueReport.filter({ submission_id: submission.id });
     const issue = links[0] ? await sr.entities.Issue.get(links[0].issue_id) : null;
+    const attachments = await sr.entities.FeedbackAttachment.filter({ submission_id: submission.id });
 
     // Only events carrying a reporter-safe public_message are surfaced.
     const submissionEvents = (await sr.entities.ActivityEvent.filter(
@@ -74,13 +76,34 @@ Deno.serve(async (req) => {
     // Safe projection only. No reporter email, owner identity, internal notes,
     // token hash, or internal IDs beyond the public reference.
     return json({
-      submissionRef: submission.id,
       reportType: submission.type,
       originalDescription: submission.description,
       publicCode: issue?.public_code ?? null,
       issueTitle: issue?.title ?? null,
       status: issue?.status ?? "processing",
       publicResolutionNote: issue?.public_resolution_note ?? null,
+      submittedAt: submission.created_at ?? submission.created_date ?? null,
+      context: submission.context_included === true ? {
+        browserName: submission.browser_name ?? null,
+        browserVersion: submission.browser_version ?? null,
+        operatingSystem: submission.operating_system ?? null,
+        deviceType: submission.device_type ?? null,
+        screenWidth: submission.screen_width ?? null,
+        screenHeight: submission.screen_height ?? null,
+        viewportWidth: submission.viewport_width ?? null,
+        viewportHeight: submission.viewport_height ?? null,
+        pageUrl: submission.page_url ?? null,
+      } : null,
+      attachments: attachments
+        .filter((attachment) => attachment.upload_status === "completed")
+        .map((attachment) => ({
+          accessKey: attachment.attachment_key,
+          fileName: attachment.file_name,
+          mimeType: attachment.mime_type,
+          sizeBytes: attachment.size_bytes,
+          width: attachment.width ?? null,
+          height: attachment.height ?? null,
+        })),
       activity,
     });
   } catch (err) {

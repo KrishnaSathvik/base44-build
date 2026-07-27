@@ -1,0 +1,44 @@
+{
+  "name": "FeedbackAttachment",
+  "description": "Private screenshot evidence associated with one feedback submission. Storage URIs are never exposed through public functions.",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string" },
+    "owner_id": { "type": "string" },
+    "submission_id": { "type": "string", "description": "Draft submission key until finalization, then the FeedbackSubmission record id" },
+    "submission_key": { "type": "string", "description": "Client UUID used to safely finalize and retry attachment association" },
+    "attachment_key": { "type": "string", "description": "Client UUID used for upload idempotency and reporter-safe access" },
+    "file_uri": {
+      "type": "string",
+      "description": "Private Base44 storage URI. Accessible only to trusted service-role functions.",
+      "rls": {
+        "read": { "user_condition": { "role": "admin" } },
+        "write": { "user_condition": { "role": "admin" } }
+      }
+    },
+    "file_name": { "type": "string" },
+    "mime_type": { "type": "string", "enum": ["image/png", "image/jpeg", "image/webp"] },
+    "size_bytes": { "type": "integer", "minimum": 0, "maximum": 10485760 },
+    "width": { "type": "integer", "minimum": 0 },
+    "height": { "type": "integer", "minimum": 0 },
+    "source": { "type": "string", "enum": ["browse", "paste", "camera", "library"] },
+    "upload_status": {
+      "type": "string",
+      "enum": ["pending", "completed", "failed", "deleted"],
+      "default": "pending"
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["project_id", "owner_id", "submission_id", "submission_key", "attachment_key", "file_uri", "file_name", "mime_type", "size_bytes", "source", "upload_status", "created_at"],
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": {
+      "$or": [
+        { "data.owner_id": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

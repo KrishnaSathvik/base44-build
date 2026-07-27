@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, ArrowRightLeft, Check, Inbox, RefreshCw, Split, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, ArrowRightLeft, Check, Inbox, Monitor, RefreshCw, Split, X } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge, Button, EmptyState, InlineError, Select, Skeleton } from '@/components/ui';
 import { formatTime, severityLabel, typeLabel } from '@/lib/format';
 import {
   listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMySubmissions,
-  processFeedback, reviewGrouping,
+  getAttachmentAccess, listMyAttachments, processFeedback, reviewGrouping,
 } from '@/lib/api';
-import type { DuplicateSuggestion, IntelligenceIssue, IntelligenceIssueReport, IntelligenceSubmission } from '@/lib/types';
+import type { DuplicateSuggestion, FeedbackAttachment, IntelligenceIssue, IntelligenceIssueReport, IntelligenceSubmission } from '@/lib/types';
+import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
 
 type Filter = 'all' | 'unreviewed' | 'duplicates' | 'failed' | 'needs_info' | 'screenshots';
 const FILTERS: Array<{ value: Filter; label: string }> = [
@@ -22,13 +23,14 @@ interface InboxData {
   issues: IntelligenceIssue[];
   links: IntelligenceIssueReport[];
   suggestions: DuplicateSuggestion[];
+  attachments: FeedbackAttachment[];
 }
 
 async function loadInbox(): Promise<InboxData> {
-  const [submissions, issues, links, suggestions] = await Promise.all([
-    listMySubmissions(), listMyIssues(), listMyIssueReports(), listMyDuplicateSuggestions(),
+  const [submissions, issues, links, suggestions, attachments] = await Promise.all([
+    listMySubmissions(), listMyIssues(), listMyIssueReports(), listMyDuplicateSuggestions(), listMyAttachments(),
   ]);
-  return { submissions, issues: issues as IntelligenceIssue[], links, suggestions };
+  return { submissions, issues: issues as IntelligenceIssue[], links, suggestions, attachments };
 }
 
 export function OwnerInboxPage() {
@@ -55,7 +57,7 @@ export function OwnerInboxPage() {
       if (filter === 'duplicates') return pendingSuggestion;
       if (filter === 'failed') return submission.processing_status === 'failed';
       if (filter === 'needs_info') return issue?.status === 'needs_info';
-      if (filter === 'screenshots') return false;
+      if (filter === 'screenshots') return query.data.attachments.some((item) => item.submission_id === submission.id && item.upload_status === 'completed');
       return submission.processing_status !== 'completed' || issue?.status === 'unreviewed' || pendingSuggestion;
     });
   }, [filter, query.data]);
@@ -92,6 +94,8 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
   const [targetId, setTargetId] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const attachments = data.attachments.filter((item) => item.submission_id === submission.id && item.upload_status === 'completed');
+  const attachmentAccess = useCallback((item: GalleryAttachment) => getAttachmentAccess(item.id ?? ''), []);
   const mutation = useMutation({
     mutationFn: async (action: Parameters<typeof reviewGrouping>[0] | { action: 'retry' }) => {
       if (action.action === 'retry') return processFeedback(submission.id, true);
@@ -106,6 +110,8 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
     <div className="flex flex-wrap items-center gap-3"><ProcessingBadge status={submission.processing_status}/>{submission.ai_severity && <span className="fi-mono text-[10px] uppercase text-ink-muted">{severityLabel(submission.ai_severity)} severity</span>}{submission.ai_confidence !== undefined && <span className="fi-mono text-[10px] text-ink-faint">{Math.round(submission.ai_confidence * 100)}% classification confidence</span>}</div>
     <h2 className="fi-display mt-4 text-3xl font-medium">{submission.ai_summary || 'Original report'}</h2>
     <section className="mt-8 border-y border-line bg-surface px-5 py-6"><p className="fi-eyebrow">Original report</p><blockquote className="mt-4 border-l-2 border-critical pl-4 text-base leading-7">{submission.description}</blockquote>{submission.expected_behavior && <div className="mt-5 border-t border-line pt-4"><p className="fi-eyebrow">Expected behavior</p><p className="mt-2 text-sm text-ink-muted">{submission.expected_behavior}</p></div>}</section>
+    <section className="mt-8"><p className="fi-eyebrow">Screenshot evidence</p><div className="mt-4"><AttachmentGallery attachments={attachments} getAccess={attachmentAccess}/></div></section>
+    <section className="mt-8"><p className="fi-eyebrow">Environment</p>{submission.context_included?<div className="mt-4 grid gap-px bg-line sm:grid-cols-2"><Fact label="Browser" value={[submission.browser_name,submission.browser_version].filter(Boolean).join(' ')}/><Fact label="Device" value={[submission.device_type,submission.operating_system].filter(Boolean).join(' · ')}/><Fact label="Screen" value={dimension(submission.screen_width,submission.screen_height)}/><Fact label="Viewport" value={dimension(submission.viewport_width,submission.viewport_height)}/><Fact label="Page" value={submission.page_url}/><Fact label="Submitted" value={formatTime(submission.created_at ?? submission.created_date)}/></div>:<p className="mt-4 flex items-center gap-2 text-xs text-ink-faint"><Monitor className="h-4 w-4"/>Reporter removed optional context.</p>}</section>
     {submission.processing_status === 'failed' && <section className="mt-6 rounded-lg border border-critical/30 bg-critical-soft p-5"><div className="flex items-center gap-2 text-sm font-medium text-critical"><AlertTriangle className="h-4 w-4"/>Processing failed</div><p className="mt-2 text-xs leading-5 text-critical">{submission.processing_error || 'The report could not be classified.'}</p><Button className="mt-4" variant="secondary" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'retry' })}><RefreshCw className="h-4 w-4"/>Retry</Button></section>}
     {submission.processing_status === 'completed' && <section className="mt-8"><p className="fi-eyebrow">AI classification</p><div className="mt-4 grid gap-px bg-line sm:grid-cols-3"><Fact label="Category" value={submission.ai_category}/><Fact label="Product area" value={submission.ai_product_area}/><Fact label="Reproducibility" value={submission.ai_reproducibility}/></div>{submission.ai_severity_reasons?.length ? <ul className="mt-4 list-disc space-y-1 pl-5 text-xs text-ink-muted">{submission.ai_severity_reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}</section>}
     {suggestion && candidate && <section className="mt-8 rounded-lg border border-warning/35 bg-warning-soft/45 p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="fi-eyebrow">Possible duplicate</p><h3 className="mt-2 text-base font-medium">{candidate.public_code} · {candidate.title}</h3></div><Badge tone="warning">{Math.round((suggestion.similarity_score ?? 0) * 100)}% match</Badge></div><div className="mt-5 grid gap-5 sm:grid-cols-2"><Evidence title="Why it may match" items={suggestion.matching_reasons}/><Evidence title="Conflicting evidence" items={suggestion.conflicting_evidence}/></div><div className="mt-5 flex flex-wrap gap-2"><Button disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'accept', suggestionId: suggestion.id })}><Check className="h-4 w-4"/>Accept grouping</Button><Button variant="secondary" disabled={mutation.isPending} onClick={() => mutation.mutate({ action: 'reject', suggestionId: suggestion.id })}><X className="h-4 w-4"/>Keep separate</Button></div></section>}
@@ -118,3 +124,4 @@ function issueForSubmission(submissionId: string, links: IntelligenceIssueReport
 function ProcessingBadge({ status }: { status?: string }) { if (status === 'failed') return <Badge tone="critical">Failed</Badge>; if (status === 'processing' || status === 'pending') return <Badge tone="warning">{status}</Badge>; return <Badge tone="success">Processed</Badge>; }
 function Fact({ label, value }: { label: string; value?: string }) { return <div className="bg-surface p-4"><p className="fi-mono text-[9px] uppercase text-ink-faint">{label}</p><p className="mt-2 text-sm capitalize">{value?.replace('_', ' ') || 'Unknown'}</p></div>; }
 function Evidence({ title, items }: { title: string; items?: string[] }) { return <div><p className="text-xs font-medium">{title}</p>{items?.length ? <ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-5 text-ink-muted">{items.map((item) => <li key={item}>{item}</li>)}</ul> : <p className="mt-2 text-xs text-ink-faint">None reported.</p>}</div>; }
+function dimension(width?: number, height?: number) { return width && height ? `${width} × ${height}` : undefined; }

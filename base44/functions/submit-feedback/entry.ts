@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
 import { json, error, errorMessage } from "../../shared/response.ts";
 import { generateTrackingToken, sha256Hex } from "../../shared/crypto.ts";
+import { canAssociateAttachment, MAX_ATTACHMENTS } from "../../shared/attachment-security.ts";
 
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -21,6 +22,10 @@ const payloadSchema = z.object({
   deviceType: z.string().max(80).optional(),
   screenWidth: z.number().int().min(0).max(20000).optional(),
   screenHeight: z.number().int().min(0).max(20000).optional(),
+  viewportWidth: z.number().int().min(0).max(20000).optional(),
+  viewportHeight: z.number().int().min(0).max(20000).optional(),
+  contextIncluded: z.boolean().optional(),
+  attachmentIds: z.array(z.string().min(1)).max(MAX_ATTACHMENTS).default([]),
   // Honeypot: real users never fill this hidden field.
   website: z.string().optional(),
 });
@@ -59,12 +64,22 @@ Deno.serve(async (req) => {
     const ownerId: string = project.created_by ?? project.owner_id ?? "";
     const projectId: string = project.id;
 
+    const uniqueAttachmentIds = [...new Set(input.attachmentIds)];
+    if (uniqueAttachmentIds.length !== input.attachmentIds.length) return error("Duplicate attachment association", 400);
+    const requestedAttachments = await Promise.all(uniqueAttachmentIds.map((id) => sr.entities.FeedbackAttachment.get(id).catch(() => null)));
+    if (requestedAttachments.some((item) => !item || !canAssociateAttachment(projectId, input.submissionKey, item))) {
+      return error("Invalid attachment association", 400);
+    }
+
     // 2. Idempotency: a retry with the same key must not create a second report.
     const existing = await sr.entities.FeedbackSubmission.filter({
       project_id: projectId,
       submission_key: input.submissionKey,
     });
     if (existing[0]) {
+      await Promise.all(requestedAttachments.filter(Boolean).map((attachment) =>
+        attachment.submission_id === existing[0].id ? Promise.resolve() : sr.entities.FeedbackAttachment.update(attachment.id, { submission_id: existing[0].id })
+      ));
       const priorLinks = await sr.entities.IssueReport.filter({
         submission_id: existing[0].id,
       });
@@ -102,10 +117,19 @@ Deno.serve(async (req) => {
       device_type: input.deviceType,
       screen_width: input.screenWidth,
       screen_height: input.screenHeight,
+      viewport_width: input.viewportWidth,
+      viewport_height: input.viewportHeight,
+      context_included: input.contextIncluded === true,
       processing_status: "pending",
       processing_attempts: 0,
       created_at: nowIso,
     });
+
+    // Associate only prevalidated, idempotently uploaded private files. Creation
+    // of the submission is the finalization point that activates processing.
+    await Promise.all(requestedAttachments.filter(Boolean).map((attachment) =>
+      sr.entities.FeedbackAttachment.update(attachment.id, { submission_id: submission.id })
+    ));
 
     // 4. Create the private tracking grant (store only the hash).
     const rawToken = generateTrackingToken();

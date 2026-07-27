@@ -3,6 +3,7 @@ import type {
   ActivityEvent,
   DuplicateSuggestion,
   FeedbackSubmission,
+  FeedbackAttachment,
   FeedbackType,
   Issue,
   IntelligenceSubmission,
@@ -11,7 +12,9 @@ import type {
   PublicProject,
   SubmitFeedbackResult,
   TrackingView,
+  AttachmentAccess,
 } from '@/lib/types';
+import type { AttachmentSource } from '@/lib/attachments';
 
 // Stage resources exist in the local schemas before the generated Base44
 // registry is refreshed during the eventual deployment workflow.
@@ -41,6 +44,26 @@ export interface SubmitFeedbackPayload {
   emailUpdatesEnabled?: boolean;
   /** Honeypot — left empty by real users; a value signals a bot. */
   website?: string;
+  browserName?: string;
+  browserVersion?: string;
+  operatingSystem?: string;
+  deviceType?: string;
+  screenWidth?: number;
+  screenHeight?: number;
+  viewportWidth?: number;
+  viewportHeight?: number;
+  contextIncluded?: boolean;
+  attachmentIds?: string[];
+}
+
+export interface UploadFeedbackAttachmentPayload {
+  projectSlug: string;
+  submissionKey: string;
+  attachmentKey: string;
+  source: AttachmentSource;
+  width?: number;
+  height?: number;
+  file: File;
 }
 
 export type GroupingAction =
@@ -67,6 +90,17 @@ export async function accessTrackingPage(token: string): Promise<TrackingView> {
   return res.data as TrackingView;
 }
 
+export async function uploadFeedbackAttachment(payload: UploadFeedbackAttachmentPayload): Promise<{ attachmentId: string; duplicate: boolean }> {
+  const { file, ...metadata } = payload;
+  const res = await stageFunctions.invoke('upload-feedback-attachment', { file, metadata });
+  return res.data as { attachmentId: string; duplicate: boolean };
+}
+
+export async function getReporterAttachmentAccess(token: string, attachmentKey: string): Promise<AttachmentAccess> {
+  const res = await stageFunctions.invoke('get-reporter-attachment-access', { token, attachmentKey });
+  return res.data as AttachmentAccess;
+}
+
 export async function processFeedback(submissionId: string, retry = false): Promise<void> {
   await stageFunctions.invoke('process-feedback', { submissionId, retry });
 }
@@ -86,6 +120,11 @@ export async function resolveIssue(
 
 export async function reviewGrouping(action: GroupingAction): Promise<void> {
   await stageFunctions.invoke('review-grouping', action);
+}
+
+export async function getAttachmentAccess(attachmentId: string): Promise<AttachmentAccess> {
+  const res = await stageFunctions.invoke('get-attachment-access', { attachmentId });
+  return res.data as AttachmentAccess;
 }
 
 // ---- Authenticated owner: direct entity access (RLS-scoped to the owner) ----
@@ -158,6 +197,14 @@ export async function listMyDuplicateSuggestions(): Promise<DuplicateSuggestion[
     DuplicateSuggestion: { list: (sort?: string, limit?: number) => Promise<DuplicateSuggestion[]> };
   };
   return entities.DuplicateSuggestion.list('-created_date', 200);
+}
+
+export async function listMyAttachments(): Promise<FeedbackAttachment[]> {
+  return base44.entities.FeedbackAttachment.list('-created_date', 500);
+}
+
+export async function getAttachmentsForSubmission(submissionId: string): Promise<FeedbackAttachment[]> {
+  return base44.entities.FeedbackAttachment.filter({ submission_id: submissionId }, 'created_date');
 }
 
 export async function getIssue(id: string): Promise<Issue> {
