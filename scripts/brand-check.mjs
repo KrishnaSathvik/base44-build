@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { configuredHostedUrlReason } from './brand-policy.mjs';
 
 const roots = /^(src|public|base44|scripts\/demo|docs)\//;
 const rootFiles = new Set(['index.html', 'README.md', 'CLAUDE.md', 'RELEASE_NOTES.md', 'package.json', 'package-lock.json', '.env.example', 'vite.config.ts', 'tailwind.config.js']);
@@ -31,6 +32,8 @@ function allowed(file, match, surrounding) {
   if ((file === 'package.json' || file === 'package-lock.json') && match.toLowerCase() === 'vensaos') return 'private package identifier';
   if (file.startsWith('docs/') && match === 'vensaos' && (/npm create|cd vensaos|"name": "vensaos"|vensaos\//.test(surrounding))) return 'documentation of the lowercase package/directory identifier';
   if (file.startsWith('dist/') && (surrounding.includes('feedback-inbox-local') || surrounding.includes('feedback-inbox:before-update'))) return 'built stable client-side technical identifier';
+  const hostedUrlReason = configuredHostedUrlReason({ file, match, surrounding, appBaseUrl: process.env.APP_BASE_URL });
+  if (hostedUrlReason) return hostedUrlReason;
   return '';
 }
 
