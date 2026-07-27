@@ -1,112 +1,23 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
-import { json, error, errorMessage } from "../../shared/response.ts";
-import { sha256Hex } from "../../shared/crypto.ts";
-import { accessGrantIsExpired } from "../../shared/attachment-security.ts";
+import { loadTrackingContext, TrackingAccessError } from "../../shared/reporter-workflow.ts";
+import { buildTrackingProjection } from "../../shared/tracking-projection.ts";
+import { error, errorMessage, json } from "../../shared/response.ts";
 
-const payloadSchema = z.object({
-  token: z.string().min(1),
-});
-
-interface PublicActivity {
-  eventType: string;
-  message: string;
-  createdAt: string | null;
-}
-
-// The Base44 SDK's dynamic entity access is untyped in the Deno function context
-// (the generated registry augmentation applies to the frontend tsconfig only), so
-// we narrow the query result to the known ActivityEvent fields we read.
-interface EventRow {
-  event_type: string;
-  public_message?: string;
-  created_at?: string;
-}
+const schema = z.object({ token: z.string().min(1) });
 
 Deno.serve(async (req) => {
   try {
-    const body = await req.json().catch(() => null);
-    const parsed = payloadSchema.safeParse(body);
-    if (!parsed.success) {
-      return error("Invalid request", 400);
-    }
-
-    const base44 = createClientFromRequest(req);
-    const sr = base44.asServiceRole;
-
-    // Look the grant up by token hash — the raw token is never stored.
-    const tokenHash = await sha256Hex(parsed.data.token);
-    const grants = await sr.entities.ReporterAccess.filter({ token_hash: tokenHash });
-    const grant = grants[0];
-    if (!grant) {
-      return error("Invalid or unknown tracking link", 404);
-    }
-    if (accessGrantIsExpired(grant.expires_at)) {
-      return error("This tracking link has expired", 410);
-    }
-
-    // Touch last-accessed (best effort; never block the read on it).
-    await sr.entities.ReporterAccess.update(grant.id, {
-      last_accessed_at: new Date().toISOString(),
-    }).catch(() => {});
-
-    const submission = await sr.entities.FeedbackSubmission.get(grant.submission_id);
-    if (!submission) {
-      return error("Report not found", 404);
-    }
-
-    const links = await sr.entities.IssueReport.filter({ submission_id: submission.id });
-    const issue = links[0] ? await sr.entities.Issue.get(links[0].issue_id) : null;
-    const attachments = await sr.entities.FeedbackAttachment.filter({ submission_id: submission.id });
-
-    // Only events carrying a reporter-safe public_message are surfaced.
-    const submissionEvents = (await sr.entities.ActivityEvent.filter(
-      { submission_id: submission.id }, "created_date",
-    )) as EventRow[];
-    const issueEvents = issue ? (await sr.entities.ActivityEvent.filter(
-      { issue_id: issue.id }, "created_date",
-    )) as EventRow[] : [];
-    const seen = new Set<string>();
-    const activity: PublicActivity[] = [...submissionEvents, ...issueEvents]
-      .filter((e) => !!e.public_message)
-      .filter((e) => { const key = `${e.event_type}:${e.created_at}:${e.public_message}`; if (seen.has(key)) return false; seen.add(key); return true; })
-      .map((e) => ({ eventType: e.event_type, message: e.public_message as string, createdAt: e.created_at ?? null }))
-      .sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""));
-
-    // Safe projection only. No reporter email, owner identity, internal notes,
-    // token hash, or internal IDs beyond the public reference.
-    return json({
-      reportType: submission.type,
-      originalDescription: submission.description,
-      publicCode: issue?.public_code ?? null,
-      issueTitle: issue?.title ?? null,
-      status: issue?.status ?? "processing",
-      publicResolutionNote: issue?.public_resolution_note ?? null,
-      submittedAt: submission.created_at ?? submission.created_date ?? null,
-      context: submission.context_included === true ? {
-        browserName: submission.browser_name ?? null,
-        browserVersion: submission.browser_version ?? null,
-        operatingSystem: submission.operating_system ?? null,
-        deviceType: submission.device_type ?? null,
-        screenWidth: submission.screen_width ?? null,
-        screenHeight: submission.screen_height ?? null,
-        viewportWidth: submission.viewport_width ?? null,
-        viewportHeight: submission.viewport_height ?? null,
-        pageUrl: submission.page_url ?? null,
-      } : null,
-      attachments: attachments
-        .filter((attachment) => attachment.upload_status === "completed")
-        .map((attachment) => ({
-          accessKey: attachment.attachment_key,
-          fileName: attachment.file_name,
-          mimeType: attachment.mime_type,
-          sizeBytes: attachment.size_bytes,
-          width: attachment.width ?? null,
-          height: attachment.height ?? null,
-        })),
-      activity,
-    });
+    const parsed = schema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) return error("Invalid request", 400);
+    const sr = createClientFromRequest(req).asServiceRole;
+    const { grant, submission, issue } = await loadTrackingContext(sr, parsed.data.token);
+    await sr.entities.ReporterAccess.update(grant.id, { last_accessed_at: new Date().toISOString() }).catch(() => {});
+    const messages = await sr.entities.ReporterMessage.filter({ submission_id: submission.id });
+    await Promise.all(messages.filter((message: Record<string, unknown>) => message.visibility === "public" && message.sender_type !== "reporter" && message.is_read_by_reporter !== true).map((message: Record<string, any>) => sr.entities.ReporterMessage.update(message.id, { is_read_by_reporter: true })));
+    return json(await buildTrackingProjection(sr, submission, issue));
   } catch (err) {
+    if (err instanceof TrackingAccessError) return error(err.message, err.status);
     return error(errorMessage(err), 500);
   }
 });

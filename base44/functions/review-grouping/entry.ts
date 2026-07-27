@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
 import { error, errorMessage, json } from "../../shared/response.ts";
 import { createIssueForSubmission, moveSubmission, recalculateIssue } from "../../shared/issue-operations.ts";
+import { assertTransition } from "../../shared/issue-state-machine.ts";
 
 type Row = Record<string, any>;
 const payloadSchema = z.discriminatedUnion("action", [
@@ -22,9 +23,18 @@ async function verifyIssue(sr: any, id: string, owner: string): Promise<Row> {
   return issue;
 }
 
-async function closeEmptyIssue(sr: any, issueId: string) {
+async function verifyCanonicalIssue(sr: any, id: string, owner: string): Promise<Row> {
+  const issue = await verifyIssue(sr, id, owner);
+  if (issue.status === "duplicate") throw new Error("Choose the canonical issue rather than another duplicate");
+  return issue;
+}
+
+async function closeEmptyIssue(sr: any, issueId: string, canonicalIssueId: string) {
   const issue = await recalculateIssue(sr, issueId);
-  if ((issue.report_count ?? 0) === 0) await sr.entities.Issue.update(issueId, { status: "duplicate" });
+  if ((issue.report_count ?? 0) === 0) {
+    assertTransition(issue.status, "duplicate");
+    await sr.entities.Issue.update(issueId, { status: "duplicate", duplicate_of_issue_id: canonicalIssueId });
+  }
 }
 
 async function rejectPendingSuggestions(sr: any, submissionId: string, owner: string, nowIso: string) {
@@ -59,12 +69,12 @@ Deno.serve(async (req) => {
         return json({ success: true, suggestion: updated });
       }
 
-      await verifyIssue(sr, suggestion.candidate_issue_id, owner);
+      await verifyCanonicalIssue(sr, suggestion.candidate_issue_id, owner);
       await moveSubmission(sr, suggestion.submission_id, suggestion.candidate_issue_id, owner, "manual", {
         confidence: suggestion.similarity_score, matchingReasons: suggestion.matching_reasons,
         conflictingEvidence: suggestion.conflicting_evidence,
       });
-      await closeEmptyIssue(sr, suggestion.source_issue_id);
+      await closeEmptyIssue(sr, suggestion.source_issue_id, suggestion.candidate_issue_id);
       const updated = await sr.entities.DuplicateSuggestion.update(suggestion.id, { status: "accepted", reviewed_by: owner, reviewed_at: nowIso });
       await sr.entities.ActivityEvent.create({
         project_id: suggestion.project_id, owner_id: owner, issue_id: suggestion.candidate_issue_id, submission_id: suggestion.submission_id,
@@ -77,14 +87,15 @@ Deno.serve(async (req) => {
     if (input.action === "merge") {
       if (input.sourceIssueId === input.targetIssueId) return error("Choose two different issues", 400);
       const source = await verifyIssue(sr, input.sourceIssueId, owner);
-      const target = await verifyIssue(sr, input.targetIssueId, owner);
+      const target = await verifyCanonicalIssue(sr, input.targetIssueId, owner);
       if (source.project_id !== target.project_id) return error("Issues must belong to the same project", 400);
       const links = await sr.entities.IssueReport.filter({ issue_id: source.id });
       for (const link of links) {
         await moveSubmission(sr, link.submission_id, target.id, owner, "manual");
         await rejectPendingSuggestions(sr, link.submission_id, owner, nowIso);
       }
-      await sr.entities.Issue.update(source.id, { status: "duplicate" });
+      assertTransition(source.status, "duplicate");
+      await sr.entities.Issue.update(source.id, { status: "duplicate", duplicate_of_issue_id: target.id });
       await recalculateIssue(sr, target.id);
       await sr.entities.ActivityEvent.create({
         project_id: source.project_id, owner_id: owner, issue_id: target.id, event_type: "issues_merged",
@@ -95,13 +106,13 @@ Deno.serve(async (req) => {
     }
 
     if (input.action === "move") {
-      const target = await verifyIssue(sr, input.targetIssueId, owner);
+      const target = await verifyCanonicalIssue(sr, input.targetIssueId, owner);
       const submission = await sr.entities.FeedbackSubmission.get(input.submissionId);
       if (!submission || submission.owner_id !== owner || submission.project_id !== target.project_id) return error("Report not found or access denied", 404);
       const oldLinks = await sr.entities.IssueReport.filter({ submission_id: submission.id });
       await moveSubmission(sr, submission.id, target.id, owner, "manual");
       await rejectPendingSuggestions(sr, submission.id, owner, nowIso);
-      for (const link of oldLinks) if (link.issue_id !== target.id) await closeEmptyIssue(sr, link.issue_id);
+      for (const link of oldLinks) if (link.issue_id !== target.id) await closeEmptyIssue(sr, link.issue_id, target.id);
       await sr.entities.ActivityEvent.create({
         project_id: target.project_id, owner_id: owner, issue_id: target.id, submission_id: submission.id,
         event_type: "report_moved", actor_type: "owner", actor_id: owner,

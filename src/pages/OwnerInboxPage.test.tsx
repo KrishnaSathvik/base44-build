@@ -1,27 +1,30 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { OwnerInboxPage } from '@/pages/OwnerInboxPage';
-import { listMyAttachments, listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMySubmissions, processFeedback, reviewGrouping } from '@/lib/api';
+import { listMyAttachments, listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMyReporterMessages, listMySubmissions, processFeedback, reviewGrouping } from '@/lib/api';
 
 vi.mock('@/api/base44Client', () => ({
   base44: { entities: {
     FeedbackSubmission: { subscribe: vi.fn(() => () => undefined) }, Issue: { subscribe: vi.fn(() => () => undefined) },
-    IssueReport: { subscribe: vi.fn(() => () => undefined) }, DuplicateSuggestion: { subscribe: vi.fn(() => () => undefined) },
+    IssueReport: { subscribe: vi.fn(() => () => undefined) }, DuplicateSuggestion: { subscribe: vi.fn(() => () => undefined) }, ReporterMessage: { subscribe: vi.fn(() => () => undefined) },
   } },
 }));
 vi.mock('@/lib/api', () => ({
   listMySubmissions: vi.fn(), listMyIssues: vi.fn(), listMyIssueReports: vi.fn(), listMyDuplicateSuggestions: vi.fn(),
   listMyAttachments: vi.fn(), getAttachmentAccess: vi.fn(), processFeedback: vi.fn(), reviewGrouping: vi.fn(),
+  listMyReporterMessages: vi.fn(), markOwnerMessagesRead: vi.fn(),
 }));
 
 function renderInbox() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return render(<QueryClientProvider client={client}><OwnerInboxPage /></QueryClientProvider>);
+  return render(<QueryClientProvider client={client}><MemoryRouter><OwnerInboxPage /></MemoryRouter></QueryClientProvider>);
 }
 
 test('shows explainable duplicate evidence and accepts a suggestion', async () => {
   vi.mocked(listMyAttachments).mockResolvedValue([]);
+  vi.mocked(listMyReporterMessages).mockResolvedValue([]);
   vi.mocked(listMySubmissions).mockResolvedValue([{ id: 'report-1', project_id: 'p1', owner_id: 'owner@test.dev', type: 'bug', description: 'Send button freezes on checkout', processing_status: 'completed', ai_summary: 'Checkout send button freezes', ai_severity: 'high', ai_product_area: 'Checkout', ai_category: 'functionality', ai_confidence: .91 } as never]);
   vi.mocked(listMyIssues).mockResolvedValue([
     { id: 'source', public_code: 'FI-SOURCE', title: 'Checkout send button freezes', status: 'unreviewed', report_count: 1 } as never,
@@ -40,6 +43,7 @@ test('shows explainable duplicate evidence and accepts a suggestion', async () =
 
 test('keeps failed evidence reviewable and exposes retry', async () => {
   vi.mocked(listMyAttachments).mockResolvedValue([]);
+  vi.mocked(listMyReporterMessages).mockResolvedValue([]);
   vi.mocked(listMySubmissions).mockResolvedValue([{ id: 'report-failed', project_id: 'p1', owner_id: 'owner@test.dev', type: 'general', description: 'Original evidence stays visible', processing_status: 'failed', processing_error: 'Invalid classifier output' } as never]);
   vi.mocked(listMyIssues).mockResolvedValue([]);
   vi.mocked(listMyIssueReports).mockResolvedValue([]);
@@ -50,4 +54,17 @@ test('keeps failed evidence reviewable and exposes retry', async () => {
   expect(screen.getByText('Invalid classifier output')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   await waitFor(() => expect(processFeedback).toHaveBeenCalledWith('report-failed', true));
+});
+
+test('shows an unread reporter-replied state and message preview', async () => {
+  vi.mocked(listMyAttachments).mockResolvedValue([]);
+  vi.mocked(listMySubmissions).mockResolvedValue([{ id: 'report-reply', project_id: 'p1', owner_id: 'owner@test.dev', type: 'bug', description: 'Initial report', processing_status: 'completed' } as never]);
+  vi.mocked(listMyIssues).mockResolvedValue([{ id: 'issue-reply', project_id: 'p1', public_code: 'FI-REPLY', title: 'Reply issue', status: 'open', report_count: 1 } as never]);
+  vi.mocked(listMyIssueReports).mockResolvedValue([{ id: 'link', project_id: 'p1', owner_id: 'owner@test.dev', issue_id: 'issue-reply', submission_id: 'report-reply', review_status: 'accepted' } as never]);
+  vi.mocked(listMyDuplicateSuggestions).mockResolvedValue([]);
+  vi.mocked(listMyReporterMessages).mockResolvedValue([{ id: 'message-1', project_id: 'p1', owner_id: 'owner@test.dev', submission_id: 'report-reply', issue_id: 'issue-reply', sender_type: 'reporter', message_type: 'reporter_follow_up', body: 'It happens after refreshing twice.', visibility: 'public', is_read_by_owner: false }]);
+  renderInbox();
+  expect((await screen.findAllByText(/It happens after refreshing twice/))[0]).toBeVisible();
+  expect(screen.getAllByText('Reporter replied').length).toBeGreaterThan(0);
+  expect(screen.getByLabelText('Unread reporter message')).toBeVisible();
 });

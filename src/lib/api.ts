@@ -13,6 +13,9 @@ import type {
   SubmitFeedbackResult,
   TrackingView,
   AttachmentAccess,
+  IssueStatus,
+  ReporterMessage,
+  WorkflowIssue,
 } from '@/lib/types';
 import type { AttachmentSource } from '@/lib/attachments';
 
@@ -66,6 +69,16 @@ export interface UploadFeedbackAttachmentPayload {
   file: File;
 }
 
+export interface UploadFollowUpAttachmentPayload {
+  token: string;
+  followUpKey: string;
+  attachmentKey: string;
+  source: AttachmentSource;
+  width?: number;
+  height?: number;
+  file: File;
+}
+
 export type GroupingAction =
   | { action: 'accept'; suggestionId: string }
   | { action: 'reject'; suggestionId: string }
@@ -92,8 +105,24 @@ export async function accessTrackingPage(token: string): Promise<TrackingView> {
 
 export async function uploadFeedbackAttachment(payload: UploadFeedbackAttachmentPayload): Promise<{ attachmentId: string; duplicate: boolean }> {
   const { file, ...metadata } = payload;
-  const res = await stageFunctions.invoke('upload-feedback-attachment', { file, metadata });
+  const res = await stageFunctions.invoke('upload-feedback-attachment', { file, metadata: { ...metadata, purpose: 'initial_report' } });
   return res.data as { attachmentId: string; duplicate: boolean };
+}
+
+export async function uploadFollowUpAttachment(payload: UploadFollowUpAttachmentPayload): Promise<{ attachmentId: string; duplicate: boolean }> {
+  const { file, ...metadata } = payload;
+  const res = await stageFunctions.invoke('upload-feedback-attachment', { file, metadata: { ...metadata, purpose: 'reporter_follow_up' } });
+  return res.data as { attachmentId: string; duplicate: boolean };
+}
+
+export async function addReporterFollowUp(input: { token: string; idempotencyKey: string; body: string; resolvedFollowUpType?: 'general' | 'not_fixed'; attachmentIds?: string[] }): Promise<TrackingView> {
+  const res = await stageFunctions.invoke('add-reporter-follow-up', input);
+  return (res.data as { tracking: TrackingView }).tracking;
+}
+
+export async function confirmResolution(input: { token: string; idempotencyKey: string; choice: 'fixed' | 'not_fixed'; explanation?: string }): Promise<TrackingView> {
+  const res = await stageFunctions.invoke('confirm-resolution', input);
+  return (res.data as { tracking: TrackingView }).tracking;
 }
 
 export async function getReporterAttachmentAccess(token: string, attachmentKey: string): Promise<AttachmentAccess> {
@@ -107,15 +136,20 @@ export async function processFeedback(submissionId: string, retry = false): Prom
 
 // ---- Authenticated owner: backend function ----
 
-export async function resolveIssue(
-  issueId: string,
-  publicResolutionNote: string,
-): Promise<Issue> {
-  const res = await base44.functions.invoke('resolve-issue', {
-    issueId,
-    publicResolutionNote,
-  });
-  return res.data.issue as Issue;
+export interface UpdateIssueStatusInput {
+  issueId: string;
+  status: IssueStatus;
+  publicMessage?: string;
+  internalNote?: string;
+  reason?: string;
+  directResolutionOverrideReason?: string;
+  duplicateOfIssueId?: string;
+  assigneeId?: string;
+}
+
+export async function updateIssueStatus(input: UpdateIssueStatusInput): Promise<WorkflowIssue> {
+  const res = await stageFunctions.invoke('update-issue-status', input);
+  return (res.data as { issue: WorkflowIssue }).issue;
 }
 
 export async function reviewGrouping(action: GroupingAction): Promise<void> {
@@ -182,6 +216,20 @@ export async function listMyProjects(): Promise<Project[]> {
 
 export async function listMyIssues(): Promise<Issue[]> {
   return base44.entities.Issue.list('-created_date', 200);
+}
+
+export async function listMyReporterMessages(): Promise<ReporterMessage[]> {
+  const entities = base44.entities as unknown as { ReporterMessage: { list: (sort?: string, limit?: number) => Promise<ReporterMessage[]> } };
+  return entities.ReporterMessage.list('-created_at', 500);
+}
+
+export async function getReporterMessagesForIssue(issueId: string): Promise<ReporterMessage[]> {
+  const entities = base44.entities as unknown as { ReporterMessage: { filter: (query: Record<string, unknown>, sort?: string) => Promise<ReporterMessage[]> } };
+  return entities.ReporterMessage.filter({ issue_id: issueId }, 'created_at');
+}
+
+export async function markOwnerMessagesRead(projectId: string, messageIds: string[]): Promise<void> {
+  await stageFunctions.invoke('mark-owner-messages-read', { projectId, messageIds });
 }
 
 export async function listMySubmissions(): Promise<IntelligenceSubmission[]> {

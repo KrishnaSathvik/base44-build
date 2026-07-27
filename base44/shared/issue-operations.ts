@@ -47,6 +47,7 @@ export async function createIssueForSubmission(
     priority_score: 0,
     priority_explanation: [],
     status,
+    resolution_confirmation_status: "not_requested",
     report_count: 0,
     affected_user_count: 0,
     first_seen_at: seenAt,

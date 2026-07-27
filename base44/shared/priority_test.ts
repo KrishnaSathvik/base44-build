@@ -18,3 +18,10 @@ Deno.test("rapid spike requires three reports within sixty minutes", () => {
   assertEquals(hasRapidSpike(["2026-01-01T00:00:00Z", "2026-01-01T00:30:00Z", "2026-01-01T01:00:00Z"]), true);
   assertEquals(hasRapidSpike(["2026-01-01T00:00:00Z", "2026-01-01T00:30:00Z", "2026-01-01T01:01:00Z"]), false);
 });
+
+Deno.test("reopening adds exactly twelve points without erasing historical inputs", () => {
+  const input = { severity: "medium" as const, reportCount: 1, reproducibility: "unknown" as const, reportTimestamps: [], lastSeenAt: "2020-01-01T00:00:00Z", coreWorkflowBlocked: false, now: new Date("2026-01-01T00:00:00Z") };
+  const before = computePriority({ ...input, reopened: false });
+  const after = computePriority({ ...input, reopened: true });
+  assertEquals(after.score - before.score, 12);
+});

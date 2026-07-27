@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
     // Associate only prevalidated, idempotently uploaded private files. Creation
     // of the submission is the finalization point that activates processing.
     await Promise.all(requestedAttachments.filter(Boolean).map((attachment) =>
-      sr.entities.FeedbackAttachment.update(attachment.id, { submission_id: submission.id })
+      sr.entities.FeedbackAttachment.update(attachment.id, { submission_id: submission.id, attachment_purpose: "initial_report" })
     ));
 
     // 4. Create the private tracking grant (store only the hash).

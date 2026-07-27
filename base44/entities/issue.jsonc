@@ -42,10 +42,11 @@
     "reproducibility": { "type": "string", "enum": ["confirmed", "likely", "unknown"] },
     "core_workflow_blocked": { "type": "boolean" },
     "was_reopened": { "type": "boolean" },
+    "status_reason": { "type": "string", "description": "Owner-only reason for the latest transition. Never returned publicly." },
+    "assignee_id": { "type": "string" },
     "status": {
       "type": "string",
       "enum": [
-        "processing",
         "unreviewed",
         "needs_info",
         "open",
@@ -85,10 +86,24 @@
       "format": "date-time",
       "description": "When the issue was resolved"
     },
+    "planned_at": { "type": "string", "format": "date-time" },
+    "work_started_at": { "type": "string", "format": "date-time" },
+    "testing_started_at": { "type": "string", "format": "date-time" },
+    "reopened_at": { "type": "string", "format": "date-time" },
+    "dismissed_at": { "type": "string", "format": "date-time" },
+    "duplicate_of_issue_id": { "type": "string", "description": "Owner-only canonical duplicate target." },
     "public_resolution_note": {
       "type": "string",
       "description": "Public-facing resolution note shown to reporters"
-    }
+    },
+    "resolution_confirmation_status": {
+      "type": "string",
+      "enum": ["not_requested", "pending", "confirmed", "not_fixed"],
+      "default": "not_requested"
+    },
+    "resolution_confirmed_at": { "type": "string", "format": "date-time" },
+    "last_owner_activity_at": { "type": "string", "format": "date-time" },
+    "last_reporter_activity_at": { "type": "string", "format": "date-time" }
   },
   "required": ["project_id", "owner_id", "public_code", "title", "status"],
   "rls": {

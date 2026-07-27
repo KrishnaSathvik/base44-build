@@ -12,7 +12,7 @@ export function OwnerIssuesPage() {
   const resolvedOnly = useLocation().pathname.endsWith('/resolved');
   const { data: allIssues, isLoading, isError } = useQuery({ queryKey: ['issues'], queryFn: listMyIssues });
   useEffect(() => { const unsubscribe = base44.entities.Issue.subscribe(() => { void queryClient.invalidateQueries({ queryKey: ['issues'] }); }); return () => unsubscribe(); }, [queryClient]);
-  const issues = allIssues?.filter(issue => resolvedOnly ? issue.status === 'resolved' : issue.status !== 'resolved');
+  const issues = allIssues?.filter(issue => resolvedOnly ? issue.status === 'resolved' : !['resolved','dismissed','duplicate'].includes(issue.status));
   return <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-7 md:py-10">
     <div className="flex flex-col gap-5 border-b border-line pb-7 sm:flex-row sm:items-end sm:justify-between"><div><p className="fi-eyebrow">{resolvedOnly ? 'Closed loop' : 'Working queue'}</p><h1 className="fi-display mt-3 text-4xl font-medium">{resolvedOnly ? 'Resolved' : 'Issues'}</h1><p className="mt-2 text-sm text-ink-muted">{resolvedOnly ? 'Issues closed with a public explanation.' : 'Normalized problems, ordered by the work they demand.'}</p></div><div className="flex items-center gap-2"><Button variant="ghost"><ListFilter className="h-4 w-4" />Filter</Button><Link to="/app/setup"><Button variant="secondary"><Plus className="h-4 w-4" />New project</Button></Link></div></div>
     <div className="mt-7 grid grid-cols-[minmax(0,1fr)_auto] border-b border-line pb-3"><span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Issue</span><span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Status</span></div>

@@ -1,0 +1,35 @@
+{
+  "name": "ReporterMessage",
+  "description": "Owner/reporter conversation content. Trusted functions perform every write; anonymous access is only through token-protected projections.",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string" },
+    "owner_id": { "type": "string" },
+    "submission_id": { "type": "string" },
+    "issue_id": { "type": "string" },
+    "sender_type": { "type": "string", "enum": ["owner", "reporter", "system"] },
+    "sender_user_id": { "type": "string" },
+    "message_type": {
+      "type": "string",
+      "enum": ["request_information", "reporter_follow_up", "public_update", "resolution_note", "resolution_confirmation", "reopen_explanation"]
+    },
+    "body": { "type": "string" },
+    "visibility": { "type": "string", "enum": ["public", "internal"] },
+    "is_read_by_owner": { "type": "boolean", "default": false },
+    "is_read_by_reporter": { "type": "boolean", "default": false },
+    "idempotency_key": { "type": "string", "description": "Client UUID scoped to the submission for retry-safe public writes" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["project_id", "owner_id", "submission_id", "issue_id", "sender_type", "message_type", "body", "visibility", "created_at"],
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": {
+      "$or": [
+        { "data.owner_id": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

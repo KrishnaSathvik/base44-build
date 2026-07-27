@@ -8,6 +8,41 @@ export type Issue = EntityRecord['Issue'];
 export type IssueReport = EntityRecord['IssueReport'];
 export type ActivityEvent = EntityRecord['ActivityEvent'];
 export type FeedbackAttachment = EntityRecord['FeedbackAttachment'];
+export type IssueStatus = 'unreviewed' | 'needs_info' | 'open' | 'planned' | 'in_progress' | 'testing' | 'resolved' | 'reopened' | 'duplicate' | 'dismissed';
+export type ResolutionConfirmationStatus = 'not_requested' | 'pending' | 'confirmed' | 'not_fixed';
+
+export type WorkflowIssue = Issue & {
+  status: IssueStatus;
+  status_reason?: string;
+  assignee_id?: string;
+  planned_at?: string;
+  work_started_at?: string;
+  testing_started_at?: string;
+  reopened_at?: string;
+  dismissed_at?: string;
+  duplicate_of_issue_id?: string;
+  resolution_confirmation_status?: ResolutionConfirmationStatus;
+  resolution_confirmed_at?: string;
+  last_owner_activity_at?: string;
+  last_reporter_activity_at?: string;
+};
+
+export interface ReporterMessage {
+  id: string;
+  project_id: string;
+  owner_id: string;
+  submission_id: string;
+  issue_id: string;
+  sender_type: 'owner' | 'reporter' | 'system';
+  sender_user_id?: string;
+  message_type: 'request_information' | 'reporter_follow_up' | 'public_update' | 'resolution_note' | 'resolution_confirmation' | 'reopen_explanation';
+  body: string;
+  visibility: 'public' | 'internal';
+  is_read_by_owner?: boolean;
+  is_read_by_reporter?: boolean;
+  created_at?: string;
+  created_date?: string;
+}
 
 export interface DuplicateSuggestion {
   id: string;
@@ -110,15 +145,27 @@ export interface TrackingActivity {
   createdAt: string | null;
 }
 
+export interface TrackingMessage {
+  senderLabel: 'Product team' | 'You' | 'System';
+  messageType: ReporterMessage['message_type'];
+  body: string;
+  createdAt: string | null;
+  ownAttachments: TrackingAttachment[];
+}
+
 export interface TrackingView {
-  reportType: FeedbackType;
+  feedbackType: FeedbackType;
   originalDescription: string;
-  publicCode: string | null;
+  publicIssueCode: string | null;
   issueTitle: string | null;
-  status: string;
+  status: IssueStatus;
   publicResolutionNote: string | null;
-  submittedAt: string | null;
-  context: TrackingContext | null;
-  attachments: TrackingAttachment[];
-  activity: TrackingActivity[];
+  resolutionConfirmationStatus: ResolutionConfirmationStatus;
+  createdAt: string | null;
+  resolvedAt: string | null;
+  reopenedAt: string | null;
+  originalContext: TrackingContext | null;
+  ownAttachments: TrackingAttachment[];
+  publicMessages: TrackingMessage[];
+  publicActivityEvents: TrackingActivity[];
 }

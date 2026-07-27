@@ -22,6 +22,12 @@
     "width": { "type": "integer", "minimum": 0 },
     "height": { "type": "integer", "minimum": 0 },
     "source": { "type": "string", "enum": ["browse", "paste", "camera", "library"] },
+    "reporter_message_id": { "type": "string", "description": "ReporterMessage this evidence belongs to, when uploaded for a follow-up" },
+    "attachment_purpose": {
+      "type": "string",
+      "enum": ["initial_report", "reporter_follow_up", "owner_evidence"],
+      "default": "initial_report"
+    },
     "upload_status": {
       "type": "string",
       "enum": ["pending", "completed", "failed", "deleted"],

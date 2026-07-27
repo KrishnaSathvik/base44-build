@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AlertTriangle, ArrowRightLeft, Check, Inbox, Monitor, RefreshCw, Split, X } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -6,16 +7,16 @@ import { Badge, Button, EmptyState, InlineError, Select, Skeleton } from '@/comp
 import { formatTime, severityLabel, typeLabel } from '@/lib/format';
 import {
   listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMySubmissions,
-  getAttachmentAccess, listMyAttachments, processFeedback, reviewGrouping,
+  getAttachmentAccess, listMyAttachments, listMyReporterMessages, markOwnerMessagesRead, processFeedback, reviewGrouping,
 } from '@/lib/api';
-import type { DuplicateSuggestion, FeedbackAttachment, IntelligenceIssue, IntelligenceIssueReport, IntelligenceSubmission } from '@/lib/types';
+import type { DuplicateSuggestion, FeedbackAttachment, IntelligenceIssue, IntelligenceIssueReport, IntelligenceSubmission, ReporterMessage } from '@/lib/types';
 import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
 
-type Filter = 'all' | 'unreviewed' | 'duplicates' | 'failed' | 'needs_info' | 'screenshots';
+type Filter = 'all' | 'unreviewed' | 'duplicates' | 'failed' | 'needs_info' | 'reporter_replied';
 const FILTERS: Array<{ value: Filter; label: string }> = [
   { value: 'all', label: 'All' }, { value: 'unreviewed', label: 'Unreviewed' },
   { value: 'duplicates', label: 'Possible duplicates' }, { value: 'failed', label: 'Processing failed' },
-  { value: 'needs_info', label: 'Needs information' }, { value: 'screenshots', label: 'Has screenshots' },
+  { value: 'needs_info', label: 'Needs information' }, { value: 'reporter_replied', label: 'Reporter replied' },
 ];
 
 interface InboxData {
@@ -24,13 +25,14 @@ interface InboxData {
   links: IntelligenceIssueReport[];
   suggestions: DuplicateSuggestion[];
   attachments: FeedbackAttachment[];
+  messages: ReporterMessage[];
 }
 
 async function loadInbox(): Promise<InboxData> {
-  const [submissions, issues, links, suggestions, attachments] = await Promise.all([
-    listMySubmissions(), listMyIssues(), listMyIssueReports(), listMyDuplicateSuggestions(), listMyAttachments(),
+  const [submissions, issues, links, suggestions, attachments, messages] = await Promise.all([
+    listMySubmissions(), listMyIssues(), listMyIssueReports(), listMyDuplicateSuggestions(), listMyAttachments(), listMyReporterMessages(),
   ]);
-  return { submissions, issues: issues as IntelligenceIssue[], links, suggestions, attachments };
+  return { submissions, issues: issues as IntelligenceIssue[], links, suggestions, attachments, messages };
 }
 
 export function OwnerInboxPage() {
@@ -42,7 +44,7 @@ export function OwnerInboxPage() {
   useEffect(() => {
     const refresh = () => { void queryClient.invalidateQueries({ queryKey: ['inbox'] }); void queryClient.invalidateQueries({ queryKey: ['issues'] }); };
     const dynamic = base44.entities as unknown as Record<string, { subscribe: (callback: () => void) => () => void }>;
-    const names = ['FeedbackSubmission', 'Issue', 'IssueReport', 'DuplicateSuggestion'];
+    const names = ['FeedbackSubmission', 'Issue', 'IssueReport', 'DuplicateSuggestion', 'ReporterMessage'];
     const unsubscribers = names.map((name) => dynamic[name]?.subscribe(refresh)).filter(Boolean) as Array<() => void>;
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
   }, [queryClient]);
@@ -57,8 +59,8 @@ export function OwnerInboxPage() {
       if (filter === 'duplicates') return pendingSuggestion;
       if (filter === 'failed') return submission.processing_status === 'failed';
       if (filter === 'needs_info') return issue?.status === 'needs_info';
-      if (filter === 'screenshots') return query.data.attachments.some((item) => item.submission_id === submission.id && item.upload_status === 'completed');
-      return submission.processing_status !== 'completed' || issue?.status === 'unreviewed' || pendingSuggestion;
+      if (filter === 'reporter_replied') return query.data.messages.some((item) => item.submission_id === submission.id && item.sender_type === 'reporter' && !item.is_read_by_owner);
+      return submission.processing_status !== 'completed' || issue?.status === 'unreviewed' || issue?.status === 'needs_info' || pendingSuggestion || query.data.messages.some((item) => item.submission_id === submission.id && item.sender_type === 'reporter' && !item.is_read_by_owner);
     });
   }, [filter, query.data]);
 
@@ -79,11 +81,13 @@ export function OwnerInboxPage() {
 function ReportRow({ submission, data, selected, onSelect }: { submission: IntelligenceSubmission; data: InboxData; selected: boolean; onSelect: () => void }) {
   const issue = issueForSubmission(submission.id, data.links, data.issues);
   const suggestion = data.suggestions.find((item) => item.submission_id === submission.id && item.status === 'pending');
+  const latestReply = data.messages.find((item) => item.submission_id === submission.id && item.sender_type === 'reporter');
+  const attentionReason = submission.processing_status === 'failed' ? 'Processing failed' : latestReply && !latestReply.is_read_by_owner ? 'Reporter replied' : suggestion ? 'Possible duplicate' : issue?.status === 'needs_info' ? 'Needs information' : 'Unreviewed';
   return <button type="button" onClick={onSelect} className={`block w-full border-b border-line px-4 py-5 text-left transition ${selected ? 'bg-surface' : 'hover:bg-surface-subtle'}`}>
-    <div className="flex items-center justify-between gap-3"><span className="fi-mono text-[9px] uppercase text-ink-faint">{typeLabel(submission.type)} · {formatTime(submission.created_at ?? submission.created_date)}</span><ProcessingBadge status={submission.processing_status}/></div>
+    <div className="flex items-center justify-between gap-3"><span className="fi-mono text-[9px] uppercase text-ink-faint">{typeLabel(submission.type)} · {formatTime(latestReply?.created_at ?? submission.created_at ?? submission.created_date)}</span><span className="flex items-center gap-2">{latestReply&&!latestReply.is_read_by_owner&&<span aria-label="Unread reporter message" className="h-2 w-2 rounded-full bg-critical"/>}<ProcessingBadge status={submission.processing_status}/></span></div>
     <p className="mt-3 line-clamp-2 text-sm font-medium">{submission.ai_summary || submission.description}</p>
     <p className="mt-2 line-clamp-2 text-xs leading-5 text-ink-muted">{submission.description}</p>
-    <div className="mt-3 flex flex-wrap items-center gap-2">{submission.ai_product_area && <Badge>{submission.ai_product_area}</Badge>}{suggestion && <Badge tone="warning">Possible duplicate</Badge>}{issue && <span className="fi-mono text-[9px] text-ink-faint">{issue.public_code}</span>}</div>
+    {latestReply&&<p className="mt-2 line-clamp-1 text-xs font-medium text-info">“{latestReply.body}”</p>}<div className="mt-3 flex flex-wrap items-center gap-2"><Badge tone={attentionReason==='Processing failed'?'critical':attentionReason==='Reporter replied'?'info':'warning'}>{attentionReason}</Badge>{submission.ai_product_area && <Badge>{submission.ai_product_area}</Badge>}{issue&&<><span className="fi-mono text-[9px] uppercase text-ink-muted">{severityLabel(issue.severity)} severity</span><span className="fi-mono text-[9px] text-ink-faint">Priority {Math.round(issue.priority_score??0)}</span><span className="fi-mono text-[9px] text-ink-faint">{issue.public_code}</span></>}</div>
   </button>;
 }
 
@@ -95,6 +99,7 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
   const [actionError, setActionError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const attachments = data.attachments.filter((item) => item.submission_id === submission.id && item.upload_status === 'completed');
+  const unreadMessages = data.messages.filter((item) => item.submission_id === submission.id && item.sender_type === 'reporter' && !item.is_read_by_owner);
   const attachmentAccess = useCallback((item: GalleryAttachment) => getAttachmentAccess(item.id ?? ''), []);
   const mutation = useMutation({
     mutationFn: async (action: Parameters<typeof reviewGrouping>[0] | { action: 'retry' }) => {
@@ -105,10 +110,13 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
     onError: () => setActionError('The action could not be completed. Refresh and try again.'),
   });
   const targets = data.issues.filter((issue) => issue.id !== sourceIssue?.id && issue.status !== 'duplicate' && issue.status !== 'dismissed');
+  const readMutation = useMutation({ mutationFn:()=>sourceIssue&&unreadMessages.length?markOwnerMessagesRead(sourceIssue.project_id,unreadMessages.map(item=>item.id)):Promise.resolve(), onSuccess:()=>queryClient.invalidateQueries({queryKey:['inbox']}) });
 
   return <article className="min-w-0 px-0 py-7 lg:px-8">
     <div className="flex flex-wrap items-center gap-3"><ProcessingBadge status={submission.processing_status}/>{submission.ai_severity && <span className="fi-mono text-[10px] uppercase text-ink-muted">{severityLabel(submission.ai_severity)} severity</span>}{submission.ai_confidence !== undefined && <span className="fi-mono text-[10px] text-ink-faint">{Math.round(submission.ai_confidence * 100)}% classification confidence</span>}</div>
     <h2 className="fi-display mt-4 text-3xl font-medium">{submission.ai_summary || 'Original report'}</h2>
+    {sourceIssue&&<div className="mt-5 flex flex-wrap gap-2"><Link to={`/app/issues/${sourceIssue.id}`}><Button>Open issue</Button></Link>{unreadMessages.length>0&&<Button variant="secondary" disabled={readMutation.isPending} onClick={()=>readMutation.mutate()}>Mark read</Button>}</div>}
+    {unreadMessages.length>0&&<section className="mt-6 rounded-lg border border-info/25 bg-info-soft/30 p-5"><p className="fi-eyebrow">Unread reporter reply</p><p className="mt-3 whitespace-pre-wrap text-sm leading-6">{unreadMessages[0]?.body}</p></section>}
     <section className="mt-8 border-y border-line bg-surface px-5 py-6"><p className="fi-eyebrow">Original report</p><blockquote className="mt-4 border-l-2 border-critical pl-4 text-base leading-7">{submission.description}</blockquote>{submission.expected_behavior && <div className="mt-5 border-t border-line pt-4"><p className="fi-eyebrow">Expected behavior</p><p className="mt-2 text-sm text-ink-muted">{submission.expected_behavior}</p></div>}</section>
     <section className="mt-8"><p className="fi-eyebrow">Screenshot evidence</p><div className="mt-4"><AttachmentGallery attachments={attachments} getAccess={attachmentAccess}/></div></section>
     <section className="mt-8"><p className="fi-eyebrow">Environment</p>{submission.context_included?<div className="mt-4 grid gap-px bg-line sm:grid-cols-2"><Fact label="Browser" value={[submission.browser_name,submission.browser_version].filter(Boolean).join(' ')}/><Fact label="Device" value={[submission.device_type,submission.operating_system].filter(Boolean).join(' · ')}/><Fact label="Screen" value={dimension(submission.screen_width,submission.screen_height)}/><Fact label="Viewport" value={dimension(submission.viewport_width,submission.viewport_height)}/><Fact label="Page" value={submission.page_url}/><Fact label="Submitted" value={formatTime(submission.created_at ?? submission.created_date)}/></div>:<p className="mt-4 flex items-center gap-2 text-xs text-ink-faint"><Monitor className="h-4 w-4"/>Reporter removed optional context.</p>}</section>

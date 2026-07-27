@@ -11,6 +11,7 @@ import { OwnerOverviewPage } from '@/pages/OwnerOverviewPage';
 import { PlaceholderWorkspacePage } from '@/pages/PlaceholderWorkspacePage';
 import { DemoPage } from '@/pages/DemoPage';
 import { OwnerInboxPage } from '@/pages/OwnerInboxPage';
+import { OwnerResolvedPage } from '@/pages/OwnerResolvedPage';
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
@@ -25,7 +26,7 @@ export const router = createBrowserRouter([
       { path: 'setup', element: <OwnerSetupPage /> },
       { path: 'issues', element: <OwnerIssuesPage /> },
       { path: 'issues/:issueId', element: <OwnerIssueDetailPage /> },
-      { path: 'resolved', element: <OwnerIssuesPage /> },
+      { path: 'resolved', element: <OwnerResolvedPage /> },
       { path: 'settings', element: <PlaceholderWorkspacePage /> },
     ],
   },
