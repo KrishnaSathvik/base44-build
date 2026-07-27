@@ -18,7 +18,8 @@ export function validateOfficialDomainConfiguration(root = process.cwd()) {
   if (/^VITE_APP_BASE_URL=/m.test(env)) errors.push('Unnecessary browser-exposed application origin is configured.');
   const vercel = JSON.parse(read(root, 'vercel.json'));
   if (vercel.$schema !== 'https://openapi.vercel.sh/vercel.json' || JSON.stringify(vercel.rewrites) !== JSON.stringify([{source:'/(.*)',destination:'/index.html'}])) errors.push('Vercel SPA rewrite is invalid.');
-  if (JSON.stringify(vercel.redirects) !== JSON.stringify([{source:'/:path*',has:[{type:'host',value:'www.vensaos.com'}],destination:'https://vensaos.com/:path*',permanent:true}])) errors.push('Vercel www→apex permanent redirect is missing.');
+  const expectedRedirects=[{source:'/',has:[{type:'host',value:'www.vensaos.com'}],destination:'https://vensaos.com/',permanent:true},{source:'/:path*',has:[{type:'host',value:'www.vensaos.com'}],destination:'https://vensaos.com/:path*',permanent:true}];
+  if (JSON.stringify(vercel.redirects) !== JSON.stringify(expectedRedirects)) errors.push('Vercel www→apex permanent redirect is missing.');
   const robots = read(root, 'public/robots.txt');
   for (const required of ['Disallow: /app/','Disallow: /track/','Disallow: /auth/','Disallow: /setup/',`Sitemap: ${ORIGIN}/sitemap.xml`]) if (!robots.includes(required)) errors.push(`robots.txt is missing ${required}`);
   const sitemap = read(root, 'public/sitemap.xml');
