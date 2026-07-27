@@ -249,21 +249,24 @@ idempotent — re-running must not create duplicate links or inflate report coun
 - Keep `process-feedback` idempotent.
 - Preserve immutable activity history.
 - Store private file references, not permanent public URLs.
-- Test entity and scheduled automations after deployment, not only locally.
+- Test hosted function execution after deployment. Free runtime does **not**
+  require Base44 Workflows; see `docs/free-runtime-architecture.md`.
 
 ---
 
 ## 13. Local vs Deployed Base44 Behavior
 
-| Capability | Local `base44 dev` | Deployed |
+| Capability | Local `base44 dev` | Deployed free runtime |
 |---|---|---|
 | Entities (in-memory DB) | Yes (clears on stop) | Yes (persistent) |
 | Functions | Yes (reload) | Yes |
 | File uploads | Yes | Yes |
 | Email/password auth | Yes | Yes |
 | Realtime subscriptions | Yes | Yes |
-| Entity automations | **No** | Yes |
-| Scheduled automations | **No** | Yes |
+| Base44 Workflows / legacy automations | **Not used** | **Not used** |
+| Immediate `submit-feedback` processing | Yes | Yes |
+| Activity-driven `run-free-maintenance` | Call directly | Owner page / Settings |
 
-Because automations do not run locally, test `process-feedback` locally by
-calling the function directly, then deploy to verify the real automation trigger.
+Core processing is invoked directly from `submit-feedback` and owner retry.
+Scheduled queue/digest workers remain callable but are orchestrated by
+`run-free-maintenance` on owner activity rather than paid Workflows.

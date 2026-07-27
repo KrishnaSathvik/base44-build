@@ -1,12 +1,14 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
 import { MAX_ATTACHMENTS } from "../../shared/attachment-security.ts";
+import { resolveBackendConfiguration } from "../../shared/configuration.ts";
 import { isIssueStatus, transitionTimestamps } from "../../shared/issue-state-machine.ts";
 import { recalculateIssue } from "../../shared/issue-operations.ts";
+import { bestEffortEnqueueAndDispatch } from "../../shared/notification-dispatch.ts";
+import { notificationDedupeKey, safeExcerpt } from "../../shared/notifications.ts";
 import { findIdempotentMessage, followUpAttachmentBelongsToReporter, followUpNextStatus, loadTrackingContext, TrackingAccessError } from "../../shared/reporter-workflow.ts";
 import { buildTrackingProjection } from "../../shared/tracking-projection.ts";
 import { error, errorMessage, json } from "../../shared/response.ts";
-import { bestEffortEnqueue, notificationDedupeKey, safeExcerpt } from "../../shared/notifications.ts";
 
 const schema = z.object({
   token: z.string().min(1), idempotencyKey: z.string().uuid(), body: z.string().trim().min(1).max(5000),
@@ -19,6 +21,16 @@ Deno.serve(async (req) => {
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return error("Invalid follow-up", 400);
     const base44 = createClientFromRequest(req); const sr = base44.asServiceRole;
+    const config = resolveBackendConfiguration({
+      appBaseUrl: Deno.env.get("APP_BASE_URL"),
+      notificationIntegrationEnabled: Deno.env.get("NOTIFICATION_INTEGRATION_ENABLED"),
+      requestUrl: req.url,
+    });
+    const dispatchGate = {
+      appBaseUrl: config.appBaseUrl,
+      runtimeDeliveryEnabled: config.notificationIntegrationEnabled,
+      emailAdapter: { send: (emailInput: { to: string; subject: string; body: string; from_name: string }) => base44.integrations.Core.SendEmail(emailInput) },
+    };
     const { submission, issue } = await loadTrackingContext(sr, parsed.data.token);
     if (issue.status === "resolved" && !parsed.data.resolvedFollowUpType) return error("Choose whether this is a general follow-up or the fix did not work", 400);
 
@@ -59,13 +71,13 @@ Deno.serve(async (req) => {
       public_message: rejectingFix ? "The issue was reopened." : "The issue is open for review.", metadata: { fromStatus: issue.status, toStatus: nextStatus }, created_at: nowIso,
     });
     const project = await sr.entities.Project.get(issue.project_id).catch(() => null);
-    if (project) await bestEffortEnqueue(sr, {
+    if (project) await bestEffortEnqueueAndDispatch(sr, {
       project, issue, templateKey: "owner_reporter_reply", recipientType: "owner",
       dedupeKey: notificationDedupeKey("reporter_reply", [message.id, issue.owner_id]),
       activityEventId: followUpEvent.id, reporterMessageId: message.id,
       payload: { productName: project.name, issueTitle: issue.title, status: nextStatus, message: safeExcerpt(parsed.data.body) },
-    });
-    if (rejectingFix) await recalculateIssue(sr, issue.id, { reopened: true });
+    }, dispatchGate);
+    if (rejectingFix) await recalculateIssue(sr, issue.id, { reopened: true, dispatchGate });
     return json({ success: true, duplicate: false, tracking: await buildTrackingProjection(sr, submission, await sr.entities.Issue.get(issue.id)) });
   } catch (err) {
     if (err instanceof TrackingAccessError) return error(err.message, err.status);

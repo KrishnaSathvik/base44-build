@@ -140,6 +140,31 @@ export async function processFeedback(submissionId: string, retry = false): Prom
   await stageFunctions.invoke('process-feedback', { submissionId, retry });
 }
 
+export interface FreeMaintenanceResult {
+  success: boolean;
+  status: 'ran' | 'already_running' | 'recently_run' | 'unauthorized' | 'no_project';
+  processed: number;
+  sent: number;
+  failed: number;
+  skipped: number;
+  deadLettered: number;
+  reconciled: number;
+  digestsQueued: number;
+  digestsSkippedEmpty: number;
+  digestsDuplicate: number;
+  projectsChecked: number;
+  orphanAttachments: number;
+  lastAttemptAt?: string | null;
+  lastSuccessAt?: string | null;
+  leaseExpiresAt?: string | null;
+  emailDeliveryDisabled: boolean;
+}
+
+export async function runFreeMaintenance(input: { projectId?: string; bypassThrottle?: boolean } = {}): Promise<FreeMaintenanceResult> {
+  const res = await stageFunctions.invoke('run-free-maintenance', input);
+  return res.data as FreeMaintenanceResult;
+}
+
 // ---- Authenticated owner: backend function ----
 
 export interface UpdateIssueStatusInput {

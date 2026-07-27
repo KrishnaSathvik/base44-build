@@ -10,7 +10,6 @@ vi.mock('@/lib/api', () => ({
   getPublicProject: vi.fn().mockResolvedValue({ slug:'acme', name:'Acme', description:null, productUrl:null, allowAnonymous:true, feedbackTypesEnabled:['bug','feature','general'], collectReporterEmail:true, isActive:true }),
   submitFeedback: vi.fn(),
   uploadFeedbackAttachment: vi.fn(),
-  processFeedback: vi.fn(),
   apiErrorMessage: vi.fn(() => 'Something went wrong'),
 }));
 

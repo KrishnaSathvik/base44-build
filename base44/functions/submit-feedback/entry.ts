@@ -1,8 +1,10 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
-import { json, error, errorMessage } from "../../shared/response.ts";
-import { generateTrackingToken, sha256Hex } from "../../shared/crypto.ts";
 import { canAssociateAttachment, MAX_ATTACHMENTS } from "../../shared/attachment-security.ts";
+import { resolveBackendConfiguration } from "../../shared/configuration.ts";
+import { generateTrackingToken, sha256Hex } from "../../shared/crypto.ts";
+import { createBase44LlmAdapter, processFeedbackSubmission } from "../../shared/feedback-processing.ts";
+import { json, error, errorMessage } from "../../shared/response.ts";
 
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -30,6 +32,13 @@ const payloadSchema = z.object({
   website: z.string().optional(),
 });
 
+async function publicCodeForSubmission(sr: any, submissionId: string): Promise<string | null> {
+  const priorLinks = await sr.entities.IssueReport.filter({ submission_id: submissionId });
+  if (!priorLinks[0]) return null;
+  const priorIssue = await sr.entities.Issue.get(priorLinks[0].issue_id).catch(() => null);
+  return priorIssue?.public_code ?? null;
+}
+
 Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => null);
@@ -41,11 +50,22 @@ Deno.serve(async (req) => {
 
     // Honeypot tripped — pretend success without creating anything.
     if (input.website && input.website.trim() !== "") {
-      return json({ success: true, duplicate: true });
+      return json({ success: true, duplicate: true, processingCompleted: false });
     }
 
     const base44 = createClientFromRequest(req);
     const sr = base44.asServiceRole;
+    const config = resolveBackendConfiguration({
+      appBaseUrl: Deno.env.get("APP_BASE_URL"),
+      notificationIntegrationEnabled: Deno.env.get("NOTIFICATION_INTEGRATION_ENABLED"),
+      requestUrl: req.url,
+    });
+    const dispatchGate = {
+      appBaseUrl: config.appBaseUrl,
+      runtimeDeliveryEnabled: config.notificationIntegrationEnabled,
+      emailAdapter: { send: (emailInput: { to: string; subject: string; body: string; from_name: string }) => base44.integrations.Core.SendEmail(emailInput) },
+    };
+    const llm = createBase44LlmAdapter(base44);
 
     // 1. Validate the active project by slug.
     const projects = await sr.entities.Project.filter({ slug: input.projectSlug });
@@ -80,20 +100,18 @@ Deno.serve(async (req) => {
       await Promise.all(requestedAttachments.filter(Boolean).map((attachment) =>
         attachment.submission_id === existing[0].id ? Promise.resolve() : sr.entities.FeedbackAttachment.update(attachment.id, { submission_id: existing[0].id })
       ));
-      const priorLinks = await sr.entities.IssueReport.filter({
-        submission_id: existing[0].id,
-      });
-      let priorCode: string | null = null;
-      if (priorLinks[0]) {
-        const priorIssue = await sr.entities.Issue.get(priorLinks[0].issue_id);
-        priorCode = priorIssue?.public_code ?? null;
+      if (existing[0].processing_status !== "completed") {
+        await processFeedbackSubmission({
+          sr, submissionId: existing[0].id, llm, trustedInline: true, dispatchGate,
+        });
       }
       return json({
         success: true,
         duplicate: true,
         submissionRef: existing[0].id,
-        publicCode: priorCode,
+        publicCode: await publicCodeForSubmission(sr, existing[0].id),
         trackingUrl: null,
+        processingCompleted: (await sr.entities.FeedbackSubmission.get(existing[0].id))?.processing_status === "completed",
       });
     }
 
@@ -129,8 +147,7 @@ Deno.serve(async (req) => {
       created_at: nowIso,
     });
 
-    // Associate only prevalidated, idempotently uploaded private files. Creation
-    // of the submission is the finalization point that activates processing.
+    // Associate only prevalidated, idempotently uploaded private files.
     await Promise.all(requestedAttachments.filter(Boolean).map((attachment) =>
       sr.entities.FeedbackAttachment.update(attachment.id, { submission_id: submission.id, attachment_purpose: "initial_report" })
     ));
@@ -151,7 +168,7 @@ Deno.serve(async (req) => {
       created_at: nowIso,
     });
 
-    // 5. Append receipt activity. Intelligence processing adds later events.
+    // 5. Append receipt activity.
     await sr.entities.ActivityEvent.create({
       project_id: projectId,
       owner_id: ownerId,
@@ -162,8 +179,27 @@ Deno.serve(async (req) => {
       public_message: "Your feedback was received.",
       created_at: nowIso,
     });
-    // 6. Return immediately. Processing is triggered independently by the client
-    // and by the deployed entity automation; the reporter never waits on AI.
+
+    // 6. Process immediately via the shared trusted implementation (no Workflow).
+    const processed = await processFeedbackSubmission({
+      sr, submissionId: submission.id, llm, trustedInline: true, dispatchGate,
+    });
+
+    if (processed.success && processed.issueId) {
+      const issue = await sr.entities.Issue.get(processed.issueId).catch(() => null);
+      return json({
+        success: true,
+        duplicate: false,
+        submissionRef: submission.id,
+        publicCode: issue?.public_code ?? null,
+        trackingToken: rawToken,
+        trackingUrl: `/track/${rawToken}`,
+        processingCompleted: true,
+        analysisMode: processed.analysisMode,
+      });
+    }
+
+    // Processing failures must not erase the accepted submission or expose internals.
     return json({
       success: true,
       duplicate: false,
@@ -171,6 +207,7 @@ Deno.serve(async (req) => {
       publicCode: null,
       trackingToken: rawToken,
       trackingUrl: `/track/${rawToken}`,
+      processingCompleted: false,
     });
   } catch (err) {
     return error(errorMessage(err), 500);

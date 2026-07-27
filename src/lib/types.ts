@@ -20,6 +20,15 @@ export interface NotificationProjectSettings {
   daily_digest_include_empty?: boolean;
   digest_timezone?: string;
   digest_hour_local?: number;
+  maintenance_last_attempt_at?: string;
+  maintenance_last_success_at?: string;
+  maintenance_last_summary?: {
+    processed?: number;
+    failed?: number;
+    skipped?: number;
+    digestsQueued?: number;
+    emailDeliveryDisabled?: boolean;
+  };
 }
 export type NotificationProject = Project & NotificationProjectSettings;
 
@@ -140,6 +149,8 @@ export interface SubmitFeedbackResult {
   publicCode?: string | null;
   trackingToken?: string;
   trackingUrl?: string | null;
+  processingCompleted?: boolean;
+  analysisMode?: 'ai' | 'deterministic_fallback';
 }
 
 export interface AttachmentAccess { signedUrl: string; expiresAt: string }

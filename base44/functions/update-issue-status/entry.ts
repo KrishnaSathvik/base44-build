@@ -2,7 +2,9 @@ import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
 import { assertTransition, isIssueStatus, transitionEventType, transitionRequirementError, transitionTimestamps } from "../../shared/issue-state-machine.ts";
 import { recalculateIssue } from "../../shared/issue-operations.ts";
-import { bestEffortEnqueue, notificationDedupeKey, reporterEmailEligible, safeExcerpt, type NotificationTemplate } from "../../shared/notifications.ts";
+import { resolveBackendConfiguration } from "../../shared/configuration.ts";
+import { bestEffortEnqueueAndDispatch } from "../../shared/notification-dispatch.ts";
+import { notificationDedupeKey, reporterEmailEligible, safeExcerpt, type NotificationTemplate } from "../../shared/notifications.ts";
 import { ownerOwnsProject, validateDuplicateTarget } from "../../shared/reporter-workflow.ts";
 import { error, errorMessage, json } from "../../shared/response.ts";
 
@@ -53,6 +55,16 @@ Deno.serve(async (req) => {
     if (!isIssueStatus(input.status)) return error("Invalid issue update", 400);
     const targetStatus = input.status;
     const sr = base44.asServiceRole;
+    const config = resolveBackendConfiguration({
+      appBaseUrl: Deno.env.get("APP_BASE_URL"),
+      notificationIntegrationEnabled: Deno.env.get("NOTIFICATION_INTEGRATION_ENABLED"),
+      requestUrl: req.url,
+    });
+    const dispatchGate = {
+      appBaseUrl: config.appBaseUrl,
+      runtimeDeliveryEnabled: config.notificationIntegrationEnabled,
+      emailAdapter: { send: (emailInput: { to: string; subject: string; body: string; from_name: string }) => base44.integrations.Core.SendEmail(emailInput) },
+    };
     const issue = await sr.entities.Issue.get(input.issueId).catch(() => null);
     if (!issue) return error("Issue not found", 404);
     const project = await sr.entities.Project.get(issue.project_id).catch(() => null);
@@ -95,7 +107,7 @@ Deno.serve(async (req) => {
         internal_message: `Status changed from ${issue.status} to ${targetStatus}.`,
         metadata: { fromStatus: issue.status, toStatus: targetStatus, canonicalPublicCode: duplicateTarget?.public_code }, created_at: nowIso,
       });
-      if (["resolved", "reopened"].includes(targetStatus)) updated = await recalculateIssue(sr, issue.id, { reopened: targetStatus === "reopened" });
+      if (["resolved", "reopened"].includes(targetStatus)) updated = await recalculateIssue(sr, issue.id, { reopened: targetStatus === "reopened", dispatchGate });
     }
 
     if (input.publicMessage) {
@@ -108,12 +120,12 @@ Deno.serve(async (req) => {
       if (template && sourceEvent) for (const message of messages) {
         const submission = await sr.entities.FeedbackSubmission.get(message.submission_id).catch(() => null);
         if (submission) {
-          const delivery = await bestEffortEnqueue(sr, {
+          const delivery = await bestEffortEnqueueAndDispatch(sr, {
           project, issue: updated, submission, templateKey: template, recipientType: "reporter",
           dedupeKey: notificationDedupeKey("reporter_status", [sourceEvent.id, submission.id]),
           activityEventId: sourceEvent.id, reporterMessageId: message.id,
           payload: { productName: project.name, issueTitle: updated.title, status: updated.status, message: safeExcerpt(input.publicMessage) },
-          });
+          }, dispatchGate);
           if (!delivery && !reporterEmailEligible(project, submission)) await sr.entities.ActivityEvent.create({
             project_id: issue.project_id, owner_id: owner, issue_id: issue.id, submission_id: submission.id,
             event_type: "notification_skipped", actor_type: "system", actor_id: "system",

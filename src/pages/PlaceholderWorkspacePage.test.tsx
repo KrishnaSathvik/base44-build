@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { PlaceholderWorkspacePage } from '@/pages/PlaceholderWorkspacePage';
-import { listMyNotificationDeliveries, retryNotification, updateProjectSettings } from '@/lib/api';
+import { listMyNotificationDeliveries, retryNotification, runFreeMaintenance, updateProjectSettings } from '@/lib/api';
 
 vi.mock('@/lib/appUrls',()=>({publicBoardUrl:vi.fn(()=> 'https://vensaos.com/f/acme')}));
 
@@ -13,6 +13,7 @@ vi.mock('@/lib/api', () => ({
   updateNotificationSettings: vi.fn(),
   listMyNotificationDeliveries: vi.fn().mockResolvedValue([]), retryNotification:vi.fn(),
   listMyAttachments:vi.fn().mockResolvedValue([]),listMySubmissions:vi.fn().mockResolvedValue([]),
+  runFreeMaintenance: vi.fn().mockResolvedValue({ success:true, status:'ran', processed:2, sent:0, failed:0, skipped:2, deadLettered:0, reconciled:0, digestsQueued:0, digestsSkippedEmpty:0, digestsDuplicate:0, projectsChecked:1, orphanAttachments:0, emailDeliveryDisabled:true, lastAttemptAt:'2026-07-27T15:00:00Z', lastSuccessAt:'2026-07-27T15:00:01Z' }),
 }));
 
 test('renders editable persisted project settings', async () => {
@@ -24,6 +25,16 @@ test('renders editable persisted project settings', async () => {
   expect(screen.getByLabelText('Critical issue alerts')).toBeChecked();
   expect(screen.getByLabelText('Digest timezone')).toHaveValue('UTC');
   expect(screen.getByText('https://vensaos.com/f/acme')).toBeVisible();
+  expect(screen.getByText(/next becomes active after the configured local hour/i)).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Run maintenance now' })).toBeVisible();
+  expect(screen.getByText(/Email delivery is disabled — maintenance will not contact SendEmail/i)).toBeVisible();
+});
+
+test('manual maintenance button invokes run-free-maintenance with bypass', async () => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/app/settings']}><PlaceholderWorkspacePage /></MemoryRouter></QueryClientProvider>);
+  fireEvent.click(await screen.findByRole('button', { name: 'Run maintenance now' }));
+  await waitFor(() => expect(runFreeMaintenance).toHaveBeenCalledWith({ projectId: 'p1', bypassThrottle: true }));
 });
 
 test('shows masked delivery history and retries a failed delivery',async()=>{

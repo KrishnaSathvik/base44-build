@@ -73,6 +73,27 @@
       "type": "string",
       "format": "date-time",
       "description": "Worker cursor used to rotate bounded project batches"
+    },
+    "maintenance_lease_holder": {
+      "type": "string",
+      "description": "Opaque free-runtime maintenance lease holder id (not a secret)"
+    },
+    "maintenance_lease_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the active free-runtime maintenance lease expires"
+    },
+    "maintenance_last_attempt_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "maintenance_last_success_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "maintenance_last_summary": {
+      "type": "object",
+      "description": "Sanitized counts from the last free-runtime maintenance run"
     }
   },
   "required": ["name", "slug"],

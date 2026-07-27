@@ -54,7 +54,9 @@ Do not claim a stage is complete without showing the command output.
   inside every privileged function.
 - Keep `process-feedback` idempotent; preserve immutable activity history.
 - Store private file references, not permanent public URLs.
-- Automations do not run locally — test them after deployment (doc 04 §13).
+- Automations do not run locally — and free runtime does not depend on them.
+  Prefer `docs/free-runtime-architecture.md`. Test hosted functions after deploy
+  (doc 04 §13).
 
 ## Reporting
 

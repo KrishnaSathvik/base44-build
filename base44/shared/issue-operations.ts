@@ -2,6 +2,7 @@ import { randomIssueCode } from "./crypto.ts";
 import { computePriority, type Reproducibility, type Severity } from "./priority.ts";
 import { normalizeTitle } from "./text.ts";
 import { bestEffortEnqueue, criticalAlertReasons, notificationDedupeKey, safeExcerpt } from "./notifications.ts";
+import { bestEffortEnqueueAndDispatch, type DispatchOptions } from "./notification-dispatch.ts";
 import { criticalPayload } from "./notification-reconciliation.ts";
 
 // Base44's generated registry is available to the frontend build, while hosted
@@ -30,6 +31,7 @@ export async function createIssueForSubmission(
   submission: Row,
   ownerId: string,
   status: "unreviewed" | "open" = "unreviewed",
+  dispatchGate: DispatchOptions | null = null,
 ): Promise<Row> {
   const existingLinks = await sr.entities.IssueReport.filter({ submission_id: submission.id });
   if (existingLinks[0]) return sr.entities.Issue.get(existingLinks[0].issue_id);
@@ -68,10 +70,14 @@ export async function createIssueForSubmission(
     threshold_version: "duplicate-thresholds-v1",
     created_at: new Date().toISOString(),
   });
-  return recalculateIssue(sr, issue.id);
+  return recalculateIssue(sr, issue.id, { dispatchGate });
 }
 
-export async function recalculateIssue(sr: ServiceClient, issueId: string, options: { reopened?: boolean } = {}): Promise<Row> {
+export async function recalculateIssue(
+  sr: ServiceClient,
+  issueId: string,
+  options: { reopened?: boolean; dispatchGate?: DispatchOptions | null } = {},
+): Promise<Row> {
   const issue = await sr.entities.Issue.get(issueId);
   const links = (await sr.entities.IssueReport.filter({ issue_id: issueId })).filter((row: Row) => row.review_status === "accepted");
   const submissions = await Promise.all(links.map((link: Row) => sr.entities.FeedbackSubmission.get(link.submission_id)));
@@ -120,11 +126,16 @@ export async function recalculateIssue(sr: ServiceClient, issueId: string, optio
     });
   }
   const alertReasons = criticalAlertReasons(issue, updated, options.reopened === true);
-  if (alertReasons.length) updated = await recordCriticalAlert(sr, updated, alertReasons.join("; "));
+  if (alertReasons.length) updated = await recordCriticalAlert(sr, updated, alertReasons.join("; "), options.dispatchGate ?? null);
   return updated;
 }
 
-export async function recordCriticalAlert(sr: ServiceClient, issue: Row, reason: string): Promise<Row> {
+export async function recordCriticalAlert(
+  sr: ServiceClient,
+  issue: Row,
+  reason: string,
+  dispatchGate: DispatchOptions | null = null,
+): Promise<Row> {
   const nowIso = new Date().toISOString(); const version = Number(issue.critical_alert_version ?? 0) + 1;
   const updated = await sr.entities.Issue.update(issue.id, { critical_alert_version: version, last_critical_alert_at: nowIso });
   const event = await sr.entities.ActivityEvent.create({
@@ -133,11 +144,15 @@ export async function recordCriticalAlert(sr: ServiceClient, issue: Row, reason:
     metadata: { criticalAlertVersion: version, reason: safeExcerpt(reason, 300) }, created_at: nowIso,
   });
   const project = await sr.entities.Project.get(issue.project_id).catch(() => null);
-  if (project) await bestEffortEnqueue(sr, {
-    project, issue: updated, templateKey: "owner_critical_issue", recipientType: "owner",
-    dedupeKey: notificationDedupeKey("critical", [issue.id, String(version)]), activityEventId: event.id,
-    payload: criticalPayload(project, updated, reason),
-  });
+  if (project) {
+    const input = {
+      project, issue: updated, templateKey: "owner_critical_issue" as const, recipientType: "owner" as const,
+      dedupeKey: notificationDedupeKey("critical", [issue.id, String(version)]), activityEventId: event.id,
+      payload: criticalPayload(project, updated, reason),
+    };
+    if (dispatchGate) await bestEffortEnqueueAndDispatch(sr, input, dispatchGate);
+    else await bestEffortEnqueue(sr, input);
+  }
   return updated;
 }
 
@@ -148,6 +163,7 @@ export async function moveSubmission(
   ownerId: string,
   groupingMethod: "automatic" | "manual",
   evidence?: { confidence?: number; matchingReasons?: string[]; conflictingEvidence?: string[] },
+  dispatchGate: DispatchOptions | null = null,
 ): Promise<string[]> {
   const existing = await sr.entities.IssueReport.filter({ submission_id: submissionId });
   const impacted = new Set<string>();
@@ -173,6 +189,6 @@ export async function moveSubmission(
     });
   }
   impacted.add(targetIssueId);
-  for (const id of impacted) await recalculateIssue(sr, id);
+  for (const id of impacted) await recalculateIssue(sr, id, { dispatchGate });
   return [...impacted];
 }

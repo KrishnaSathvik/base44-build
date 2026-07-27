@@ -1,4 +1,13 @@
-import { createEmailTrackingGrant, failurePatch, sanitizeDeliveryError, sendingLeaseExpired, templateEnabled, type Row } from "./notifications.ts";
+import {
+  bestEffortEnqueue,
+  createEmailTrackingGrant,
+  failurePatch,
+  sanitizeDeliveryError,
+  sendingLeaseExpired,
+  templateEnabled,
+  type EnqueueInput,
+  type Row,
+} from "./notifications.ts";
 import { renderNotification } from "./notification-templates.ts";
 import { buildCanonicalUrl, buildOwnerIssueUrl, buildTrackingUrl, validateAppBaseUrl } from "./configuration.ts";
 
@@ -99,5 +108,27 @@ export async function dispatchNotificationDelivery(sr: any, deliveryId: string, 
       templateKey: delivery.template_key, attempt, errorCode: sanitized.code,
     }, nowIso);
     return updated;
+  }
+}
+
+/** Enqueue then run eligibility/dispatch immediately (replaces entity Workflow triggers). */
+export async function bestEffortEnqueueAndDispatch(
+  sr: any,
+  input: EnqueueInput,
+  gate: DispatchOptions | null,
+): Promise<Row | null> {
+  const delivery = await bestEffortEnqueue(sr, input);
+  if (!delivery || !gate) return delivery;
+  try {
+    return await dispatchNotificationDelivery(sr, delivery.id, gate);
+  } catch (error) {
+    const sanitized = sanitizeDeliveryError(error);
+    await sr.entities.ActivityEvent.create({
+      project_id: input.project.id, owner_id: input.project.created_by ?? input.project.owner_id,
+      issue_id: input.issue?.id, submission_id: input.submission?.id, event_type: "notification_dispatch_failed",
+      actor_type: "system", actor_id: "system", internal_message: "Direct notification dispatch failed.",
+      metadata: { templateKey: input.templateKey, errorCode: sanitized.code, deliveryId: delivery.id }, created_at: new Date().toISOString(),
+    }).catch(() => undefined);
+    return delivery;
   }
 }

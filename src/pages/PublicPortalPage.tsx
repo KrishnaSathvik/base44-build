@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Bug, CheckCircle2, ExternalLink, Lightbulb, MessageSquareText, ShieldCheck, X } from 'lucide-react';
-import { apiErrorMessage, getPublicProject, processFeedback, submitFeedback, uploadFeedbackAttachment } from '@/lib/api';
+import { apiErrorMessage, getPublicProject, submitFeedback, uploadFeedbackAttachment } from '@/lib/api';
 import type { FeedbackType, SubmitFeedbackResult } from '@/lib/types';
 import type { PendingScreenshot } from '@/lib/attachments';
 import { collectEnvironmentContext } from '@/lib/environment';
@@ -88,7 +88,6 @@ export function PublicPortalPage(){
       if(!submitted.success)throw new Error('The report was not accepted.');
       setResult(submitted);
       await discardFeedbackDraft(projectSlug);
-      if(!submitted.duplicate&&submitted.submissionRef){void processFeedback(submitted.submissionRef).catch(()=>undefined);}
     }catch(err){setSubmitError(apiErrorMessage(err));}
   }
 
