@@ -1,5 +1,7 @@
 export interface FrontendRuntimeConfig { appId: string; serverUrl?: string; }
 const LINKED_APP_ID = '6a627102d65aedec9330ed4c';
+/** Matches @base44/sdk createClient default serverUrl. Required as appBaseUrl so OAuth/logout do not hit the custom frontend origin. */
+export const BASE44_HOSTED_BACKEND_ORIGIN = 'https://base44.app';
 
 function isLocalUrl(value: string) { try { const url = new URL(value); return ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname); } catch { return false; } }
 
@@ -13,6 +15,13 @@ export function validateFrontendConfig(input: { appId?: string; injectedServerUr
   const serverUrl = input.injectedServerUrl || 'http://localhost:4400';
   if (!isLocalUrl(serverUrl)) throw new Error('Local development must use a localhost Base44 backend.');
   return { appId, serverUrl };
+}
+
+export function createBase44ClientOptions(config: FrontendRuntimeConfig) {
+  if (config.serverUrl) {
+    return { appId: config.appId, serverUrl: config.serverUrl, appBaseUrl: config.serverUrl };
+  }
+  return { appId: config.appId, appBaseUrl: BASE44_HOSTED_BACKEND_ORIGIN };
 }
 
 export const frontendRuntimeConfig = validateFrontendConfig({

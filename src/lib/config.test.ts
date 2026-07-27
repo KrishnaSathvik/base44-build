@@ -1,4 +1,6 @@
 import { expect, test } from 'vitest';
-import { validateFrontendConfig } from '@/lib/config';
+import { BASE44_HOSTED_BACKEND_ORIGIN, createBase44ClientOptions, validateFrontendConfig } from '@/lib/config';
 test('production omits every Base44 server override',()=>{expect(validateFrontendConfig({appId:'app',development:false})).toEqual({appId:'app'});expect(()=>validateFrontendConfig({appId:'app',development:false,injectedServerUrl:'http://localhost:4400'})).toThrow(/Production/);expect(()=>validateFrontendConfig({appId:'app',development:false,injectedServerUrl:'https://api.example'})).toThrow(/Production/);});
 test('development explicitly points at the local Base44 server',()=>{expect(validateFrontendConfig({appId:'app',development:true}).serverUrl).toBe('http://localhost:4400');expect(()=>validateFrontendConfig({appId:'app',development:true,injectedServerUrl:'https://example.com'})).toThrow(/localhost/);});
+test('production client options keep OAuth on the hosted Base44 backend',()=>{expect(createBase44ClientOptions({appId:'app'})).toEqual({appId:'app',appBaseUrl:BASE44_HOSTED_BACKEND_ORIGIN});expect(BASE44_HOSTED_BACKEND_ORIGIN).toBe('https://base44.app');});
+test('local client options keep serverUrl and appBaseUrl aligned',()=>{expect(createBase44ClientOptions({appId:'app',serverUrl:'http://localhost:4400'})).toEqual({appId:'app',serverUrl:'http://localhost:4400',appBaseUrl:'http://localhost:4400'});});
