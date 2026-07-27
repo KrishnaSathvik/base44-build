@@ -6,6 +6,7 @@ import { Button, Checkbox, EmptyState, Field, InlineError, Input, Skeleton, Swit
 import { listMyAttachments, listMyNotificationDeliveries, listMyProjects, listMySubmissions, retryNotification, updateNotificationSettings, updateProjectSettings } from '@/lib/api';
 import type { FeedbackType, NotificationProject } from '@/lib/types';
 import { formatTime } from '@/lib/format';
+import { publicBoardUrl } from '@/lib/appUrls';
 
 export function isValidTimezone(value:string){try{new Intl.DateTimeFormat('en-US',{timeZone:value}).format();return true;}catch{return false;}}
 
@@ -36,7 +37,7 @@ function ProjectSettings() {
 
   if(projects.isLoading)return <SettingsFrame><Skeleton className="h-12 w-full"/><Skeleton className="mt-8 h-80 w-full"/></SettingsFrame>;
   if(!project)return <SettingsFrame><EmptyState title="Create a project first" description="Project settings become available after your first feedback board is created." action={<Link to="/app/setup"><Button>Create a project</Button></Link>} /></SettingsFrame>;
-  const publicLink=`${window.location.origin}/f/${project.slug}`;
+  const publicLink=publicBoardUrl(project.slug);
   const submissionIds=new Set((submissions.data??[]).map(item=>item.id));
   const orphanCount=(attachments.data??[]).filter(item=>item.project_id===project.id&&item.upload_status!=='deleted'&&!submissionIds.has(item.submission_id)&&Date.parse(item.created_at??item.created_date??'')<Date.now()-24*60*60_000).length;
   const toggleType=(type:FeedbackType,checked:boolean)=>setTypes(current=>checked?[...current,type]:current.filter(item=>item!==type));

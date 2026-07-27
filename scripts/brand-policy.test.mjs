@@ -21,4 +21,18 @@ describe('configured hosted URL brand policy', () => {
       appBaseUrl,
     })).toBe('');
   });
+
+  it('allows the lowercase product name only inside an approved domain hostname', () => {
+    expect(configuredHostedUrlReason({
+      file: 'docs/vercel-domain-setup.md',
+      match: 'vensaos',
+      surrounding: 'Primary: https://vensaos.com and redirect https://www.vensaos.com',
+    })).toBe('approved canonical or redirect hostname');
+
+    expect(configuredHostedUrlReason({
+      file: 'README.md',
+      match: 'vensaos',
+      surrounding: 'the vensaos product',
+    })).toBe('');
+  });
 });

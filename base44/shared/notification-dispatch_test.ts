@@ -26,9 +26,18 @@ Deno.test("master disabled and missing recipient safely skip without calling ema
 
 Deno.test("successful reporter send creates only a token hash and marks sent", async () => {
   const store = fakeStore(); let outgoing = "";
-  const result = await dispatchNotificationDelivery(store.sr, "d1", { now: new Date("2026-07-27T12:00:00Z"), appBaseUrl: "https://app.test", runtimeDeliveryEnabled: true, emailAdapter: { send: async (input) => { outgoing = input.body; return { id: "provider-1" }; } } });
+  const result = await dispatchNotificationDelivery(store.sr, "d1", { now: new Date("2026-07-27T12:00:00Z"), appBaseUrl: "https://vensaos.com", runtimeDeliveryEnabled: true, emailAdapter: { send: async (input) => { outgoing = input.body; return { id: "provider-1" }; } } });
   assertEquals(result.status, "sent"); assertEquals(result.provider_message_id, "provider-1"); assertEquals(store.grants.length, 1);
-  assertMatch(store.grants[0].token_hash, /^[a-f0-9]{64}$/); assertEquals("raw_token" in store.grants[0], false); assert(outgoing.includes("https://app.test/track/"));
+  assertMatch(store.grants[0].token_hash, /^[a-f0-9]{64}$/); assertEquals("raw_token" in store.grants[0], false); assert(outgoing.includes("https://vensaos.com/track/"));
+});
+
+Deno.test("owner alerts and digests use canonical VensaOS workspace links", async () => {
+  const alert = fakeStore({ recipient_type: "owner", submission_id: undefined, template_key: "owner_critical_issue" }); let alertBody = "";
+  await dispatchNotificationDelivery(alert.sr, "d1", { appBaseUrl: "https://vensaos.com", runtimeDeliveryEnabled: true, emailAdapter: { send: async (input) => { alertBody = input.body; return {}; } } });
+  assert(alertBody.includes("https://vensaos.com/app/issues/i1"));
+  const digest = fakeStore({ recipient_type: "owner", submission_id: undefined, issue_id: undefined, template_key: "owner_daily_digest" }); (digest.project as any).daily_digest_enabled = true; let digestBody = "";
+  await dispatchNotificationDelivery(digest.sr, "d1", { appBaseUrl: "https://vensaos.com", runtimeDeliveryEnabled: true, emailAdapter: { send: async (input) => { digestBody = input.body; return {}; } } });
+  assert(digestBody.includes("https://vensaos.com/app/overview"));
 });
 
 Deno.test("failed sends revoke grants and follow deterministic retry/dead-letter transitions", async () => {
@@ -36,7 +45,7 @@ Deno.test("failed sends revoke grants and follow deterministic retry/dead-letter
   let now = new Date("2026-07-27T12:00:00Z");
   for (let attempt = 1; attempt <= 4; attempt++) {
     store.delivery.status = attempt === 1 ? "pending" : "failed"; store.delivery.next_attempt_at = undefined;
-    await dispatchNotificationDelivery(store.sr, "d1", { now, appBaseUrl: "https://app.test", runtimeDeliveryEnabled: true, emailAdapter: adapter });
+    await dispatchNotificationDelivery(store.sr, "d1", { now, appBaseUrl: "https://vensaos.com", runtimeDeliveryEnabled: true, emailAdapter: adapter });
     now = new Date(now.getTime() + 2 * 60 * 60_000);
   }
   assertEquals(store.delivery.status, "dead_letter"); assertEquals(store.delivery.attempt_count, 4); assertEquals(store.grants.length, 4);

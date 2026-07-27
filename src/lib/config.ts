@@ -7,7 +7,7 @@ export function validateFrontendConfig(input: { appId?: string; injectedServerUr
   const appId = input.appId?.trim();
   if (!appId) throw new Error('Base44 app identity is missing.');
   if (!input.development) {
-    if (input.injectedServerUrl && isLocalUrl(input.injectedServerUrl)) throw new Error('Production cannot route Base44 SDK requests to localhost.');
+    if (input.injectedServerUrl) throw new Error('Production Base44 SDK requests cannot use a server override.');
     return { appId };
   }
   const serverUrl = input.injectedServerUrl || 'http://localhost:4400';

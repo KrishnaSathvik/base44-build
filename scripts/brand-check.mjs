@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { configuredHostedUrlReason } from './brand-policy.mjs';
 
 const roots = /^(src|public|base44|scripts\/demo|docs)\//;
-const rootFiles = new Set(['index.html', 'README.md', 'CLAUDE.md', 'RELEASE_NOTES.md', 'package.json', 'package-lock.json', '.env.example', 'vite.config.ts', 'tailwind.config.js']);
+const rootFiles = new Set(['index.html', 'README.md', 'CLAUDE.md', 'RELEASE_NOTES.md', 'package.json', 'package-lock.json', '.env.example', 'vercel.json', 'vite.config.ts', 'tailwind.config.js']);
 const excluded = new Set(['scripts/brand-check.mjs']);
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { encoding: 'utf8' }).trim().split('\n').filter(file => file && existsSync(file));
 const sourceFiles = tracked.filter(file => !excluded.has(file) && (roots.test(file) || rootFiles.has(file)));
@@ -30,6 +30,7 @@ function allowed(file, match, surrounding) {
   if ((file === 'src/pages/PublicPortalPage.tsx' || file === 'src/app/PwaUpdatePrompt.tsx') && surrounding.includes('feedback-inbox:before-update')) return 'stable draft-preservation browser event';
   if (file === 'README.md' && (match === 'Feedback Inbox' || match === 'feedback-inbox')) return 'explicit historical branding decision';
   if ((file === 'package.json' || file === 'package-lock.json') && match.toLowerCase() === 'vensaos') return 'private package identifier';
+  if (file === 'base44/shared/configuration_test.ts' && match === 'feedback-inbox' && surrounding.includes('.base44.app')) return 'rejected legacy Base44 public-origin test fixture';
   if (file.startsWith('docs/') && match === 'vensaos' && (/npm create|cd vensaos|"name": "vensaos"|vensaos\//.test(surrounding))) return 'documentation of the lowercase package/directory identifier';
   if (file.startsWith('dist/') && (surrounding.includes('feedback-inbox-local') || surrounding.includes('feedback-inbox:before-update'))) return 'built stable client-side technical identifier';
   const hostedUrlReason = configuredHostedUrlReason({ file, match, surrounding, appBaseUrl: process.env.APP_BASE_URL });

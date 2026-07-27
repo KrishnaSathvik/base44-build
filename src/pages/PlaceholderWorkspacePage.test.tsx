@@ -5,6 +5,8 @@ import { vi } from 'vitest';
 import { PlaceholderWorkspacePage } from '@/pages/PlaceholderWorkspacePage';
 import { listMyNotificationDeliveries, retryNotification, updateProjectSettings } from '@/lib/api';
 
+vi.mock('@/lib/appUrls',()=>({publicBoardUrl:vi.fn(()=> 'https://vensaos.com/f/acme')}));
+
 vi.mock('@/lib/api', () => ({
   listMyProjects: vi.fn().mockResolvedValue([{ id:'p1', name:'Acme', slug:'acme', product_url:'https://acme.test', description:'Product feedback', allow_anonymous:true, feedback_types_enabled:['bug','feature','general'], collect_reporter_email:true }]),
   updateProjectSettings: vi.fn(),
@@ -21,6 +23,7 @@ test('renders editable persisted project settings', async () => {
   expect(screen.getByText('Email delivery is currently disabled. Notifications will be recorded but not sent.')).toBeVisible();
   expect(screen.getByLabelText('Critical issue alerts')).toBeChecked();
   expect(screen.getByLabelText('Digest timezone')).toHaveValue('UTC');
+  expect(screen.getByText('https://vensaos.com/f/acme')).toBeVisible();
 });
 
 test('shows masked delivery history and retries a failed delivery',async()=>{

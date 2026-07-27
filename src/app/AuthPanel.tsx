@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button, Field, Input, Panel } from '@/components/ui';
 import { Brand } from '@/components/Brand';
 import { PageMetadata } from '@/app/PageMetadata';
+import { authenticationReturnUrl } from '@/lib/appUrls';
 
 type Mode = 'login' | 'register' | 'verify';
 
@@ -131,7 +132,7 @@ export function AuthPanel() {
               type="button"
               variant="secondary"
               className="w-full"
-              onClick={() => base44.auth.loginWithProvider('google', window.location.href)}
+              onClick={() => base44.auth.loginWithProvider('google', authenticationReturnUrl())}
             >
               Continue with Google
             </Button>

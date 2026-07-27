@@ -8,6 +8,7 @@ import { createProject } from '@/lib/api';
 import { slugify, shortSuffix } from '@/lib/format';
 import type { Project } from '@/lib/types';
 import { Button, Field, Input, Panel, Textarea } from '@/components/ui';
+import { publicBoardUrl } from '@/lib/appUrls';
 
 const schema = z.object({
   name: z.string().min(1, 'Product name is required').max(80),
@@ -55,7 +56,7 @@ export function OwnerSetupPage() {
   }
 
   if (created) {
-    const link = `${window.location.origin}/f/${created.slug}`;
+    const link = publicBoardUrl(created.slug);
     return (
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-7">
         <h1 className="fi-display text-2xl font-semibold text-ink">Your project is ready</h1>

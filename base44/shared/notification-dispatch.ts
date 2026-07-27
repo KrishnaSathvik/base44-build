@@ -1,5 +1,6 @@
 import { createEmailTrackingGrant, failurePatch, sanitizeDeliveryError, sendingLeaseExpired, templateEnabled, type Row } from "./notifications.ts";
 import { renderNotification } from "./notification-templates.ts";
+import { buildCanonicalUrl, buildOwnerIssueUrl, buildTrackingUrl, validateAppBaseUrl } from "./configuration.ts";
 
 export interface EmailAdapter {
   send(input: { to: string; subject: string; body: string; from_name: string }): Promise<Row>;
@@ -49,6 +50,7 @@ export async function dispatchNotificationDelivery(sr: any, deliveryId: string, 
     ? project.created_by ?? project.owner_id
     : submission?.reporter_email;
   if (!recipient) return skip(sr, delivery, "recipient_missing", nowIso);
+  validateAppBaseUrl(options.appBaseUrl, true);
 
   const attempt = Number(delivery.attempt_count ?? 0) + 1;
   const leasePatch = { status: "sending", attempt_count: attempt, last_attempt_at: nowIso, sending_started_at: nowIso,
@@ -67,12 +69,15 @@ export async function dispatchNotificationDelivery(sr: any, deliveryId: string, 
       if (!submission) return skip(sr, delivery, "recipient_missing", nowIso);
       const created = await createEmailTrackingGrant(sr, delivery, submission, now);
       grant = created.grant;
-      trackingUrl = `${options.appBaseUrl.replace(/\/$/, "")}/track/${created.rawToken}`;
+      trackingUrl = buildTrackingUrl(created.rawToken);
     }
     const issue = delivery.issue_id ? await sr.entities.Issue.get(delivery.issue_id).catch(() => null) : null;
+    const ownerUrl = delivery.recipient_type === "owner"
+      ? delivery.template_key === "owner_daily_digest" ? buildCanonicalUrl("/app/overview") : issue ? buildOwnerIssueUrl(issue.id) : buildCanonicalUrl("/app/inbox")
+      : undefined;
     const rendered = renderNotification({
       templateKey: delivery.template_key, payload: delivery.payload ?? {}, publicCode: issue?.public_code,
-      trackingUrl, ownerUrl: delivery.recipient_type === "owner" && issue ? `${options.appBaseUrl.replace(/\/$/, "")}/app/issues/${issue.id}` : undefined,
+      trackingUrl, ownerUrl,
     });
     const provider = await options.emailAdapter.send({ to: recipient, subject: rendered.subject, body: rendered.html, from_name: "VensaOS" });
     // Provider acceptance and this update cannot be one atomic transaction. A

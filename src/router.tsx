@@ -19,12 +19,12 @@ const OwnerOverviewPage = lazy(() => import('@/pages/OwnerOverviewPage').then(mo
 const PlaceholderWorkspacePage = lazy(() => import('@/pages/PlaceholderWorkspacePage').then(module => ({ default: module.PlaceholderWorkspacePage })));
 const OwnerInboxPage = lazy(() => import('@/pages/OwnerInboxPage').then(module => ({ default: module.OwnerInboxPage })));
 const OwnerResolvedPage = lazy(() => import('@/pages/OwnerResolvedPage').then(module => ({ default: module.OwnerResolvedPage })));
-const publicView = (element: ReactNode, title=DEFAULT_TITLE, description=DEFAULT_DESCRIPTION) => <Suspense fallback={<PublicRouteSkeleton />}><PageMetadata title={title} description={description}/>{element}</Suspense>;
+const publicView = (element: ReactNode, title=DEFAULT_TITLE, description=DEFAULT_DESCRIPTION, canonicalPath?: string) => <Suspense fallback={<PublicRouteSkeleton />}><PageMetadata title={title} description={description} canonicalPath={canonicalPath} indexable={!!canonicalPath}/>{element}</Suspense>;
 const ownerView = (element: ReactNode, title='Overview') => <Suspense fallback={<OwnerRouteSkeleton />}><PageMetadata title={title} description="Private VensaOS owner workspace."/>{element}</Suspense>;
 
 export const router = createBrowserRouter([
-  { path: '/', element: publicView(<LandingPage />), errorElement: <RouteError /> },
-  { path: '/demo', element: publicView(<DemoPage />,'Demo'), errorElement: <RouteError /> },
+  { path: '/', element: publicView(<LandingPage />,DEFAULT_TITLE,DEFAULT_DESCRIPTION,'/'), errorElement: <RouteError /> },
+  { path: '/demo', element: publicView(<DemoPage />,'Demo',DEFAULT_DESCRIPTION,'/demo'), errorElement: <RouteError /> },
   {
     path: '/app',
     element: ownerView(<AppLayout />), errorElement: <RouteError />,

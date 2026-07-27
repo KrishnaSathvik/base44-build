@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /track/
+Disallow: /auth/
+Disallow: /setup/
+
+Sitemap: https://vensaos.com/sitemap.xml

@@ -18,6 +18,7 @@ import { PageMetadata } from '@/app/PageMetadata';
 import { BrandMark } from '@/components/Brand';
 import { ScreenshotUploader } from '@/components/ScreenshotUploader';
 import { Button, Checkbox, Field, InlineError, Input, Skeleton, Textarea } from '@/components/ui';
+import { reporterTrackingUrl } from '@/lib/appUrls';
 
 const TYPES: {value:FeedbackType;title:string;hint:string;icon:typeof Bug}[] = [
   {value:'bug',title:'Report a problem',hint:'Something is broken or not working as expected.',icon:Bug},
@@ -96,8 +97,8 @@ export function PublicPortalPage(){
   const project=projectQuery.data;
 
   if(result){
-    const trackingLink=result.trackingUrl?`${window.location.origin}${result.trackingUrl}`:null;
-    return <PortalFrame productName={project.name}><State icon={<CheckCircle2/>} title="Your feedback is in" body="The report and private evidence were accepted. Keep the private link below to follow what happens next."><div className="mt-7 rounded-lg border border-line bg-surface-subtle p-4 text-left"><div className="flex items-center justify-between"><span className="fi-eyebrow">Private tracking</span>{result.publicCode&&<span className="fi-mono text-[10px] text-ink-faint">{result.publicCode}</span>}</div>{trackingLink?<><p className="fi-mono mt-3 break-all text-xs leading-5">{trackingLink}</p><a href={result.trackingUrl??'#'} className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium">Open tracking page <ArrowRight className="h-4 w-4"/></a></>:<p className="mt-3 text-sm text-ink-muted">This report was already received.</p>}</div></State></PortalFrame>;
+    const trackingLink=result.trackingToken?reporterTrackingUrl(result.trackingToken):null;
+    return <PortalFrame productName={project.name}><State icon={<CheckCircle2/>} title="Your feedback is in" body="The report and private evidence were accepted. Keep the private link below to follow what happens next."><div className="mt-7 rounded-lg border border-line bg-surface-subtle p-4 text-left"><div className="flex items-center justify-between"><span className="fi-eyebrow">Private tracking</span>{result.publicCode&&<span className="fi-mono text-[10px] text-ink-faint">{result.publicCode}</span>}</div>{trackingLink?<><p className="fi-mono mt-3 break-all text-xs leading-5">{trackingLink}</p><a href={trackingLink} className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium">Open tracking page <ArrowRight className="h-4 w-4"/></a></>:<p className="mt-3 text-sm text-ink-muted">This report was already received.</p>}</div></State></PortalFrame>;
   }
 
   const enabledTypes=project.feedbackTypesEnabled ?? ['bug','feature','general'];

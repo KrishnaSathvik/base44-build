@@ -18,6 +18,3 @@ ReactDOM.createRoot(rootElement).render(
     <RouterProvider router={router} /><PwaUpdatePrompt />
   </QueryClientProvider></NetworkStateProvider></AppErrorBoundary>,
 );
-
-const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]') ?? document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'canonical' }));
-canonical.href = `${window.location.origin}/`;
