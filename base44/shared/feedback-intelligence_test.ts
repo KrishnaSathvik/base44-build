@@ -15,3 +15,23 @@ Deno.test("backend thresholds override the model decision label", () => {
 Deno.test("unknown candidate ids cannot be grouped", () => {
   assertEquals(enforceDuplicateThreshold(decision(0.99), new Set()), "separate");
 });
+
+Deno.test("sameUnderlyingIssue false never auto-groups even at high confidence", () => {
+  assertEquals(enforceDuplicateThreshold({
+    candidateIssueId: "issue-1",
+    sameUnderlyingIssue: false,
+    decision: "auto_group",
+    confidence: 0.99,
+    matchingReasons: [],
+    conflictingEvidence: [],
+  }, new Set(["issue-1"])), "separate");
+});
+
+Deno.test("analysis schema rejects out-of-range confidence and excess keywords", async () => {
+  const { analysisSchema } = await import("./feedback-intelligence.ts");
+  assertEquals(analysisSchema.safeParse({
+    summary: "ok", feedbackType: "bug", category: "functionality", productArea: "Export",
+    severity: "high", severityReasons: ["impact"], keywords: ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
+    reproducibility: "likely", coreWorkflowBlocked: false, confidence: 1.2,
+  }).success, false);
+});

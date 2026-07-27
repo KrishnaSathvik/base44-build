@@ -22,3 +22,9 @@ playwright-report/
 # Base44
 .app.json*
 .types/
+
+# Vercel
+.vercel
+
+# Local verification probes
+scratch/

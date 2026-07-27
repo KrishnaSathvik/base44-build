@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 import { z } from "npm:zod";
+import { applyOwnerClassificationCorrection } from "../../shared/classification-correction.ts";
 import { error, errorMessage, json } from "../../shared/response.ts";
 import { createIssueForSubmission, moveSubmission, recalculateIssue } from "../../shared/issue-operations.ts";
 import { assertTransition } from "../../shared/issue-state-machine.ts";
@@ -11,6 +12,14 @@ const payloadSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("merge"), sourceIssueId: z.string().min(1), targetIssueId: z.string().min(1) }),
   z.object({ action: z.literal("move"), submissionId: z.string().min(1), targetIssueId: z.string().min(1) }),
   z.object({ action: z.literal("separate"), submissionId: z.string().min(1) }),
+  z.object({
+    action: z.literal("correct_classification"),
+    issueId: z.string().min(1),
+    feedbackType: z.enum(["bug", "feature", "general"]).optional(),
+    category: z.enum(["ui_ux", "functionality", "performance", "authentication", "data", "content", "other"]).optional(),
+    productArea: z.string().trim().min(1).max(120).optional(),
+    severity: z.enum(["critical", "high", "medium", "low"]).optional(),
+  }),
 ]);
 
 async function requireOwner(base44: any): Promise<string | null> {
@@ -119,6 +128,14 @@ Deno.serve(async (req) => {
         internal_message: `Report moved to ${target.public_code}.`, created_at: nowIso,
       });
       return json({ success: true, issueId: target.id });
+    }
+
+    if (input.action === "correct_classification") {
+      if (!input.feedbackType && !input.category && !input.productArea && !input.severity) {
+        return error("Provide at least one classification field to correct", 400);
+      }
+      const { issue } = await applyOwnerClassificationCorrection(sr, owner, input);
+      return json({ success: true, issueId: issue.id, issue });
     }
 
     const submission = await sr.entities.FeedbackSubmission.get(input.submissionId);

@@ -92,7 +92,7 @@ export function OwnerSetupPage() {
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-7">
       <h1 className="fi-display text-2xl font-semibold text-ink">Set up your VensaOS workspace</h1>
       <p className="mt-1 text-sm text-ink-muted">
-        Create a feedback board for your product.
+        Create your first feedback board for your product.
       </p>
       <Panel className="mt-6 p-5">
         <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
@@ -112,7 +112,7 @@ export function OwnerSetupPage() {
           </Field>
           {submitError && <p className="text-sm text-critical">{submitError}</p>}
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating…' : 'Create project'}
+            {isSubmitting ? 'Creating…' : 'Create your first feedback board'}
           </Button>
         </form>
       </Panel>

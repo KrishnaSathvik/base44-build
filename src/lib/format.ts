@@ -24,6 +24,18 @@ export function severityLabel(severity: string | undefined): string {
   return severity.charAt(0).toUpperCase() + severity.slice(1);
 }
 
+export function categoryLabel(category: string | undefined): string {
+  if (!category) return 'Unknown';
+  return category.replaceAll('_', ' ');
+}
+
+export function analysisModeLabel(mode: string | undefined): string {
+  if (mode === 'deterministic_fallback') return 'Deterministic fallback';
+  if (mode === 'owner_corrected') return 'Owner corrected';
+  if (mode === 'ai') return 'AI analysis';
+  return 'Analysis pending';
+}
+
 export function typeLabel(type: string | undefined): string {
   switch (type) {
     case 'bug':

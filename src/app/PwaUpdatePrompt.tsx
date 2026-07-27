@@ -14,8 +14,8 @@ export function PwaUpdatePrompt() {
     await new Promise(resolve => window.setTimeout(resolve, 250));
     await updateRef.current?.(true);
   };
-  return <section role="dialog" aria-modal="false" aria-labelledby="pwa-update-title" className="fixed bottom-4 right-4 z-[80] max-w-sm rounded-lg border border-line bg-surface p-4 shadow-sheet">
+  return <section role="dialog" aria-modal="false" aria-labelledby="pwa-update-title" className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[80] rounded-lg border border-line bg-surface p-4 shadow-sheet sm:left-auto sm:right-4 sm:max-w-sm md:bottom-4">
     <p id="pwa-update-title" className="text-sm font-medium">A new version of VensaOS is ready.</p>
-    <div className="mt-4 flex gap-2"><Button onClick={() => void update()}>Update now</Button><Button variant="ghost" onClick={() => setNeedsRefresh(false)}>Later</Button></div>
+    <div className="mt-4 flex flex-wrap gap-2"><Button onClick={() => void update()}>Update now</Button><Button variant="ghost" onClick={() => setNeedsRefresh(false)}>Later</Button></div>
   </section>;
 }

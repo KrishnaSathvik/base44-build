@@ -121,6 +121,7 @@ export type IntelligenceSubmission = FeedbackSubmission & {
   ai_reproducibility?: 'confirmed' | 'likely' | 'unknown';
   ai_core_workflow_blocked?: boolean;
   ai_confidence?: number;
+  ai_analysis_mode?: 'ai' | 'deterministic_fallback' | 'owner_corrected';
 };
 
 export type IntelligenceIssue = Issue & {
@@ -150,7 +151,7 @@ export interface SubmitFeedbackResult {
   trackingToken?: string;
   trackingUrl?: string | null;
   processingCompleted?: boolean;
-  analysisMode?: 'ai' | 'deterministic_fallback';
+  analysisMode?: 'ai' | 'deterministic_fallback' | 'owner_corrected';
 }
 
 export interface AttachmentAccess { signedUrl: string; expiresAt: string }

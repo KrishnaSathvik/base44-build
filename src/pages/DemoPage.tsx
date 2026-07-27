@@ -1,7 +1,35 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Brand } from '@/components/Brand';
-import { ConvergenceDemo } from '@/pages/demo/ConvergenceDemo';
+import { InteractiveDemoWorkspace } from '@/pages/demo/InteractiveDemoWorkspace';
 
-export function DemoPage() { return <div className="min-h-screen bg-canvas"><header className="border-b border-line"><div className="fi-container flex h-16 items-center justify-between"><Brand /><Link to="/app/setup" className="inline-flex min-h-11 items-center gap-2 rounded-md bg-ink px-4 text-sm text-white">Create a real board <ArrowRight className="h-4 w-4" /></Link></div></header><main className="fi-container py-16"><p className="fi-eyebrow">VensaOS Demo</p><h1 className="fi-display mt-4 max-w-3xl text-5xl font-medium leading-tight">See how VensaOS turns related reports into one evidence-backed issue.</h1><p className="mt-4 max-w-2xl leading-7 text-ink-muted">The TrailVerse Demo state below is prepared to explain the workflow. Submissions, grouping, private evidence access, and owner actions are live product behavior; no email delivery or deployed automation is implied here.</p><div className="mt-7 flex flex-wrap gap-3 text-xs"><span className="rounded-full border border-line bg-surface px-3 py-2">Live product behavior</span><span className="rounded-full border border-line bg-surface px-3 py-2">Representative demo state</span></div><div className="mt-12"><ConvergenceDemo /></div><section className="mt-12 grid gap-5 md:grid-cols-3"><DemoFact title="Grouping explanation" body="Two closely related chat-layout reports group automatically. A medium-confidence relationship remains a suggestion for owner review."/><DemoFact title="Private evidence" body="A reporter screenshot and reviewed browser context are visible to the owner and the matching private tracking grant—not unrelated reporters."/><DemoFact title="Owner ↔ reporter loop" body="The owner requests information, the reporter replies, work moves through testing, and the reporter can confirm whether the resolution is fixed."/></section><div className="mt-14 border-t border-line pt-10"><h2 className="fi-display text-3xl font-medium">Ready to use real feedback?</h2><p className="mt-3 text-sm text-ink-muted">Create a board and share its public feedback link.</p><Link to="/app/setup" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-md bg-ink px-5 text-sm text-white">Create a real board <ArrowRight className="h-4 w-4"/></Link></div></main></div>; }
-function DemoFact({title,body}:{title:string;body:string}){return <article className="rounded-lg border border-line bg-surface p-5"><h2 className="text-sm font-medium">{title}</h2><p className="mt-3 text-sm leading-6 text-ink-muted">{body}</p></article>}
+export function DemoPage() {
+  return (
+    <div className="min-h-screen bg-canvas">
+      <header className="border-b border-line">
+        <div className="fi-container flex h-16 items-center">
+          <Brand />
+        </div>
+      </header>
+      <main className="fi-container py-12 sm:py-16">
+        <p className="fi-eyebrow">Interactive product demo</p>
+        <h1 className="fi-display mt-4 max-w-3xl text-3xl font-medium leading-tight sm:text-4xl md:text-5xl">
+          Explore the real VensaOS interface using representative data.
+        </h1>
+        <p className="mt-4 max-w-2xl leading-7 text-ink-muted">
+          Nothing you do here affects a live workspace. Use the guided steps to open a grouped issue, review a possible duplicate, inspect priority, and see how a reporter “Not fixed” response reopens work.
+        </p>
+        <div className="mt-10">
+          <InteractiveDemoWorkspace />
+        </div>
+        <div className="mt-14 border-t border-line pt-10">
+          <h2 className="fi-display text-3xl font-medium">Ready for your own workspace?</h2>
+          <p className="mt-3 text-sm text-ink-muted">Open VensaOS to authenticate, create a feedback board, and share your public link.</p>
+          <Link to="/app" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-md bg-ink px-5 text-sm text-white">
+            Open workspace <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </main>
+    </div>
+  );
+}

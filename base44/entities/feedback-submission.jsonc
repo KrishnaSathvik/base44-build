@@ -85,8 +85,8 @@
     "ai_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
     "ai_analysis_mode": {
       "type": "string",
-      "enum": ["ai", "deterministic_fallback"],
-      "description": "Whether classification used Base44 AI or the free deterministic fallback"
+      "enum": ["ai", "deterministic_fallback", "owner_corrected"],
+      "description": "Whether classification used Base44 AI, the free deterministic fallback, or an owner correction"
     },
     "created_at": {
       "type": "string",

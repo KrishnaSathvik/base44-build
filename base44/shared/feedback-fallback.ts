@@ -11,7 +11,11 @@ import { normalizeTitle } from "./text.ts";
 
 export const FALLBACK_ANALYSIS_MODE = "deterministic_fallback" as const;
 export const AI_ANALYSIS_MODE = "ai" as const;
-export type AnalysisMode = typeof AI_ANALYSIS_MODE | typeof FALLBACK_ANALYSIS_MODE;
+export const OWNER_CORRECTED_MODE = "owner_corrected" as const;
+export type AnalysisMode =
+  | typeof AI_ANALYSIS_MODE
+  | typeof FALLBACK_ANALYSIS_MODE
+  | typeof OWNER_CORRECTED_MODE;
 
 /** Bounded confidence for keyword rules — never presented as model confidence. */
 export const FALLBACK_CONFIDENCE = 0.42;

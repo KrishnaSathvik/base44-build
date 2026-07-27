@@ -85,7 +85,15 @@ export type GroupingAction =
   | { action: 'reject'; suggestionId: string }
   | { action: 'merge'; sourceIssueId: string; targetIssueId: string }
   | { action: 'move'; submissionId: string; targetIssueId: string }
-  | { action: 'separate'; submissionId: string };
+  | { action: 'separate'; submissionId: string }
+  | {
+      action: 'correct_classification';
+      issueId: string;
+      feedbackType?: 'bug' | 'feature' | 'general';
+      category?: 'ui_ux' | 'functionality' | 'performance' | 'authentication' | 'data' | 'content' | 'other';
+      productArea?: string;
+      severity?: 'critical' | 'high' | 'medium' | 'low';
+    };
 
 export async function submitFeedback(
   payload: SubmitFeedbackPayload,

@@ -1,12 +1,13 @@
 import { lazy, Suspense } from 'react';
 import type { ReactNode } from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { OwnerRouteSkeleton, PublicRouteSkeleton } from '@/app/RouteSkeleton';
 import { RouteError } from '@/app/RouteError';
 import { PageMetadata } from '@/app/PageMetadata';
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '@/lib/brand';
 
 const AppLayout = lazy(() => import('@/app/AppLayout').then(module => ({ default: module.AppLayout })));
+const AppIndexRedirect = lazy(() => import('@/app/AppIndexRedirect').then(module => ({ default: module.AppIndexRedirect })));
 const LandingPage = lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
 const DemoPage = lazy(() => import('@/pages/DemoPage').then(module => ({ default: module.DemoPage })));
 const OwnerSetupPage = lazy(() => import('@/pages/OwnerSetupPage').then(module => ({ default: module.OwnerSetupPage })));
@@ -29,7 +30,7 @@ export const router = createBrowserRouter([
     path: '/app',
     element: ownerView(<AppLayout />), errorElement: <RouteError />,
     children: [
-      { index: true, element: <Navigate to="/app/overview" replace /> },
+      { index: true, element: ownerView(<AppIndexRedirect />) },
       { path: 'overview', element: ownerView(<OwnerOverviewPage />,'Overview') },
       { path: 'inbox', element: ownerView(<OwnerInboxPage />,'Inbox') },
       { path: 'setup', element: ownerView(<OwnerSetupPage />,'Set Up Your Workspace') },
