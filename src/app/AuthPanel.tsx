@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Eye, EyeOff } from 'lucide-react';
@@ -6,9 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { Button, Field, Input, Panel } from '@/components/ui';
 import { Brand } from '@/components/Brand';
 import { ConvergenceVisual } from '@/components/ConvergenceVisual';
-import { GoogleMark } from '@/components/GoogleMark';
 import { PageMetadata } from '@/app/PageMetadata';
-import { authenticationReturnUrl } from '@/lib/appUrls';
 
 type Mode = 'login' | 'register' | 'verify';
 
@@ -39,11 +37,6 @@ export function AuthPanel() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const googleTimeoutRef = useRef<number | null>(null);
-
-  useEffect(() => () => {
-    if (googleTimeoutRef.current !== null) window.clearTimeout(googleTimeoutRef.current);
-  }, []);
 
   async function refreshUser() {
     await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
@@ -92,22 +85,6 @@ export function AuthPanel() {
       setError(authErrorMessage(err));
     } finally {
       setBusy(false);
-    }
-  }
-
-  function handleGoogle() {
-    setError(null);
-    if (googleTimeoutRef.current !== null) window.clearTimeout(googleTimeoutRef.current);
-    try {
-      base44.auth.loginWithProvider('google', authenticationReturnUrl());
-      // Redirect usually navigates away. If we remain here (misconfigured OAuth / blocked popup), surface guidance.
-      googleTimeoutRef.current = window.setTimeout(() => {
-        setError(
-          'Google sign-in did not complete. On localhost this often means the redirect URL is not allowed, or Google login is not enabled for this app. Try again on the deployed preview, or use email and password.',
-        );
-      }, 2500);
-    } catch (err) {
-      setError(authErrorMessage(err));
     }
   }
 
@@ -220,13 +197,6 @@ export function AuthPanel() {
               {error && <p role="alert" className="text-sm text-critical">{error}</p>}
               <Button type="submit" disabled={busy} className="w-full">
                 {busy ? (mode === 'login' ? 'Signing in…' : 'Creating account…') : mode === 'login' ? 'Sign in' : 'Create account'}
-              </Button>
-              <div className="relative py-1 text-center">
-                <span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Or</span>
-              </div>
-              <Button type="button" variant="secondary" className="w-full" onClick={handleGoogle} disabled={busy}>
-                <GoogleMark className="h-4 w-4" />
-                {mode === 'login' ? 'Sign in with Google' : 'Sign up with Google'}
               </Button>
               <p className="text-center text-xs text-ink-muted">
                 {mode === 'login' ? 'No account yet? ' : 'Already have an account? '}
