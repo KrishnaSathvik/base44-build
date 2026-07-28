@@ -1,6 +1,6 @@
 {
   "enableUsernamePassword": true,
-  "enableGoogleLogin": false,
+  "enableGoogleLogin": true,
   "enableMicrosoftLogin": false,
   "enableFacebookLogin": false,
   "enableAppleLogin": false,
