@@ -46,7 +46,7 @@ export function OwnerIssuesPage() {
 
   return (
     <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-7 md:py-10">
-      <div className="flex flex-col gap-5 border-b border-line pb-7 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-5 border-b border-line pb-7">
         <div className="min-w-0">
           <p className="fi-eyebrow">{resolvedOnly ? 'Closed loop' : 'Working queue'}</p>
           <h1 className="fi-display mt-3 text-3xl font-medium sm:text-4xl">
@@ -58,18 +58,18 @@ export function OwnerIssuesPage() {
               : 'Normalized problems, ordered by the work they demand.'}
           </p>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap lg:w-auto lg:self-start">
           <Button
             variant="secondary"
-            className="w-full justify-center sm:w-auto"
+            className="w-full shrink-0 whitespace-nowrap justify-center sm:w-auto"
             onClick={() => void navigator.clipboard.writeText(publicBoardUrl(project.slug))}
           >
-            <Copy className="h-4 w-4" />
+            <Copy className="h-4 w-4 shrink-0" />
             Copy link
           </Button>
           <Link to="/app/setup" className="w-full sm:w-auto">
-            <Button variant="secondary" className="w-full justify-center sm:w-auto">
-              <Plus className="h-4 w-4" />
+            <Button variant="secondary" className="w-full shrink-0 whitespace-nowrap justify-center sm:w-auto">
+              <Plus className="h-4 w-4 shrink-0" />
               New project
             </Button>
           </Link>

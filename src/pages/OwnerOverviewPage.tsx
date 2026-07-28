@@ -31,7 +31,7 @@ export function OwnerOverviewPage() {
 
   return (
     <Workspace>
-      <div className="flex flex-col gap-6 border-b border-line pb-8 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-6 border-b border-line pb-8">
         <div className="min-w-0">
           <p className="fi-eyebrow">Friday briefing</p>
           <h1 className="fi-display mt-3 text-3xl font-medium leading-tight sm:text-4xl md:text-[42px]">
@@ -45,10 +45,10 @@ export function OwnerOverviewPage() {
         </div>
         <Button
           variant="secondary"
-          className="w-full shrink-0 sm:w-auto"
+          className="w-full shrink-0 whitespace-nowrap justify-center sm:w-auto sm:self-start"
           onClick={() => navigator.clipboard.writeText(publicBoardUrl(project.slug))}
         >
-          <Copy className="h-4 w-4" />
+          <Copy className="h-4 w-4 shrink-0" />
           Copy feedback link
         </Button>
       </div>

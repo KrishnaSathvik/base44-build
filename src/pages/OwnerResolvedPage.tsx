@@ -97,69 +97,60 @@ export function OwnerResolvedPage() {
         </div>
       ) : (
         <div>
-          {issues.map((issue) => (
-            <Link
-              key={issue.id}
-              to={`/app/issues/${issue.id}`}
-              className="group grid gap-3 border-b border-line px-1 py-5 hover:bg-surface sm:grid-cols-[minmax(0,1fr)_140px_150px_90px_auto] sm:items-center sm:gap-4 sm:px-2"
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="fi-mono text-[10px] text-ink-faint">{issue.public_code}</span>
-                  <StatusBadge status={issue.status} label={statusLabel(issue.status)} />
+          {issues.map((issue) => {
+            const confirmationTone =
+              issue.resolution_confirmation_status === 'confirmed'
+                ? 'success'
+                : issue.status === 'reopened'
+                  ? 'critical'
+                  : 'warning';
+            const confirmationText =
+              issue.status === 'reopened'
+                ? 'Not fixed'
+                : issue.resolution_confirmation_status === 'confirmed'
+                  ? 'Reporter confirmed'
+                  : 'Waiting';
+
+            return (
+              <Link
+                key={issue.id}
+                to={`/app/issues/${issue.id}`}
+                className="group block border-b border-line px-1 py-5 hover:bg-surface sm:px-2 lg:grid lg:grid-cols-[minmax(0,1fr)_8.5rem_10rem_5rem_auto] lg:items-center lg:gap-4"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="fi-mono text-[10px] text-ink-faint">{issue.public_code}</span>
+                    <StatusBadge status={issue.status} label={statusLabel(issue.status)} />
+                  </div>
+                  <p className="mt-2 font-medium leading-snug">{issue.title}</p>
+                  <p className="mt-2 line-clamp-2 text-xs text-ink-muted lg:line-clamp-1">
+                    {issue.public_resolution_note || 'No public resolution note'}
+                  </p>
+                  <div className="mt-4 grid grid-cols-3 gap-3 lg:hidden">
+                    <Fact label="Resolved" value={formatTime(issue.resolved_at)} />
+                    <div>
+                      <Badge tone={confirmationTone}>{confirmationText}</Badge>
+                      <p className="fi-mono mt-1 text-[9px] uppercase text-ink-faint">
+                        {confirmationLabel(issue)}
+                      </p>
+                    </div>
+                    <Fact label="Reports" value={String(issue.report_count ?? 0)} />
+                  </div>
                 </div>
-                <p className="mt-2 font-medium">{issue.title}</p>
-                <p className="mt-2 line-clamp-2 text-xs text-ink-muted sm:line-clamp-1">
-                  {issue.public_resolution_note || 'No public resolution note'}
-                </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2 sm:hidden">
-                  <Badge
-                    tone={
-                      issue.resolution_confirmation_status === 'confirmed'
-                        ? 'success'
-                        : issue.status === 'reopened'
-                          ? 'critical'
-                          : 'warning'
-                    }
-                  >
-                    {issue.status === 'reopened'
-                      ? 'Not fixed'
-                      : issue.resolution_confirmation_status === 'confirmed'
-                        ? 'Reporter confirmed'
-                        : 'Waiting'}
-                  </Badge>
-                  <span className="fi-mono text-[9px] uppercase text-ink-faint">
-                    {formatTime(issue.resolved_at)}
-                  </span>
+                <div className="hidden lg:block">
+                  <Fact label="Resolution date" value={formatTime(issue.resolved_at)} />
                 </div>
-              </div>
-              <div className="hidden sm:block">
-                <Fact label="Resolution date" value={formatTime(issue.resolved_at)} />
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-xs">{confirmationLabel(issue)}</p>
-                <Badge
-                  tone={
-                    issue.resolution_confirmation_status === 'confirmed'
-                      ? 'success'
-                      : issue.status === 'reopened'
-                        ? 'critical'
-                        : 'warning'
-                  }
-                >
-                  {issue.status === 'reopened'
-                    ? 'Not fixed'
-                    : issue.resolution_confirmation_status === 'confirmed'
-                      ? 'Reporter confirmed'
-                      : 'Waiting'}
-                </Badge>
-              </div>
-              <div className="hidden sm:block">
-                <Fact label="Reports" value={String(issue.report_count ?? 0)} />
-              </div>
-              <ArrowRight className="hidden h-4 w-4 text-ink-faint transition group-hover:translate-x-1 sm:block" />
-            </Link>
-          ))}
+                <div className="hidden lg:block">
+                  <p className="text-xs">{confirmationLabel(issue)}</p>
+                  <Badge tone={confirmationTone}>{confirmationText}</Badge>
+                </div>
+                <div className="hidden lg:block">
+                  <Fact label="Reports" value={String(issue.report_count ?? 0)} />
+                </div>
+                <ArrowRight className="hidden h-4 w-4 text-ink-faint transition group-hover:translate-x-1 lg:block" />
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

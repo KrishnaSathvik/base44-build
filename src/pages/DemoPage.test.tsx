@@ -8,10 +8,15 @@ afterEach(() => {
 });
 
 test('interactive demo is honestly labeled and exposes the workspace walkthrough', () => {
-  render(<MemoryRouter><DemoPage /></MemoryRouter>);
+  render(
+    <MemoryRouter>
+      <DemoPage />
+    </MemoryRouter>,
+  );
   expect(screen.getByText('Interactive product demo')).toBeVisible();
   expect(screen.getByRole('heading', { name: /Explore the real VensaOS interface/i })).toBeVisible();
   expect(screen.getByText(/Nothing you do here affects a live workspace/i)).toBeVisible();
+  expect(screen.getByText(/Demo data — nothing is saved/i)).toBeVisible();
   expect(screen.getByRole('link', { name: /Open workspace/i })).toHaveAttribute('href', '/app');
   expect(screen.getByText(/1 issue needs attention/i)).toBeVisible();
   expect(screen.getByText('Live snapshot')).toBeVisible();
@@ -25,10 +30,12 @@ test('interactive demo is honestly labeled and exposes the workspace walkthrough
   fireEvent.click(screen.getAllByRole('button', { name: /Open the grouped issue/i })[0]!);
   expect(screen.getByText(/Base44 managed InvokeLLM/i)).toBeVisible();
   expect(screen.getByText('How VensaOS understood this')).toBeVisible();
+  expect(screen.getByLabelText(/Public message/i)).toBeVisible();
+  expect(screen.getByLabelText(/Internal note/i)).toBeVisible();
 
   fireEvent.click(screen.getByRole('button', { name: /^Review the possible duplicate$/i }));
   expect(screen.getByRole('heading', { name: 'Inbox' })).toBeVisible();
-  expect(screen.getByText(/Everyday unreviewed work lives in Issues/i )).toBeVisible();
+  expect(screen.getByText(/Everyday unreviewed work lives in Issues/i)).toBeVisible();
   expect(screen.getAllByText('Possible duplicate').length).toBeGreaterThan(0);
 
   fireEvent.click(screen.getByRole('button', { name: /Review suggestion/i }));
@@ -53,14 +60,20 @@ test('demo inbox shows list or detail on mobile, not both', () => {
     }),
   );
 
-  render(<MemoryRouter><DemoPage /></MemoryRouter>);
+  render(
+    <MemoryRouter>
+      <DemoPage />
+    </MemoryRouter>,
+  );
 
   fireEvent.click(screen.getByRole('tab', { name: '2' }));
   expect(screen.getByRole('heading', { name: 'Inbox' })).toBeVisible();
   expect(screen.queryByRole('button', { name: /Review suggestion/i })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /Back to Inbox/i })).not.toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: /Weather timeline is slow on older phones/i }));
+  fireEvent.click(
+    screen.getByRole('button', { name: /Weather timeline is slow on older phones/i }),
+  );
   expect(screen.getByRole('button', { name: /Review suggestion/i })).toBeVisible();
   expect(screen.getByRole('button', { name: /Back to Inbox/i })).toBeVisible();
 

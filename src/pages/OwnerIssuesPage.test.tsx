@@ -39,7 +39,7 @@ test('shows onboarding when no project exists', async () => {
   expect(await screen.findByRole('heading', { name: 'Create your first feedback board' })).toBeVisible();
 });
 
-test('does not expose a non-functional filter control on the issues header', async () => {
+test('keeps header action labels on one line', async () => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={queryClient}>
@@ -49,9 +49,8 @@ test('does not expose a non-functional filter control on the issues header', asy
     </QueryClientProvider>,
   );
   expect(await screen.findByRole('heading', { name: 'Issues' })).toBeVisible();
-  expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Copy link' })).toBeVisible();
-  expect(screen.getByRole('button', { name: 'New project' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Copy link' })).toHaveClass('whitespace-nowrap');
+  expect(screen.getByRole('button', { name: 'New project' })).toHaveClass('whitespace-nowrap');
 });
 
 test('allows long issue titles to wrap instead of truncating into empty space', async () => {

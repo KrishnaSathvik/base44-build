@@ -1,16 +1,24 @@
-export type DemoView = 'overview' | 'inbox' | 'issue' | 'duplicate' | 'priority' | 'reporter' | 'reopen';
+export type DemoView =
+  | 'overview'
+  | 'inbox'
+  | 'issues'
+  | 'detail'
+  | 'duplicate'
+  | 'resolved'
+  | 'tracking';
 
 export const DEMO_PRODUCT = 'TrailVerse Demo';
 
 export const DEMO_STEPS = [
   { id: 1, label: 'Overview briefing', view: 'overview' as const },
   { id: 2, label: 'Inbox exceptions', view: 'inbox' as const },
-  { id: 3, label: 'Grouped issue in Issues', view: 'issue' as const },
-  { id: 4, label: 'Owner resolves with a public note', view: 'issue' as const },
-  { id: 5, label: 'Reporter confirms the result', view: 'reporter' as const },
+  { id: 3, label: 'Issues queue', view: 'issues' as const },
+  { id: 4, label: 'Resolve with a public message', view: 'detail' as const },
+  { id: 5, label: 'Reporter confirmation', view: 'tracking' as const },
 ] as const;
 
 export const DEMO_ISSUE = {
+  id: 'demo-issue-1',
   publicCode: 'FI-DEMO01',
   title: 'Mobile chat composer obscures new messages',
   description: 'The keyboard and fixed composer can hide the newest conversation content.',
@@ -25,6 +33,7 @@ export const DEMO_ISSUE = {
   coreWorkflow: 'Blocked',
   analysisMethod: 'Base44 managed InvokeLLM',
   confidence: '86%',
+  lastSeen: 'Today',
   priorityReasons: [
     'Core conversation workflow blocked',
     'Three related reports',
@@ -36,6 +45,21 @@ export const DEMO_ISSUE = {
     'Matching reasons: same composer occlusion · mobile viewport',
   ],
 };
+
+export const DEMO_SECONDARY_ISSUE = {
+  id: 'demo-issue-2',
+  publicCode: 'FI-DEMO02',
+  title: 'Weather timeline is slow on older phones',
+  description: 'The forecast timeline takes several seconds to paint on older devices.',
+  severity: 'medium' as const,
+  status: 'unreviewed' as const,
+  priorityScore: 54,
+  reportCount: 1,
+  affectedUserCount: 1,
+  lastSeen: 'Yesterday',
+};
+
+export const DEMO_ISSUES = [DEMO_ISSUE, DEMO_SECONDARY_ISSUE] as const;
 
 /** Hero / convergence slips — same three reports that group into FI-DEMO01. */
 export const DEMO_CONVERGENCE_REPORTS = [
@@ -78,14 +102,27 @@ export const DEMO_DUPLICATE = {
   publicCode: 'FI-DEMO02',
   title: 'Weather timeline is slow on older phones',
   confidence: 72,
-  reason: 'Different product area and symptoms—kept as a suggestion for owner review, not auto-merged.',
+  reason:
+    'Different product area and symptoms—kept as a suggestion for owner review, not auto-merged.',
   body: 'Weather timeline is very slow on my older phone.',
 };
 
 export const DEMO_MESSAGES = [
-  { from: 'owner' as const, body: 'Thanks for reporting this. Which viewport width were you using when the composer covered the newest message?', time: '2 hours ago' },
-  { from: 'reporter' as const, body: 'iPhone 14, portrait. Happens as soon as the keyboard opens.', time: '1 hour ago' },
-  { from: 'owner' as const, body: 'We raised the composer above the keyboard safe area. Please confirm whether new messages stay visible.', time: '35 min ago' },
+  {
+    from: 'owner' as const,
+    body: 'Thanks for reporting this. Which viewport width were you using when the composer covered the newest message?',
+    time: '2 hours ago',
+  },
+  {
+    from: 'reporter' as const,
+    body: 'iPhone 14, portrait. Happens as soon as the keyboard opens.',
+    time: '1 hour ago',
+  },
+  {
+    from: 'owner' as const,
+    body: 'We raised the composer above the keyboard safe area. Please confirm whether new messages stay visible.',
+    time: '35 min ago',
+  },
 ];
 
 export const DEMO_ACTIVITY = [
@@ -102,3 +139,6 @@ export const DEMO_ENVIRONMENT = {
   viewport: '390 × 664',
   page: '/chat/thread/4821',
 } as const;
+
+export const DEMO_RESOLUTION_NOTE =
+  'We raised the composer above the keyboard safe area so new messages stay visible.';

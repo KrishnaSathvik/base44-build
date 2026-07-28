@@ -18,7 +18,9 @@ export function DemoPage() {
           Explore the real VensaOS interface using representative data.
         </h1>
         <p className="mt-4 max-w-2xl leading-7 text-ink-muted">
-          Nothing you do here affects a live workspace. Use the guided steps to open a grouped issue, review a possible duplicate, inspect priority, and see how a reporter “Not fixed” response reopens work.
+          Nothing you do here affects a live workspace. This walkthrough uses representative fixture
+          data inside the real VensaOS owner chrome—Overview, Inbox, Issues, resolve workflow, and
+          reporter confirmation—without writing anything.
         </p>
         <div className="mt-10">
           <InteractiveDemoWorkspace />
