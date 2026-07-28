@@ -20,12 +20,18 @@ const OwnerOverviewPage = lazy(() => import('@/pages/OwnerOverviewPage').then(mo
 const PlaceholderWorkspacePage = lazy(() => import('@/pages/PlaceholderWorkspacePage').then(module => ({ default: module.PlaceholderWorkspacePage })));
 const OwnerInboxPage = lazy(() => import('@/pages/OwnerInboxPage').then(module => ({ default: module.OwnerInboxPage })));
 const OwnerResolvedPage = lazy(() => import('@/pages/OwnerResolvedPage').then(module => ({ default: module.OwnerResolvedPage })));
+const PrivacyPage = lazy(() => import('@/pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
+const TermsPage = lazy(() => import('@/pages/TermsPage').then(module => ({ default: module.TermsPage })));
+const SecurityPage = lazy(() => import('@/pages/SecurityPage').then(module => ({ default: module.SecurityPage })));
 const publicView = (element: ReactNode, title=DEFAULT_TITLE, description=DEFAULT_DESCRIPTION, canonicalPath?: string) => <Suspense fallback={<PublicRouteSkeleton />}><PageMetadata title={title} description={description} canonicalPath={canonicalPath} indexable={!!canonicalPath}/>{element}</Suspense>;
 const ownerView = (element: ReactNode, title='Overview') => <Suspense fallback={<OwnerRouteSkeleton />}><PageMetadata title={title} description="Private VensaOS owner workspace."/>{element}</Suspense>;
 
 export const router = createBrowserRouter([
   { path: '/', element: publicView(<LandingPage />,DEFAULT_TITLE,DEFAULT_DESCRIPTION,'/'), errorElement: <RouteError /> },
   { path: '/demo', element: publicView(<DemoPage />,'Demo',DEFAULT_DESCRIPTION,'/demo'), errorElement: <RouteError /> },
+  { path: '/privacy', element: publicView(<PrivacyPage />,'Privacy Policy','How VensaOS collects, uses, and protects information.','/privacy'), errorElement: <RouteError /> },
+  { path: '/terms', element: publicView(<TermsPage />,'Terms of Service','Terms governing use of VensaOS.','/terms'), errorElement: <RouteError /> },
+  { path: '/security', element: publicView(<SecurityPage />,'Security & Data Handling','How VensaOS protects feedback, attachments, and account data.','/security'), errorElement: <RouteError /> },
   {
     path: '/app',
     element: ownerView(<AppLayout />), errorElement: <RouteError />,

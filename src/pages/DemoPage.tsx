@@ -22,7 +22,7 @@ export function DemoPage() {
           data inside the real VensaOS owner chrome—Overview, Inbox, Issues, resolve workflow, and
           reporter confirmation—without writing anything.
         </p>
-        <div className="mt-10">
+        <div className="mt-10 min-w-0">
           <InteractiveDemoWorkspace />
         </div>
         <div className="mt-14 border-t border-line pt-10">

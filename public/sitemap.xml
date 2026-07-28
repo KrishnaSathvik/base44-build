@@ -2,4 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://vensaos.com/</loc></url>
   <url><loc>https://vensaos.com/demo</loc></url>
+  <url><loc>https://vensaos.com/security</loc></url>
+  <url><loc>https://vensaos.com/privacy</loc></url>
+  <url><loc>https://vensaos.com/terms</loc></url>
 </urlset>

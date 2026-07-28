@@ -189,7 +189,11 @@ export function InteractiveDemoWorkspace() {
         onNavigate={navigateShell}
       >
         {view === 'overview' ? (
-          <DemoOverviewView onOpenIssue={() => go('issues', 3)} />
+          <DemoOverviewView
+            walkthroughResolved={resolved && !notFixed}
+            onOpenIssues={() => go('issues', 3)}
+            onOpenIssue={() => go('detail', 4)}
+          />
         ) : null}
         {view === 'inbox' ? (
           <DemoInboxView
@@ -198,7 +202,11 @@ export function InteractiveDemoWorkspace() {
           />
         ) : null}
         {view === 'issues' ? (
-          <DemoIssuesView notFixed={notFixed} onOpenIssue={() => go('detail', 4)} />
+          <DemoIssuesView
+            walkthroughResolved={resolved && !notFixed}
+            notFixed={notFixed}
+            onOpenIssue={() => go('detail', 4)}
+          />
         ) : null}
         {view === 'detail' ? (
           <DemoIssueDetailView
@@ -214,10 +222,10 @@ export function InteractiveDemoWorkspace() {
         {view === 'duplicate' ? <DemoDuplicateView onBack={() => go('inbox', 2)} /> : null}
         {view === 'resolved' ? (
           <DemoResolvedView
-            resolved={resolved}
+            walkthroughResolved={resolved}
             confirmed={confirmed}
             notFixed={notFixed}
-            onOpenIssue={() => go('detail', 4)}
+            onOpenWalkthrough={() => go('detail', 4)}
           />
         ) : null}
         {view === 'tracking' ? (

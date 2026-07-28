@@ -23,5 +23,6 @@ test('routes public CTAs through /app and /demo with consistent wording', () => 
   expect(screen.queryByText(/Coupon action freezes checkout/i)).not.toBeInTheDocument();
   expect(screen.queryByText('FI-7K2M9A')).not.toBeInTheDocument();
   expect(screen.getByText(/Device context/i)).toBeVisible();
-  expect(screen.getByText('Built for clear product decisions.')).toBeVisible();
+  expect(screen.getByText('Feedback intelligence for product teams.')).toBeVisible();
+  expect(screen.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
 });

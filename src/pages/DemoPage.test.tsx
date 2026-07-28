@@ -18,9 +18,12 @@ test('interactive demo is honestly labeled and exposes the workspace walkthrough
   expect(screen.getByText(/Nothing you do here affects a live workspace/i)).toBeVisible();
   expect(screen.getByText(/Demo data — nothing is saved/i)).toBeVisible();
   expect(screen.getByRole('link', { name: /Open workspace/i })).toHaveAttribute('href', '/app');
-  expect(screen.getByText(/1 issue needs attention/i)).toBeVisible();
+  expect(screen.getByText(/5 issues need attention/i)).toBeVisible();
   expect(screen.getByText('Live snapshot')).toBeVisible();
-  expect(screen.getByText('Built for clear product decisions.')).toBeVisible();
+  expect(screen.getByText('5 open')).toBeVisible();
+  expect(screen.getByText('1 resolved')).toBeVisible();
+  expect(screen.getByText(/Offline trail cache not refreshing/i)).toBeVisible();
+  expect(screen.getByText('Feedback intelligence for product teams.')).toBeVisible();
 
   expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
@@ -37,6 +40,9 @@ test('interactive demo is honestly labeled and exposes the workspace walkthrough
   expect(screen.getByRole('heading', { name: 'Inbox' })).toBeVisible();
   expect(screen.getByText(/Everyday unreviewed work lives in Issues/i)).toBeVisible();
   expect(screen.getAllByText('Possible duplicate').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('Processing failed').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('Needs information').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('Reporter replied').length).toBeGreaterThan(0);
 
   fireEvent.click(screen.getByRole('button', { name: /Review suggestion/i }));
   expect(screen.getByText(/Owner review required/i)).toBeVisible();
@@ -79,4 +85,26 @@ test('demo inbox shows list or detail on mobile, not both', () => {
 
   fireEvent.click(screen.getByRole('button', { name: /Back to Inbox/i }));
   expect(screen.queryByRole('button', { name: /Review suggestion/i })).not.toBeInTheDocument();
+});
+
+test('demo issues and resolved show the full fixture spread', () => {
+  render(
+    <MemoryRouter>
+      <DemoPage />
+    </MemoryRouter>,
+  );
+
+  fireEvent.click(screen.getByRole('tab', { name: '3' }));
+  expect(screen.getByRole('heading', { name: 'Issues' })).toBeVisible();
+  expect(screen.getByText('Critical')).toBeVisible();
+  expect(screen.getByText('High')).toBeVisible();
+  expect(screen.getByText('Medium')).toBeVisible();
+  expect(screen.getAllByText('Low').length).toBeGreaterThanOrEqual(2);
+  expect(screen.getByText(/Checkout payment fails/i)).toBeVisible();
+  expect(screen.getByText(/Map pin colors/i)).toBeVisible();
+
+  fireEvent.click(screen.getAllByRole('button', { name: 'Resolved' })[0]!);
+  expect(screen.getByRole('heading', { name: 'Resolved' })).toBeVisible();
+  expect(screen.getByText(/Offline trail cache not refreshing/i)).toBeVisible();
+  expect(screen.getAllByText('Reporter confirmed').length).toBeGreaterThan(0);
 });

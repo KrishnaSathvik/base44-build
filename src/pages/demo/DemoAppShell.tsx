@@ -51,7 +51,7 @@ export function DemoAppShell({
   const current = activeNav(view);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-canvas shadow-sheet">
+    <div className="overflow-x-clip rounded-xl border border-line bg-canvas shadow-sheet">
       <div
         role="status"
         className="border-b border-info/25 bg-info-soft/40 px-4 py-2.5 text-center text-xs text-ink-muted"
@@ -60,7 +60,7 @@ export function DemoAppShell({
       </div>
 
       <header className="flex min-h-14 flex-col justify-center gap-1 border-b border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-0">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <BrandMark className="h-7 w-7" decorative />
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{DEMO_PRODUCT}</p>
@@ -69,9 +69,11 @@ export function DemoAppShell({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           {toast ? (
-            <p className="max-w-full text-xs text-ink-muted sm:max-w-sm sm:text-right">{toast}</p>
+            <p className="max-w-[12rem] truncate text-xs text-ink-muted sm:max-w-sm sm:text-right">
+              {toast}
+            </p>
           ) : null}
           <button
             type="button"
@@ -85,7 +87,7 @@ export function DemoAppShell({
         </div>
       </header>
 
-      <div className="grid lg:grid-cols-[200px_minmax(0,1fr)]">
+      <div className="grid min-w-0 lg:grid-cols-[200px_minmax(0,1fr)]">
         <aside className="hidden border-r border-line bg-surface lg:flex lg:flex-col">
           <div className="border-b border-line px-4 py-3">
             <p className="truncate text-sm font-medium">{DEMO_PRODUCT}</p>
@@ -124,7 +126,7 @@ export function DemoAppShell({
           </div>
         </aside>
 
-        <div className={cn('min-h-[640px]', !hideMobileNav && 'pb-16 lg:pb-0')}>
+        <div className={cn('min-h-[640px] min-w-0', !hideMobileNav && 'pb-16 lg:pb-0')}>
           {!hideMobileNav ? (
             <div className="flex gap-2 overflow-x-auto border-b border-line p-3 lg:hidden">
               {NAV.map(({ id, label }) => (

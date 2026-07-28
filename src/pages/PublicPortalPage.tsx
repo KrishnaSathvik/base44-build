@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -477,6 +477,10 @@ export function PublicPortalPage() {
               onRetry={retryUpload}
               disabled={isSubmitting}
             />
+            <p className="mt-2 text-xs leading-5 text-ink-muted">
+              Screenshots are stored privately and shared only with the relevant workspace owner and
+              the reporter through authorized access.
+            </p>
           </div>
 
           <section className="overflow-hidden rounded-lg border border-line bg-surface">
@@ -618,6 +622,15 @@ export function PublicPortalPage() {
               You are offline. This draft is saved on this device and can be submitted deliberately after reconnection.
             </p>
           )}
+          <p className="text-xs leading-5 text-ink-muted">
+            Your report may be analyzed to classify and group related feedback. Please do not include
+            passwords, financial information, health information, or other sensitive personal data.
+            Learn more in our{' '}
+            <Link to="/privacy" className="text-ink underline underline-offset-2">
+              Privacy Policy
+            </Link>
+            .
+          </p>
           <Button
             type="submit"
             disabled={isSubmitting || networkState !== 'online' || !type}

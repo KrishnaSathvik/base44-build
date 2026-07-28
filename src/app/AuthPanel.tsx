@@ -198,6 +198,19 @@ export function AuthPanel() {
               <Button type="submit" disabled={busy} className="w-full">
                 {busy ? (mode === 'login' ? 'Signing in…' : 'Creating account…') : mode === 'login' ? 'Sign in' : 'Create account'}
               </Button>
+              {mode === 'register' ? (
+                <p className="text-center text-xs leading-5 text-ink-muted">
+                  By creating an account, you agree to the{' '}
+                  <Link to="/terms" className="text-ink underline underline-offset-2">
+                    Terms of Service
+                  </Link>{' '}
+                  and acknowledge the{' '}
+                  <Link to="/privacy" className="text-ink underline underline-offset-2">
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
+              ) : null}
               <p className="text-center text-xs text-ink-muted">
                 {mode === 'login' ? 'No account yet? ' : 'Already have an account? '}
                 <button
