@@ -18,6 +18,7 @@ export default defineConfig({
     includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png', 'og-image.png'],
     manifest: pwaManifest,
     workbox: {
+      clientsClaim: true,
       navigateFallback: '/index.html', navigateFallbackDenylist: [/^\/api\//, /^\/functions\//, /^\/auth\//],
       globPatterns: ['**/*.{js,css,html,woff,woff2,png,svg,ico}'],
       runtimeCaching: [

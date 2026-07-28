@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Copy, Radio, TriangleAlert } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { listMyIssues, listMyNotificationDeliveries, listMyProjects } from '@/lib/api';
+import { listMyIssues, listMyProjects } from '@/lib/api';
 import { formatTime, severityLabel } from '@/lib/format';
 import { Button, SeverityBadge, Skeleton } from '@/components/ui';
 import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
@@ -10,20 +10,167 @@ import { publicBoardUrl } from '@/lib/appUrls';
 export function OwnerOverviewPage() {
   const projects = useQuery({ queryKey: ['projects'], queryFn: listMyProjects });
   const issues = useQuery({ queryKey: ['issues'], queryFn: listMyIssues });
-  const deliveries = useQuery({ queryKey:['notification-deliveries'], queryFn:listMyNotificationDeliveries });
   const project = projects.data?.[0];
-  const open = issues.data?.filter(x => x.status !== 'resolved') ?? [];
-  const resolved = issues.data?.filter(x => x.status === 'resolved') ?? [];
-  const attention = [...open].sort((a,b) => (b.priority_score ?? 0) - (a.priority_score ?? 0)).slice(0,4);
-  const failedDeliveries=deliveries.data?.filter(item=>item.status==='failed').length??0; const deadLetters=deliveries.data?.filter(item=>item.status==='dead_letter').length??0; const lastDigest=deliveries.data?.find(item=>item.template_key==='owner_daily_digest');
-  if (projects.isLoading || issues.isLoading) return <Workspace><Skeleton className="h-10 w-72" /><div className="mt-12 grid gap-8 lg:grid-cols-[1.35fr_.65fr]"><Skeleton className="h-80" /><Skeleton className="h-80" /></div></Workspace>;
+  const open = issues.data?.filter((x) => x.status !== 'resolved') ?? [];
+  const resolved = issues.data?.filter((x) => x.status === 'resolved') ?? [];
+  const attention = [...open]
+    .sort((a, b) => (b.priority_score ?? 0) - (a.priority_score ?? 0))
+    .slice(0, 4);
+
+  if (projects.isLoading || issues.isLoading) {
+    return (
+      <Workspace>
+        <Skeleton className="h-10 w-72" />
+        <Skeleton className="mt-12 h-80" />
+      </Workspace>
+    );
+  }
+
   if (!project) return <NoProjectOnboarding eyebrow="Overview" />;
-  return <Workspace>
-    <div className="flex flex-col gap-6 border-b border-line pb-8 sm:flex-row sm:items-end sm:justify-between"><div className="min-w-0"><p className="fi-eyebrow">Friday briefing</p><h1 className="fi-display mt-3 text-3xl font-medium leading-tight sm:text-4xl md:text-[42px]">{open.length ? `${open.length} issue${open.length === 1 ? '' : 's'} need attention.` : 'Everything is clear today.'}</h1><p className="mt-3 text-sm text-ink-muted">The highest-impact work in {project.name}, ordered for review.</p></div><Button variant="secondary" className="w-full shrink-0 sm:w-auto" onClick={() => navigator.clipboard.writeText(publicBoardUrl(project.slug))}><Copy className="h-4 w-4" />Copy feedback link</Button></div>
-    <div className="grid gap-10 pt-8 sm:gap-12 sm:pt-10 lg:grid-cols-[1.35fr_.65fr]"><section className="min-w-0"><div className="flex items-center justify-between gap-3"><h2 className="fi-display text-xl font-medium sm:text-2xl">Needs attention</h2><Link to="/app/issues" className="flex shrink-0 items-center gap-1 text-sm text-ink-muted hover:text-ink">All issues <ArrowRight className="h-4 w-4" /></Link></div><div className="mt-5 border-t border-line">{attention.length ? attention.map(issue => <Link key={issue.id} to={`/app/issues/${issue.id}`} className="grid gap-3 border-b border-line py-5 transition hover:bg-surface/60 sm:grid-cols-[1fr_auto] sm:px-2"><div><div className="flex items-center gap-3"><span className="fi-mono text-[10px] text-ink-faint">{issue.public_code}</span><SeverityBadge severity={issue.severity ?? 'medium'} label={severityLabel(issue.severity)} /></div><p className="mt-2 text-[15px] font-medium">{issue.title}</p><p className="fi-mono mt-2 text-[9px] uppercase text-ink-faint">{issue.report_count ?? 0} reports · {issue.affected_user_count ?? 0} affected · seen {formatTime(issue.last_seen_at)}</p></div><span className="fi-display self-center text-xl font-medium">{Math.round(issue.priority_score ?? 0)}<span className="ml-1 text-xs text-ink-faint">priority</span></span></Link>) : <p className="border-b border-line py-10 text-sm text-ink-muted">No open issues. New reports will appear here.</p>}</div></section>
-      <aside className="min-w-0 space-y-9"><section><h2 className="fi-display text-xl font-medium">Live activity</h2><div className="mt-4 border-l border-line pl-5"><Activity icon={<Radio />} title="Processing is connected" detail="New issues update in real time" /><Activity icon={<TriangleAlert />} title={`${open.length} open`} detail="Across your current project" /><Activity icon={<CheckCircle2 />} title={`${resolved.length} resolved`} detail="Closed with public notes" /></div></section><section className="border-t border-line pt-7"><h2 className="fi-display text-xl font-medium">Notification operations</h2><div className="mt-4 space-y-2 text-sm"><p>{failedDeliveries} failed deliveries</p><p>{deadLetters} dead-letter deliveries</p><p className="text-xs text-ink-muted">Last daily digest: {lastDigest?`${lastDigest.status} · ${formatTime(lastDigest.created_at??lastDigest.created_date)}`:'Not queued'}</p><Link className="inline-block pt-2 text-xs font-medium" to="/app/settings#notifications">Open notification settings</Link></div></section><section className="border-t border-line pt-7"><h2 className="fi-display text-xl font-medium">Recently resolved</h2>{resolved.slice(0,3).map(item => <Link key={item.id} to={`/app/issues/${item.id}`} className="mt-4 block text-sm"><span className="line-clamp-1">{item.title}</span><span className="fi-mono mt-1 block text-[9px] uppercase text-ink-faint">{formatTime(item.resolved_at)}</span></Link>)}{!resolved.length && <p className="mt-3 text-sm leading-6 text-ink-muted">Resolved issues will stay visible here with their public note.</p>}</section></aside>
-    </div>
-  </Workspace>;
+
+  return (
+    <Workspace>
+      <div className="flex flex-col gap-6 border-b border-line pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="fi-eyebrow">Friday briefing</p>
+          <h1 className="fi-display mt-3 text-3xl font-medium leading-tight sm:text-4xl md:text-[42px]">
+            {open.length
+              ? `${open.length} issue${open.length === 1 ? '' : 's'} need${open.length === 1 ? 's' : ''} attention.`
+              : 'Everything is clear today.'}
+          </h1>
+          <p className="mt-3 text-sm text-ink-muted">
+            The highest-impact work in {project.name}, ordered for review.
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          className="w-full shrink-0 sm:w-auto"
+          onClick={() => navigator.clipboard.writeText(publicBoardUrl(project.slug))}
+        >
+          <Copy className="h-4 w-4" />
+          Copy feedback link
+        </Button>
+      </div>
+
+      <section className="border-b border-line py-10">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="fi-display text-xl font-medium sm:text-2xl">Needs attention</h2>
+          <Link to="/app/issues" className="flex shrink-0 items-center gap-1 text-sm text-ink-muted hover:text-ink">
+            All issues <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="mt-5 border-t border-line">
+          {attention.length ? (
+            attention.map((issue) => (
+              <Link
+                key={issue.id}
+                to={`/app/issues/${issue.id}`}
+                className="grid gap-3 border-b border-line py-5 transition hover:bg-surface/60 sm:grid-cols-[1fr_auto] sm:px-2"
+              >
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="fi-mono text-[10px] text-ink-faint">{issue.public_code}</span>
+                    <SeverityBadge severity={issue.severity ?? 'medium'} label={severityLabel(issue.severity)} />
+                  </div>
+                  <p className="mt-2 text-[15px] font-medium">{issue.title}</p>
+                  <p className="fi-mono mt-2 text-[9px] uppercase text-ink-faint">
+                    {issue.report_count ?? 0} reports · {issue.affected_user_count ?? 0} affected · seen{' '}
+                    {formatTime(issue.last_seen_at)}
+                  </p>
+                </div>
+                <span className="fi-display self-center text-xl font-medium">
+                  {Math.round(issue.priority_score ?? 0)}
+                  <span className="ml-1 text-xs text-ink-faint">priority</span>
+                </span>
+              </Link>
+            ))
+          ) : (
+            <p className="border-b border-line py-10 text-sm text-ink-muted">
+              No open issues. New reports will appear here.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section className="border-b border-line py-10">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="fi-display text-xl font-medium sm:text-2xl">Live snapshot</h2>
+          <span className="inline-flex items-center gap-2 text-xs text-ink-muted">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/60 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+            </span>
+            Live
+          </span>
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <SnapshotCard
+            icon={<Radio className="h-4 w-4" />}
+            title="Connected"
+            detail="New reports refresh automatically"
+          />
+          <SnapshotCard
+            icon={<TriangleAlert className="h-4 w-4" />}
+            title={`${open.length} open`}
+            detail="Across your current project"
+          />
+          <SnapshotCard
+            icon={<CheckCircle2 className="h-4 w-4" />}
+            title={`${resolved.length} resolved`}
+            detail="Closed with public notes"
+          />
+        </div>
+      </section>
+
+      <section className="py-10">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="fi-display text-xl font-medium sm:text-2xl">Recently resolved</h2>
+          <Link to="/app/resolved" className="flex shrink-0 items-center gap-1 text-sm text-ink-muted hover:text-ink">
+            View all <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="mt-5 space-y-1">
+          {resolved.slice(0, 5).map((item) => (
+            <Link
+              key={item.id}
+              to={`/app/issues/${item.id}`}
+              className="flex items-center justify-between gap-4 border-b border-line py-4 transition hover:bg-surface/60 sm:px-2"
+            >
+              <span className="min-w-0 truncate text-sm font-medium">{item.title}</span>
+              <span className="fi-mono shrink-0 text-[9px] uppercase text-ink-faint">
+                {formatTime(item.resolved_at)}
+              </span>
+            </Link>
+          ))}
+          {!resolved.length && (
+            <p className="py-6 text-sm leading-6 text-ink-muted">
+              Resolved issues will stay visible here with their public note.
+            </p>
+          )}
+        </div>
+      </section>
+    </Workspace>
+  );
 }
-function Workspace({ children }: { children: React.ReactNode }) { return <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-7 md:py-10">{children}</div>; }
-function Activity({icon,title,detail}:{icon:React.ReactNode;title:string;detail:string}) { return <div className="relative pb-6 last:pb-0"><span className="absolute -left-[30px] top-0 flex h-5 w-5 items-center justify-center rounded-full bg-canvas text-ink-muted [&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span><p className="text-sm">{title}</p><p className="mt-1 text-xs text-ink-faint">{detail}</p></div>; }
+
+function Workspace({ children }: { children: React.ReactNode }) {
+  return <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-7 md:py-10">{children}</div>;
+}
+
+function SnapshotCard({
+  icon,
+  title,
+  detail,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-xl border border-line bg-surface p-5">
+      <div className="flex items-center gap-2 text-ink-muted">{icon}</div>
+      <p className="mt-3 text-sm font-medium">{title}</p>
+      <p className="mt-1 text-xs text-ink-faint">{detail}</p>
+    </div>
+  );
+}

@@ -105,15 +105,15 @@ export function NotificationMenu({ compact = false }: { compact?: boolean }) {
           id={panelId}
           role="dialog"
           aria-label="Notifications"
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-line bg-surface shadow-sheet"
+          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(22rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-lg border border-line bg-surface shadow-sheet"
         >
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <div>
+          <div className="flex flex-col gap-2 border-b border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <p className="text-sm font-medium">Notifications</p>
               <p className="mt-0.5 text-xs text-ink-muted">Delivery activity for this workspace</p>
             </div>
             {attentionCount > 0 && (
-              <span className="fi-mono rounded bg-critical-soft px-2 py-1 text-[10px] uppercase tracking-wider text-critical">
+              <span className="fi-mono w-fit rounded bg-critical-soft px-2 py-1 text-[10px] uppercase tracking-wider text-critical">
                 {attentionCount} need attention
               </span>
             )}

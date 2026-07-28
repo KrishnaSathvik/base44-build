@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Archive, ArrowRight } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { listMyIssues, listMyProjects } from '@/lib/api';
 import { formatTime, statusLabel } from '@/lib/format';
-import { Badge, Button, EmptyState, Skeleton, StatusBadge } from '@/components/ui';
+import { Badge, EmptyState, Skeleton, StatusBadge } from '@/components/ui';
 import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
 import type { WorkflowIssue } from '@/lib/types';
 
@@ -18,17 +17,9 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
 ];
 
 export function OwnerResolvedPage() {
-  const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>('all');
   const projects = useQuery({ queryKey: ['projects'], queryFn: listMyProjects });
   const query = useQuery({ queryKey: ['issues'], queryFn: listMyIssues });
-  useEffect(
-    () =>
-      base44.entities.Issue.subscribe(() => {
-        void queryClient.invalidateQueries({ queryKey: ['issues'] });
-      }),
-    [queryClient],
-  );
   const issues = useMemo(
     () =>
       ((query.data ?? []) as WorkflowIssue[]).filter((issue) =>
@@ -99,11 +90,6 @@ export function OwnerResolvedPage() {
               filter === 'reopened'
                 ? 'Issues rejected by a reporter will appear here for explicit review.'
                 : 'Issues resolved with a public note will remain here as a record.'
-            }
-            action={
-              <Link to="/app/issues">
-                <Button variant="secondary">View open issues</Button>
-              </Link>
             }
           />
         </div>

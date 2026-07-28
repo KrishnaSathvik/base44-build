@@ -29,7 +29,8 @@ export function IconButton({ label, className, ...props }: ButtonProps & { label
   return <button aria-label={label} title={label} className={cn('inline-flex h-11 w-11 items-center justify-center rounded-md border border-line bg-surface text-ink-muted transition hover:border-line-strong hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink', className)} {...props} />;
 }
 
-const fieldClass = 'w-full min-h-11 rounded-md border border-line bg-surface px-3.5 text-[15px] text-ink placeholder:text-ink-faint transition focus-visible:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/15 disabled:bg-surface-subtle disabled:text-ink-faint';
+const fieldClass = 'w-full min-h-11 rounded-md border border-line bg-surface px-3.5 text-base text-ink placeholder:text-ink-faint transition focus-visible:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/15 disabled:bg-surface-subtle disabled:text-ink-faint';
+
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...props }, ref) { return <input ref={ref} className={cn(fieldClass, className)} {...props} />; });
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea({ className, ...props }, ref) { return <textarea ref={ref} className={cn(fieldClass, 'min-h-[120px] resize-y py-3 leading-relaxed', className)} {...props} />; });
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function Select({ className, ...props }, ref) { return <select ref={ref} className={cn(fieldClass, className)} {...props} />; });

@@ -39,6 +39,9 @@ test('immediate submission processing result shows tracking and public code', as
   expect(await screen.findByText('Your feedback is in')).toBeVisible();
   expect(screen.getByText('FI-1001')).toBeVisible();
   expect(screen.getByText(/\/track\/token-1/)).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Copy tracking link' })).toBeVisible();
+  expect(screen.getByRole('link', { name: /open tracking page/i })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Submit another report' })).toBeVisible();
 });
 
 test('safe accepted response when processing fails still returns tracking', async () => {
@@ -54,5 +57,5 @@ test('safe accepted response when processing fails still returns tracking', asyn
   await fillAndSubmit();
   expect(await screen.findByText('Your feedback is in')).toBeVisible();
   expect(screen.getByText(/\/track\/token-2/)).toBeVisible();
-  expect(screen.queryByText(/AI|processing failed|InvokeLLM/i)).toBeNull();
+  expect(screen.queryByText(/processing failed|InvokeLLM|\bAI\b/i)).toBeNull();
 });

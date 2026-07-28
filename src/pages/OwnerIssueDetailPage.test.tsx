@@ -97,7 +97,8 @@ beforeEach(() => {
 test('shows how VensaOS understood the issue including analysis mode and grouping conflict', async () => {
   renderPage();
   expect(await screen.findByText('How VensaOS understood this')).toBeVisible();
-  expect(screen.getByText('AI analysis')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: /How VensaOS understood this/i }));
+  expect(await screen.findByText('AI analysis')).toBeVisible();
   expect(screen.getByText('functionality')).toBeVisible();
   expect(screen.getByText('Export')).toBeVisible();
   expect(screen.getByText('Blocked')).toBeVisible();
@@ -122,12 +123,16 @@ test('labels deterministic fallback instead of AI analysis', async () => {
     ai_analysis_mode: 'deterministic_fallback',
   } as never);
   renderPage();
+  expect(await screen.findByText('How VensaOS understood this')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: /How VensaOS understood this/i }));
   expect(await screen.findByText('Deterministic fallback')).toBeVisible();
   expect(screen.queryByText('AI analysis')).toBeNull();
 });
 
 test('owner can submit a classification correction', async () => {
   renderPage();
+  expect(await screen.findByText('How VensaOS understood this')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: /How VensaOS understood this/i }));
   expect(await screen.findByText('Save classification correction')).toBeVisible();
   fireEvent.change(screen.getByDisplayValue('High'), { target: { value: 'medium' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save classification correction' }));

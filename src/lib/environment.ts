@@ -30,18 +30,23 @@ export function parseUserAgent(userAgent: string, platform = ''): Pick<Environme
   return { browserName: browser[0], browserVersion: browser[1]?.split('.').slice(0, 2).join('.'), operatingSystem, deviceType };
 }
 
-export function collectEnvironmentContext(): EnvironmentContext {
-  const parsed = parseUserAgent(navigator.userAgent, navigator.platform);
-  // A product may pass its current path as ?page=/chat. Never use referrer:
-  // it can reveal unrelated browsing history. Fall back to this portal path.
-  const suppliedPage = new URLSearchParams(window.location.search).get('page');
-  const pageUrl = suppliedPage || window.location.pathname;
+/**
+ * Collects non-identifying reproduction context.
+ * Page comes only from an explicit `?page=` param (products can deep-link into the portal).
+ * Never use the feedback portal path or document.referrer — those are either useless or invasive.
+ */
+export function collectEnvironmentContext(search = typeof window !== 'undefined' ? window.location.search : ''): EnvironmentContext {
+  const parsed = parseUserAgent(
+    typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    typeof navigator !== 'undefined' ? navigator.platform : '',
+  );
+  const suppliedPage = new URLSearchParams(search).get('page')?.trim() || undefined;
   return {
     ...parsed,
-    screenWidth: window.screen?.width,
-    screenHeight: window.screen?.height,
-    viewportWidth: window.innerWidth,
-    viewportHeight: window.innerHeight,
-    pageUrl,
+    screenWidth: typeof window !== 'undefined' ? window.screen?.width : undefined,
+    screenHeight: typeof window !== 'undefined' ? window.screen?.height : undefined,
+    viewportWidth: typeof window !== 'undefined' ? window.innerWidth : undefined,
+    viewportHeight: typeof window !== 'undefined' ? window.innerHeight : undefined,
+    pageUrl: suppliedPage,
   };
 }

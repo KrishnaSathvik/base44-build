@@ -5,7 +5,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, CheckCircle2, ExternalLink, ShieldCheck, X } from 'lucide-react';
+import { ArrowRight, Check, CheckCircle2, Copy, ExternalLink, Link2, ShieldCheck, X } from 'lucide-react';
 import { apiErrorMessage, getPublicProject, submitFeedback, uploadFeedbackAttachment } from '@/lib/api';
 import type { FeedbackType, SubmitFeedbackResult } from '@/lib/types';
 import type { PendingScreenshot } from '@/lib/attachments';
@@ -345,31 +345,36 @@ export function PublicPortalPage() {
   const selectedMeta = TYPES.find((option) => option.value === activeType);
 
   if (result) {
-    const trackingLink = result.trackingToken ? reporterTrackingUrl(result.trackingToken) : null;
     return (
       <PortalFrame productName={project.name}>
-        <State
-          icon={<CheckCircle2 />}
-          title="Your feedback is in"
-          body="The report and private evidence were accepted. Keep the private link below to follow what happens next."
-        >
-          <div className="mt-7 rounded-lg border border-line bg-surface-subtle p-4 text-left">
-            <div className="flex items-center justify-between">
-              <span className="fi-eyebrow">Private tracking</span>
-              {result.publicCode && <span className="fi-mono text-[10px] text-ink-faint">{result.publicCode}</span>}
-            </div>
-            {trackingLink ? (
-              <>
-                <p className="fi-mono mt-3 break-all text-xs leading-5">{trackingLink}</p>
-                <a href={trackingLink} className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium">
-                  Open tracking page <ArrowRight className="h-4 w-4" />
-                </a>
-              </>
-            ) : (
-              <p className="mt-3 text-sm text-ink-muted">This report was already received.</p>
-            )}
-          </div>
-        </State>
+        <PageMetadata
+          title="Feedback received"
+          description={`Your feedback for ${project.name} was accepted.`}
+        />
+        <SubmissionConfirmation
+          result={result}
+          productUrl={project.productUrl}
+          onSubmitAnother={() => {
+            setResult(null);
+            setScreenshots([]);
+            setType(firstEnabledType(enabledTypes));
+            setSubmissionKey(crypto.randomUUID());
+            setIncludeEnvironment(true);
+            setIncludePage(true);
+            const next = collectEnvironmentContext();
+            setEnvironment(next);
+            reset({
+              description: '',
+              expectedBehavior: '',
+              pageUrl: next.pageUrl ?? '',
+              reporterEmail: '',
+              emailUpdatesEnabled: false,
+              website: '',
+            });
+            setSubmitError(null);
+            setDraftRestored(false);
+          }}
+        />
       </PortalFrame>
     );
   }
@@ -380,16 +385,16 @@ export function PublicPortalPage() {
         title="Submit Feedback"
         description={`Share private product feedback with the ${project.name} team.`}
       />
-      <div className="mx-auto max-w-2xl py-10 sm:py-16">
+      <div className="mx-auto max-w-2xl py-8 sm:py-16">
         {draftRestored && (
           <div
             role="status"
-            className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-line bg-surface p-4 text-sm"
+            className="mb-6 flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4"
           >
             <span>Your unfinished feedback was restored.</span>
             <button
               type="button"
-              className="min-h-11 text-xs font-medium"
+              className="min-h-11 shrink-0 self-start text-xs font-medium sm:self-auto"
               onClick={() => {
                 void discardFeedbackDraft(projectSlug);
                 screenshots.forEach((item) => URL.revokeObjectURL(item.previewUrl));
@@ -412,18 +417,18 @@ export function PublicPortalPage() {
           </div>
         )}
 
-        <p className="fi-eyebrow">Feedback for {project.name}</p>
-        <h1 className="fi-display mt-4 text-3xl font-medium leading-tight sm:text-4xl">{copy.heading}</h1>
-        <p className="mt-4 max-w-xl text-[15px] leading-7 text-ink-muted">
+        <p className="fi-eyebrow break-words">Feedback for {project.name}</p>
+        <h1 className="fi-display mt-3 text-[1.75rem] font-medium leading-tight sm:mt-4 sm:text-4xl">{copy.heading}</h1>
+        <p className="mt-3 max-w-xl text-[15px] leading-7 text-ink-muted sm:mt-4">
           {project.description ? `${project.description} ` : ''}
           Tell us what happened, what you expected, and anything else that may help the team.
         </p>
-        <p className="mt-4 flex items-center gap-2 text-xs text-ink-faint">
-          <ShieldCheck className="h-4 w-4" />
+        <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-ink-faint">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
           Screenshots are private. No account is required.
         </p>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-7 space-y-5 sm:mt-8 sm:space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <Field label="Feedback type" htmlFor="feedback-type">
             <Select
               id="feedback-type"
@@ -467,12 +472,13 @@ export function PublicPortalPage() {
             />
           </div>
 
-          <section className="rounded-lg border border-line bg-surface">
-            <div className="flex items-start justify-between gap-4 border-b border-line p-4">
-              <div>
-                <p className="fi-eyebrow">Context attached</p>
+          <section className="overflow-hidden rounded-lg border border-line bg-surface">
+            <div className="flex items-start justify-between gap-3 border-b border-line p-4 sm:gap-4">
+              <div className="min-w-0">
+                <p className="fi-eyebrow">Device context</p>
                 <p className="mt-1 text-xs leading-5 text-ink-muted">
-                  Useful reproduction details only. No IP address, precise location, or fingerprinting identifiers.
+                  Browser and screen details that help reproduce the issue. No IP address, precise location, or
+                  fingerprinting.
                 </p>
               </div>
               {includeEnvironment && (
@@ -480,7 +486,7 @@ export function PublicPortalPage() {
                   type="button"
                   aria-label="Remove browser and device context"
                   onClick={() => setIncludeEnvironment(false)}
-                  className="p-2 text-ink-muted hover:text-critical"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-ink-muted hover:bg-canvas hover:text-critical"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -504,31 +510,36 @@ export function PublicPortalPage() {
                   />
                 </>
               ) : (
-                <div className="col-span-2 bg-surface p-4 text-ink-faint">Browser and device context removed.</div>
+                <div className="col-span-full bg-surface p-4 text-ink-faint">Browser and device context removed.</div>
               )}
               {includePage ? (
-                <div className="col-span-2 bg-surface p-4">
-                  <div className="flex items-center justify-between">
+                <div className="col-span-full bg-surface p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <label htmlFor="pageUrl" className="fi-mono text-[9px] uppercase text-ink-faint">
-                      Page
+                      Page where this happened
                     </label>
                     <button
                       type="button"
-                      className="text-[10px] text-ink-muted hover:text-critical"
+                      className="min-h-11 self-start text-[10px] text-ink-muted hover:text-critical sm:min-h-0 sm:shrink-0"
                       onClick={() => {
                         setIncludePage(false);
                         setValue('pageUrl', '');
                       }}
                     >
-                      Remove page
+                      Remove
                     </button>
                   </div>
                   <Input
                     id="pageUrl"
                     className="mt-2"
-                    placeholder="/chat or https://product.example/chat"
+                    inputMode="url"
+                    autoComplete="off"
+                    placeholder="e.g. /settings or https://yourproduct.com/checkout"
                     {...register('pageUrl')}
                   />
+                  <p className="mt-2 text-[11px] leading-4 text-ink-faint">
+                    Optional. Leave blank if you are unsure — do not use this feedback form’s own URL.
+                  </p>
                   {errors.pageUrl && (
                     <div className="mt-2">
                       <InlineError>{errors.pageUrl.message}</InlineError>
@@ -536,32 +547,33 @@ export function PublicPortalPage() {
                   )}
                 </div>
               ) : (
-                <div className="col-span-2 bg-surface p-4 text-ink-faint">Page URL removed.</div>
+                <div className="col-span-full bg-surface p-4 text-ink-faint">Page URL removed.</div>
               )}
             </div>
             {!includeEnvironment && (
-              <button type="button" className="m-4 text-xs font-medium" onClick={() => setIncludeEnvironment(true)}>
+              <button type="button" className="m-4 min-h-11 text-xs font-medium" onClick={() => setIncludeEnvironment(true)}>
                 Restore browser/device context
               </button>
             )}
             {!includePage && (
               <button
                 type="button"
-                className="m-4 text-xs font-medium"
+                className="m-4 min-h-11 text-xs font-medium"
                 onClick={() => {
                   setIncludePage(true);
                   setValue('pageUrl', environment.pageUrl ?? '');
                 }}
               >
-                Restore page URL
+                Add page URL
               </button>
             )}
           </section>
 
           {project.collectReporterEmail !== false && (
             <details className="rounded-lg border border-line bg-surface">
-              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 text-sm font-medium">
-                Contact details <span className="text-xs font-normal text-ink-faint">Optional</span>
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium">
+                <span>Contact details</span>
+                <span className="text-xs font-normal text-ink-faint">Optional</span>
               </summary>
               <div className="space-y-5 border-t border-line p-4">
                 <Field
@@ -597,7 +609,7 @@ export function PublicPortalPage() {
           <Button
             type="submit"
             disabled={isSubmitting || networkState !== 'online' || !type}
-            className="w-full sm:w-auto"
+            className="w-full min-h-12 sm:w-auto sm:min-h-11"
           >
             {isSubmitting ? 'Uploading and sending…' : 'Send feedback'}
             <ArrowRight className="h-4 w-4" />
@@ -608,6 +620,137 @@ export function PublicPortalPage() {
   );
 }
 
+function SubmissionConfirmation({
+  result,
+  productUrl,
+  onSubmitAnother,
+}: {
+  result: SubmitFeedbackResult;
+  productUrl?: string | null;
+  onSubmitAnother: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const [showFullLink, setShowFullLink] = useState(false);
+  const trackingLink = result.trackingToken ? reporterTrackingUrl(result.trackingToken) : null;
+
+  async function copyLink() {
+    if (!trackingLink) return;
+    try {
+      await navigator.clipboard.writeText(trackingLink);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard may be unavailable; URL remains selectable */
+    }
+  }
+
+  return (
+    <div className="confirm-in mx-auto max-w-lg py-8 sm:py-14">
+      <div className="text-center">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-success/25 bg-success-soft text-success shadow-sm">
+          <CheckCircle2 className="h-6 w-6" aria-hidden />
+        </span>
+        <p className="fi-eyebrow mt-6">Received</p>
+        <h1 className="fi-display mt-3 text-[1.75rem] font-medium leading-tight sm:text-3xl">
+          Your feedback is in
+        </h1>
+        <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-ink-muted">
+          Save your private tracking link — it’s the only way to follow this report.
+        </p>
+      </div>
+
+      <div className="mt-8 overflow-hidden rounded-xl border border-line bg-surface text-left shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
+          <span className="inline-flex items-center gap-2 text-sm font-medium">
+            <Link2 className="h-4 w-4 text-ink-muted" aria-hidden />
+            Private tracking
+          </span>
+          {result.publicCode && (
+            <span className="fi-mono rounded bg-canvas px-2 py-1 text-[10px] uppercase tracking-wider text-ink-muted">
+              {result.publicCode}
+            </span>
+          )}
+        </div>
+
+        {trackingLink ? (
+          <div className="space-y-4 p-4 sm:p-5">
+            <Button type="button" className="w-full min-h-12 sm:min-h-11" onClick={() => void copyLink()}>
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'Link copied' : 'Copy tracking link'}
+            </Button>
+
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="fi-mono text-[9px] uppercase tracking-wider text-ink-faint">Your private link</p>
+                <button
+                  type="button"
+                  className="text-xs font-medium text-ink-muted hover:text-ink"
+                  onClick={() => setShowFullLink((value) => !value)}
+                >
+                  {showFullLink ? 'Hide full link' : 'Show full link'}
+                </button>
+              </div>
+              <div className="mt-2 rounded-lg border border-line bg-canvas px-3 py-3">
+                <p className="fi-mono break-all text-[11px] leading-5 text-ink sm:text-xs">
+                  {showFullLink ? trackingLink : truncateTrackingLink(trackingLink)}
+                </p>
+              </div>
+            </div>
+
+            <a
+              href={trackingLink}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:border-ink sm:min-h-11"
+            >
+              Open tracking page
+              <ArrowRight className="h-4 w-4" />
+            </a>
+
+            <p className="flex items-start gap-2 text-xs leading-5 text-ink-faint">
+              <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+              This link is private. Bookmark it or copy it now — it will not appear in email unless you opted in.
+            </p>
+          </div>
+        ) : (
+          <div className="p-4 sm:p-5">
+            <p className="text-sm text-ink-muted">This report was already received.</p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full min-h-12 sm:w-auto sm:min-h-11"
+          onClick={onSubmitAnother}
+        >
+          Submit another report
+        </Button>
+        {productUrl ? (
+          <a
+            href={productUrl}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md px-4 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-subtle hover:text-ink sm:min-h-11 sm:w-auto"
+          >
+            Return to product
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function truncateTrackingLink(url: string) {
+  try {
+    const parsed = new URL(url);
+    const token = parsed.pathname.split('/').filter(Boolean).pop() ?? '';
+    if (token.length <= 14) return url;
+    return `${parsed.origin}/track/${token.slice(0, 6)}…${token.slice(-4)}`;
+  } catch {
+    return url.length > 48 ? `${url.slice(0, 28)}…${url.slice(-8)}` : url;
+  }
+}
+
 function dimensions(width?: number, height?: number) {
   return width && height ? `${width} × ${height}` : 'Not available';
 }
@@ -616,17 +759,17 @@ function ContextLine({ label, value }: { label: string; value?: string }) {
   return (
     <div className="bg-surface p-4">
       <p className="fi-mono text-[9px] uppercase text-ink-faint">{label}</p>
-      <p className="mt-2 text-sm text-ink-muted">{value || 'Not available'}</p>
+      <p className="mt-2 break-words text-sm text-ink-muted">{value || 'Not available'}</p>
     </div>
   );
 }
 
 function PortalFrame({ children, productName }: { children: ReactNode; productName?: string }) {
   return (
-    <div className="min-h-screen bg-canvas">
-      <header className="border-b border-line">
-        <div className="mx-auto flex min-h-16 max-w-4xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6">
-          <div className="min-w-0">
+    <div className="min-h-[100dvh] bg-canvas pb-[env(safe-area-inset-bottom)]">
+      <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/90">
+        <div className="mx-auto flex min-h-14 max-w-4xl items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:min-h-16 sm:gap-4 sm:px-6">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{productName || 'Feedback portal'}</p>
             <p className="fi-mono mt-1 text-[8px] uppercase tracking-wider text-ink-faint">Share feedback</p>
           </div>
@@ -637,7 +780,7 @@ function PortalFrame({ children, productName }: { children: ReactNode; productNa
           </span>
         </div>
       </header>
-      <main className="px-4 sm:px-6">{children}</main>
+      <main className="px-4 pb-10 sm:px-6 sm:pb-16">{children}</main>
     </div>
   );
 }
@@ -654,7 +797,7 @@ function State({
   children?: ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-lg py-16 text-center sm:py-24">
+    <div className="mx-auto max-w-lg px-1 py-12 text-center sm:py-24">
       <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted [&>svg]:h-5 [&>svg]:w-5">
         {icon}
       </span>

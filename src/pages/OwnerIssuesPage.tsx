@@ -1,8 +1,6 @@
-import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, Archive, Copy, ListFilter, Plus } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { listMyIssues, listMyProjects } from '@/lib/api';
 import { formatTime, severityLabel, statusLabel } from '@/lib/format';
 import { Button, EmptyState, SeverityBadge, Skeleton, StatusBadge } from '@/components/ui';
@@ -10,16 +8,9 @@ import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
 import { publicBoardUrl } from '@/lib/appUrls';
 
 export function OwnerIssuesPage() {
-  const queryClient = useQueryClient();
   const resolvedOnly = useLocation().pathname.endsWith('/resolved');
   const projects = useQuery({ queryKey: ['projects'], queryFn: listMyProjects });
   const { data: allIssues, isLoading, isError } = useQuery({ queryKey: ['issues'], queryFn: listMyIssues });
-  useEffect(() => {
-    const unsubscribe = base44.entities.Issue.subscribe(() => {
-      void queryClient.invalidateQueries({ queryKey: ['issues'] });
-    });
-    return () => unsubscribe();
-  }, [queryClient]);
 
   const project = projects.data?.[0];
   const issues = allIssues?.filter((issue) =>
@@ -110,21 +101,6 @@ export function OwnerIssuesPage() {
               resolvedOnly
                 ? 'When an issue is resolved with a public note, it will remain here as a record.'
                 : 'Share your public feedback link. The first submitted report will become an issue here.'
-            }
-            action={
-              !resolvedOnly ? (
-                <Button
-                  variant="secondary"
-                  onClick={() => void navigator.clipboard.writeText(publicBoardUrl(project.slug))}
-                >
-                  <Copy className="h-4 w-4" />
-                  Copy feedback link
-                </Button>
-              ) : (
-                <Link to="/app/issues">
-                  <Button variant="secondary">View open issues</Button>
-                </Link>
-              )
             }
           />
         </div>

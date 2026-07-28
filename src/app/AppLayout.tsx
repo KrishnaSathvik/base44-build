@@ -3,6 +3,7 @@ import { Archive, Inbox, LayoutGrid, LogOut, Settings, SquareKanban } from 'luci
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useFreeMaintenance } from '@/lib/useFreeMaintenance';
+import { useOwnerRealtime } from '@/lib/useOwnerRealtime';
 import { AuthPanel } from '@/app/AuthPanel';
 import { Brand } from '@/components/Brand';
 import { NotificationMenu } from '@/components/NotificationMenu';
@@ -12,7 +13,7 @@ import { clearOwnerSnapshots, loadOwnerSnapshots, saveOwnerSnapshot, toOwnerIssu
 import type { OwnerSnapshot } from '@/lib/ownerSnapshot';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { listMyIssues, listMyProjects } from '@/lib/api';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { statusLabel } from '@/lib/format';
 
 const navigation = [
@@ -29,6 +30,7 @@ export function AppLayout() {
   const isIssueDetail = /^\/app\/issues\/[^/]+$/.test(pathname);
   const { user, isLoading, isAuthenticated } = useCurrentUser();
   const maintenance = useFreeMaintenance(!!user && isAuthenticated && networkState !== 'offline');
+  useOwnerRealtime(!!user && isAuthenticated && networkState !== 'offline');
   const projects = useQuery({
     queryKey: ['projects'],
     queryFn: listMyProjects,
@@ -40,6 +42,20 @@ export function AppLayout() {
     enabled: !!user && networkState !== 'offline',
   });
   const [offlineSnapshots, setOfflineSnapshots] = useState<OwnerSnapshot[]>([]);
+  const [liveAnnouncement, setLiveAnnouncement] = useState('');
+  const previousOpenCount = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!issues.data) return;
+    const openCount = issues.data.filter((issue) => !['resolved', 'dismissed', 'duplicate'].includes(issue.status)).length;
+    if (previousOpenCount.current !== null && openCount > previousOpenCount.current) {
+      const added = openCount - previousOpenCount.current;
+      setLiveAnnouncement(
+        added === 1 ? 'A new issue needs attention.' : `${added} new issues need attention.`,
+      );
+    }
+    previousOpenCount.current = openCount;
+  }, [issues.data]);
 
   useEffect(() => {
     if (networkState === 'online' && user && projects.data && issues.data) {
@@ -75,6 +91,9 @@ export function AppLayout() {
 
   return (
     <div className={cn('min-h-screen bg-canvas md:pb-0', !isIssueDetail && 'pb-20')}>
+      <span className="sr-only" role="status" aria-live="polite">
+        {liveAnnouncement}
+      </span>
       <header className="fixed inset-x-0 top-0 z-40 h-16 overflow-visible border-b border-line bg-surface">
         <div className="flex h-full items-center">
           <div className="flex h-full w-full items-center justify-between px-4 md:w-[228px] md:border-r md:px-5">

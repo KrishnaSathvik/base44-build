@@ -40,7 +40,8 @@ test('opens a unified form with type dropdown instead of separate type pages', a
   expect(await screen.findByRole('heading', { name: 'What happened?' })).toBeVisible();
   expect(screen.getByLabelText('Feedback type')).toHaveValue('bug');
   expect(screen.getByLabelText('Describe the problem')).toHaveFocus();
-  expect(screen.getByText('Context attached')).toBeVisible();
+  expect(screen.getByText('Device context')).toBeVisible();
+  expect(screen.getByLabelText('Page where this happened')).toHaveValue('');
   expect(screen.getByLabelText('Email me when the product team replies or changes this issue.')).not.toBeChecked();
   expect(screen.getByText('Acme')).toBeVisible();
   expect(screen.getByText('Powered by VensaOS')).toBeVisible();
@@ -64,7 +65,7 @@ test('allows browser context and page URL to be removed before submission', asyn
   renderPortal();
   await screen.findByRole('heading', { name: 'What happened?' });
   fireEvent.click(screen.getByRole('button', { name: 'Remove browser and device context' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Remove page' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
   expect(screen.getByText('Browser and device context removed.')).toBeVisible();
   expect(screen.getByText('Page URL removed.')).toBeVisible();
 });

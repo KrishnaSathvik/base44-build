@@ -23,7 +23,7 @@ test('shows an intentional empty issue state', async () => {
     </QueryClientProvider>,
   );
   expect(await screen.findByRole('heading', { name: 'No issues yet' })).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Copy feedback link' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Copy feedback link' })).not.toBeInTheDocument();
 });
 
 test('shows onboarding when no project exists', async () => {
