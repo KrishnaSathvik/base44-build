@@ -315,7 +315,7 @@ async function runOwner(browser, viewportName, size) {
 
   const routes = [
     ['/app/overview', '05-overview', /Friday briefing|need attention|Everything is clear/i],
-    ['/app/inbox', '06-inbox', /Inbox|Report queue/i],
+    ['/app/inbox', '06-inbox', /Inbox|Exceptions/i],
     ['/app/issues', '07-issues', /Issues|Open issues|Needs attention/i],
     ['/app/issues/issue-1', '08-issue-detail', /Update this issue|All issues/i],
     ['/app/resolved', '09-resolved', /Resolved|Recently resolved|No resolved/i],

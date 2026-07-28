@@ -69,4 +69,19 @@ test('shows an unread reporter-replied state and message preview', async () => {
   expect((await screen.findAllByText(/It happens after refreshing twice/))[0]).toBeVisible();
   expect(screen.getAllByText('Reporter replied').length).toBeGreaterThan(0);
   expect(screen.getByLabelText('Unread reporter message')).toBeVisible();
+  expect(screen.getByRole('button', { name: /review in issues/i })).toBeVisible();
+});
+
+test('hides plain processed unreviewed reports from inbox exceptions', async () => {
+  vi.mocked(listMyAttachments).mockResolvedValue([]);
+  vi.mocked(listMyReporterMessages).mockResolvedValue([]);
+  vi.mocked(listMySubmissions).mockResolvedValue([{ id: 'report-plain', project_id: 'p1', owner_id: 'owner@test.dev', type: 'bug', description: 'Groceries icons misalignment', processing_status: 'completed', ai_summary: 'Groceries icons misalignment and category functionality issues' } as never]);
+  vi.mocked(listMyIssues).mockResolvedValue([{ id: 'issue-plain', project_id: 'p1', public_code: 'FI-V9VX5G', title: 'Groceries icons misalignment', status: 'unreviewed', report_count: 1 } as never]);
+  vi.mocked(listMyIssueReports).mockResolvedValue([{ id: 'link', project_id: 'p1', owner_id: 'owner@test.dev', issue_id: 'issue-plain', submission_id: 'report-plain', review_status: 'accepted' } as never]);
+  vi.mocked(listMyDuplicateSuggestions).mockResolvedValue([]);
+  renderInbox();
+  expect(await screen.findByText('Inbox is clear')).toBeVisible();
+  expect(screen.getByText(/New unreviewed issues are in Issues/i)).toBeVisible();
+  expect(screen.queryByText(/Groceries icons misalignment/i)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Unreviewed' })).not.toBeInTheDocument();
 });

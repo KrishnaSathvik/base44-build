@@ -143,13 +143,15 @@ export function PublicPortalPage() {
 
   useEffect(() => {
     const hasWork =
-      !!type ||
-      !!values.description ||
-      !!values.expectedBehavior ||
-      !!values.reporterEmail ||
+      !!values.description?.trim() ||
+      !!values.expectedBehavior?.trim() ||
+      !!values.reporterEmail?.trim() ||
       screenshots.length > 0;
-    if (!hasWork) return;
     const timer = window.setTimeout(() => {
+      if (!hasWork) {
+        void discardFeedbackDraft(projectSlug);
+        return;
+      }
       void saveFeedbackDraft({
         projectSlug,
         type,

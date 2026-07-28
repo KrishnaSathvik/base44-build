@@ -12,12 +12,16 @@ import {
 import type { DuplicateSuggestion, FeedbackAttachment, IntelligenceIssue, IntelligenceIssueReport, IntelligenceSubmission, ReporterMessage } from '@/lib/types';
 import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
 
-type Filter = 'all' | 'unreviewed' | 'duplicates' | 'failed' | 'needs_info' | 'reporter_replied';
+type Filter = 'all' | 'duplicates' | 'failed' | 'needs_info' | 'reporter_replied';
 const FILTERS: Array<{ value: Filter; label: string }> = [
-  { value: 'all', label: 'All' }, { value: 'unreviewed', label: 'Unreviewed' },
-  { value: 'duplicates', label: 'Possible duplicates' }, { value: 'failed', label: 'Processing failed' },
-  { value: 'needs_info', label: 'Needs information' }, { value: 'reporter_replied', label: 'Reporter replied' },
+  { value: 'all', label: 'All attention' },
+  { value: 'duplicates', label: 'Possible duplicates' },
+  { value: 'failed', label: 'Processing failed' },
+  { value: 'needs_info', label: 'Needs information' },
+  { value: 'reporter_replied', label: 'Reporter replied' },
 ];
+
+type AttentionReason = 'Processing failed' | 'Reporter replied' | 'Possible duplicate' | 'Needs information';
 
 interface InboxData {
   submissions: IntelligenceSubmission[];
@@ -26,6 +30,27 @@ interface InboxData {
   suggestions: DuplicateSuggestion[];
   attachments: FeedbackAttachment[];
   messages: ReporterMessage[];
+}
+
+function hasUnreadReporterReply(submissionId: string, messages: ReporterMessage[]) {
+  return messages.some(
+    (item) => item.submission_id === submissionId && item.sender_type === 'reporter' && !item.is_read_by_owner,
+  );
+}
+
+function attentionForSubmission(
+  submission: IntelligenceSubmission,
+  data: Pick<InboxData, 'links' | 'issues' | 'suggestions' | 'messages'>,
+): AttentionReason | null {
+  const issue = issueForSubmission(submission.id, data.links, data.issues);
+  const pendingSuggestion = data.suggestions.some(
+    (item) => item.submission_id === submission.id && item.status === 'pending',
+  );
+  if (submission.processing_status === 'failed') return 'Processing failed';
+  if (hasUnreadReporterReply(submission.id, data.messages)) return 'Reporter replied';
+  if (pendingSuggestion) return 'Possible duplicate';
+  if (issue?.status === 'needs_info') return 'Needs information';
+  return null;
 }
 
 async function loadInbox(): Promise<InboxData> {
@@ -56,16 +81,25 @@ export function OwnerInboxPage() {
 
   const filtered = useMemo(() => {
     if (!query.data) return [];
-    const { links, issues, suggestions } = query.data;
     return query.data.submissions.filter((submission) => {
-      const issue = issueForSubmission(submission.id, links, issues);
-      const pendingSuggestion = suggestions.some((item) => item.submission_id === submission.id && item.status === 'pending');
-      if (filter === 'unreviewed') return issue?.status === 'unreviewed';
-      if (filter === 'duplicates') return pendingSuggestion;
-      if (filter === 'failed') return submission.processing_status === 'failed';
-      if (filter === 'needs_info') return issue?.status === 'needs_info';
-      if (filter === 'reporter_replied') return query.data.messages.some((item) => item.submission_id === submission.id && item.sender_type === 'reporter' && !item.is_read_by_owner);
-      return submission.processing_status !== 'completed' || issue?.status === 'unreviewed' || issue?.status === 'needs_info' || pendingSuggestion || query.data.messages.some((item) => item.submission_id === submission.id && item.sender_type === 'reporter' && !item.is_read_by_owner);
+      const reason = attentionForSubmission(submission, query.data);
+      if (!reason) return false;
+      switch (filter) {
+        case 'duplicates':
+          return reason === 'Possible duplicate';
+        case 'failed':
+          return reason === 'Processing failed';
+        case 'needs_info':
+          return reason === 'Needs information';
+        case 'reporter_replied':
+          return reason === 'Reporter replied';
+        case 'all':
+          return true;
+        default: {
+          const _exhaustive: never = filter;
+          return _exhaustive;
+        }
+      }
     });
   }, [filter, query.data]);
 
@@ -94,18 +128,18 @@ export function OwnerInboxPage() {
   if (!projects.data?.length) {
     return (
       <NoProjectOnboarding
-        eyebrow="Report queue"
+        eyebrow="Exceptions"
         title="Create your first feedback board"
-        description="Inbox fills with reports after you create a board and share the public feedback link."
+        description="Inbox shows failed processing, duplicates, and reporter replies. Everyday unreviewed work lives in Issues after you share the public feedback link."
       />
     );
   }
 
   return <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-7 md:py-10">
-    <header className="border-b border-line pb-7"><p className="fi-eyebrow">Report queue</p><h1 className="fi-display mt-3 text-3xl font-medium sm:text-4xl">Inbox</h1><p className="mt-2 text-sm text-ink-muted">Review intelligence, grouping evidence, and reports that still need a decision.</p></header>
+    <header className="border-b border-line pb-7"><p className="fi-eyebrow">Exceptions</p><h1 className="fi-display mt-3 text-3xl font-medium sm:text-4xl">Inbox</h1><p className="mt-2 text-sm text-ink-muted">Failed processing, duplicate matches, and reporter replies that need a decision. Everyday unreviewed work lives in Issues.</p></header>
     {deliveryFailures>0&&<div role="status" className="mt-5 flex flex-col gap-3 rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4"><span>{deliveryFailures} notification {deliveryFailures===1?'delivery needs':'deliveries need'} operational attention.</span><Link className="font-medium" to="/app/settings#notifications">Review notifications</Link></div>}
     <div className="flex gap-2 overflow-x-auto border-b border-line py-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Inbox filters">{FILTERS.map((item) => <button key={item.value} type="button" onClick={() => setFilter(item.value)} className={`min-h-10 shrink-0 rounded-md px-3 text-xs ${filter === item.value ? 'bg-ink text-white' : 'text-ink-muted hover:bg-surface'}`}>{item.label}</button>)}</div>
-    {query.isLoading ? <div className="grid gap-6 py-6 lg:grid-cols-[380px_1fr]"><Skeleton className="h-[520px]"/><Skeleton className="h-[520px]"/></div> : query.isError ? <div className="py-8"><InlineError>Inbox data could not be loaded. Check your connection and retry.</InlineError></div> : !filtered.length ? <div className="mt-6"><EmptyState icon={<Inbox className="h-5 w-5"/>} title="No reports in this view" description="New, failed, and reviewable reports will appear here without exposing them outside your project."/></div> : <div className="grid min-h-0 lg:min-h-[620px] lg:grid-cols-[380px_minmax(0,1fr)]">
+    {query.isLoading ? <div className="grid gap-6 py-6 lg:grid-cols-[380px_1fr]"><Skeleton className="h-[520px]"/><Skeleton className="h-[520px]"/></div> : query.isError ? <div className="py-8"><InlineError>Inbox data could not be loaded. Check your connection and retry.</InlineError></div> : !filtered.length ? <div className="mt-6"><EmptyState icon={<Inbox className="h-5 w-5"/>} title={filter === 'all' ? 'Inbox is clear' : 'No reports in this view'} description={filter === 'all' ? 'No exceptions need attention. New unreviewed issues are in Issues.' : 'Nothing matches this filter right now.'}/></div> : <div className="grid min-h-0 lg:min-h-[620px] lg:grid-cols-[380px_minmax(0,1fr)]">
       <div className={`border-line lg:border-r ${showList ? '' : 'hidden'}`}>{filtered.map((submission) => <ReportRow key={submission.id} submission={submission} data={query.data!} selected={submission.id === selectedId} onSelect={() => { setSelectedId(submission.id); setMobileShowDetail(true); }}/>)}</div>
       {selectedSubmission && showDetail ? <div><button type="button" onClick={() => setMobileShowDetail(false)} className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-ink-muted hover:text-ink lg:hidden"><ArrowLeft className="h-4 w-4"/>Back to inbox</button><ReportDetail submission={selectedSubmission} data={query.data!}/></div> : null}
     </div>}
@@ -114,9 +148,9 @@ export function OwnerInboxPage() {
 
 function ReportRow({ submission, data, selected, onSelect }: { submission: IntelligenceSubmission; data: InboxData; selected: boolean; onSelect: () => void }) {
   const issue = issueForSubmission(submission.id, data.links, data.issues);
-  const suggestion = data.suggestions.find((item) => item.submission_id === submission.id && item.status === 'pending');
   const latestReply = data.messages.find((item) => item.submission_id === submission.id && item.sender_type === 'reporter');
-  const attentionReason = submission.processing_status === 'failed' ? 'Processing failed' : latestReply && !latestReply.is_read_by_owner ? 'Reporter replied' : suggestion ? 'Possible duplicate' : issue?.status === 'needs_info' ? 'Needs information' : 'Unreviewed';
+  const attentionReason = attentionForSubmission(submission, data);
+  if (!attentionReason) return null;
   return (
     <button
       type="button"
@@ -131,7 +165,6 @@ function ReportRow({ submission, data, selected, onSelect }: { submission: Intel
           {latestReply && !latestReply.is_read_by_owner && (
             <span aria-label="Unread reporter message" className="h-2 w-2 rounded-full bg-critical" />
           )}
-          <ProcessingBadge status={submission.processing_status} />
         </span>
       </div>
       <p className="mt-3 line-clamp-2 text-sm font-medium">
@@ -161,6 +194,7 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
   const sourceIssue = issueForSubmission(submission.id, data.links, data.issues);
   const suggestion = data.suggestions.find((item) => item.submission_id === submission.id && item.status === 'pending');
   const candidate = suggestion ? data.issues.find((item) => item.id === suggestion.candidate_issue_id) : undefined;
+  const attentionReason = attentionForSubmission(submission, data);
   const [targetId, setTargetId] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [showInsights, setShowInsights] = useState(false);
@@ -199,7 +233,19 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
   return (
     <article className="min-w-0 px-0 py-7 lg:px-8">
       <div className="flex flex-wrap items-center gap-3">
-        <ProcessingBadge status={submission.processing_status} />
+        {attentionReason ? (
+          <Badge
+            tone={
+              attentionReason === 'Processing failed'
+                ? 'critical'
+                : attentionReason === 'Reporter replied'
+                  ? 'info'
+                  : 'warning'
+            }
+          >
+            {attentionReason}
+          </Badge>
+        ) : null}
         {submission.ai_severity && (
           <span className="fi-mono text-[10px] uppercase text-ink-muted">
             {severityLabel(submission.ai_severity)} severity
@@ -212,7 +258,7 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
       {sourceIssue && (
         <div className="mt-5 flex flex-wrap gap-2">
           <Link to={`/app/issues/${sourceIssue.id}`}>
-            <Button>Open issue</Button>
+            <Button>Review in Issues</Button>
           </Link>
           {unreadMessages.length > 0 && (
             <Button variant="secondary" disabled={readMutation.isPending} onClick={() => readMutation.mutate()}>
@@ -425,7 +471,6 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
 }
 
 function issueForSubmission(submissionId: string, links: IntelligenceIssueReport[], issues: IntelligenceIssue[]) { const link = links.find((item) => item.submission_id === submissionId && item.review_status !== 'rejected'); return link ? issues.find((item) => item.id === link.issue_id) : undefined; }
-function ProcessingBadge({ status }: { status?: string }) { if (status === 'failed') return <Badge tone="critical">Failed</Badge>; if (status === 'processing' || status === 'pending') return <Badge tone="warning">{status}</Badge>; return <Badge tone="success">Processed</Badge>; }
 function Fact({ label, value }: { label: string; value?: string }) { return <div className="bg-surface p-4"><p className="fi-mono text-[9px] uppercase text-ink-faint">{label}</p><p className="mt-2 text-sm capitalize">{value?.replace('_', ' ') || 'Unknown'}</p></div>; }
 function Evidence({ title, items }: { title: string; items?: string[] }) { return <div><p className="text-xs font-medium">{title}</p>{items?.length ? <ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-5 text-ink-muted">{items.map((item) => <li key={item}>{item}</li>)}</ul> : <p className="mt-2 text-xs text-ink-faint">None reported.</p>}</div>; }
 function dimension(width?: number, height?: number) { return width && height ? `${width} × ${height}` : undefined; }

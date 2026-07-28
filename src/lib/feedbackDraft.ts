@@ -35,14 +35,30 @@ export interface FeedbackDraft {
 export function draftKey(projectSlug: string) { return `${prefix}${projectSlug}`; }
 export function isDraftExpired(draft: FeedbackDraft, now = Date.now()) { return now - draft.lastUpdated > DRAFT_TTL_MS; }
 
+/** True when the draft has real user input — not just the auto-selected type or default context. */
+export function hasMeaningfulDraftContent(
+  draft: Pick<FeedbackDraft, 'description' | 'expectedBehavior' | 'reporterEmail' | 'attachments'>,
+): boolean {
+  return (
+    draft.description.trim().length > 0 ||
+    draft.expectedBehavior.trim().length > 0 ||
+    draft.reporterEmail.trim().length > 0 ||
+    draft.attachments.length > 0
+  );
+}
+
 export async function loadFeedbackDraft(projectSlug: string, now = Date.now()): Promise<FeedbackDraft | null> {
   const draft = await localDatabase.get<FeedbackDraft>(draftKey(projectSlug)).catch(() => undefined);
   if (!draft || draft.projectSlug !== projectSlug) return null;
   if (isDraftExpired(draft, now)) { await discardFeedbackDraft(projectSlug); return null; }
+  if (!hasMeaningfulDraftContent(draft)) { await discardFeedbackDraft(projectSlug); return null; }
   return draft;
 }
 
-export function saveFeedbackDraft(draft: FeedbackDraft) { return localDatabase.set(draftKey(draft.projectSlug), draft); }
+export function saveFeedbackDraft(draft: FeedbackDraft) {
+  if (!hasMeaningfulDraftContent(draft)) return discardFeedbackDraft(draft.projectSlug);
+  return localDatabase.set(draftKey(draft.projectSlug), draft);
+}
 export function discardFeedbackDraft(projectSlug: string) { return localDatabase.delete(draftKey(projectSlug)).catch(() => undefined); }
 
 export function draftAttachmentFromFile(input: { key: string; file: File; source: AttachmentSource; width?: number; height?: number }): DraftAttachment {
