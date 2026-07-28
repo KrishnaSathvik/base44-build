@@ -113,31 +113,34 @@ export function LandingPage() {
         </section>
 
         <section className="border-y border-line bg-surface-subtle">
-          <div className="fi-container grid items-start gap-10 py-16 sm:gap-12 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16">
-            <div className="max-w-lg min-w-0 lg:pt-2">
-              <p className="fi-eyebrow">Simple on purpose</p>
-              <h2 className="fi-display mt-4 text-3xl font-medium leading-tight sm:text-4xl">A feedback form people will actually finish.</h2>
-              <p className="mt-5 text-[15px] leading-7 text-ink-muted">
-                Reporters choose what they want to share, answer only relevant questions, and receive a private link to follow the result.
-              </p>
-              <ul className="mt-8 space-y-3.5 text-sm">
-                {['No account required', 'Clear, progressive questions', 'Private status tracking'].map((x) => (
-                  <li key={x} className="flex items-center gap-3">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-white">
-                      <Check className="h-3 w-3" />
-                    </span>
-                    {x}
-                  </li>
-                ))}
-              </ul>
+          <div className="fi-container py-16 sm:py-20">
+            <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-sheet lg:grid lg:grid-cols-2">
+              <div className="flex flex-col justify-start border-b border-line p-8 sm:p-10 lg:border-b-0 lg:border-r lg:p-12">
+                <p className="fi-eyebrow">Simple on purpose</p>
+                <h2 className="fi-display mt-4 text-3xl font-medium leading-tight sm:text-4xl">
+                  A feedback form people will actually finish.
+                </h2>
+                <p className="mt-5 max-w-md text-[15px] leading-7 text-ink-muted">
+                  Reporters choose what they want to share, answer only relevant questions, and receive a private link to follow the result.
+                </p>
+                <ul className="mt-8 space-y-3 text-sm">
+                  {['No account required', 'Clear, progressive questions', 'Private status tracking'].map((x) => (
+                    <li key={x} className="flex items-center gap-3">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-white">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      {x}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <FormPreview />
             </div>
-            <FormPreview />
           </div>
         </section>
 
         <section className="fi-container py-16 text-center sm:py-24">
-          <BrandMark className="mx-auto h-11 w-11" />
-          <h2 className="fi-display mx-auto mt-6 max-w-2xl text-3xl font-medium leading-tight sm:text-4xl">
+          <h2 className="fi-display mx-auto max-w-2xl text-3xl font-medium leading-tight sm:text-4xl">
             Turn the next report into something your team can act on.
           </h2>
           <Link to="/app" className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-ink px-5 text-sm font-medium text-white sm:w-auto">
@@ -152,7 +155,7 @@ export function LandingPage() {
 
 function FormPreview() {
   return (
-    <div className="w-full rounded-xl border border-line bg-surface p-5 shadow-sheet sm:p-6">
+    <div className="flex flex-col justify-start bg-canvas p-6 sm:p-8 lg:p-10" aria-hidden="true">
       <div className="flex items-center gap-3 border-b border-line pb-4">
         <BrandMark className="h-8 w-8" />
         <div>
@@ -160,16 +163,16 @@ function FormPreview() {
           <p className="text-xs text-ink-faint">Usually less than a minute</p>
         </div>
       </div>
-      <div className="mt-4 space-y-3.5" aria-hidden="true">
+      <div className="mt-5 space-y-3.5">
         <div>
           <p className="text-xs text-ink-faint">Feedback type</p>
-          <div className="mt-1.5 flex min-h-10 items-center rounded-md border border-line px-3 text-sm">
+          <div className="mt-1.5 flex min-h-10 items-center rounded-md border border-line bg-surface px-3 text-sm">
             Report a problem
           </div>
         </div>
         <div>
           <p className="text-xs text-ink-faint">Describe the problem</p>
-          <div className="mt-1.5 min-h-[64px] rounded-md border border-line px-3 py-2.5 text-sm leading-5 text-ink-muted">
+          <div className="mt-1.5 min-h-[72px] rounded-md border border-line bg-surface px-3 py-2.5 text-sm leading-5 text-ink-muted">
             Tell us what you were doing and where things went wrong…
           </div>
         </div>
@@ -178,11 +181,11 @@ function FormPreview() {
             <p className="text-xs text-ink-faint">What did you expect?</p>
             <p className="text-xs text-ink-faint">Optional</p>
           </div>
-          <div className="mt-1.5 flex min-h-10 items-center rounded-md border border-line px-3 text-sm text-ink-muted">
+          <div className="mt-1.5 flex min-h-10 items-center rounded-md border border-line bg-surface px-3 text-sm text-ink-muted">
             Newest message remains visible.
           </div>
         </div>
-        <div className="flex min-h-10 items-center gap-2 rounded-md border border-dashed border-line px-3 text-xs text-ink-muted">
+        <div className="flex min-h-10 items-center gap-2 rounded-md border border-dashed border-line bg-surface px-3 text-xs text-ink-muted">
           <ImagePlus className="h-3.5 w-3.5 shrink-0 text-ink-faint" />
           Screenshots · PNG, JPEG, or WebP
         </div>

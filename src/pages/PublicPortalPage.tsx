@@ -5,7 +5,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Check, CheckCircle2, Copy, ExternalLink, Link2, ShieldCheck, X } from 'lucide-react';
+import { ArrowRight, Bookmark, Check, CheckCircle2, Copy, ExternalLink, Link2, Mail, ShieldCheck, X } from 'lucide-react';
 import { apiErrorMessage, getPublicProject, submitFeedback, uploadFeedbackAttachment } from '@/lib/api';
 import type { FeedbackType, SubmitFeedbackResult } from '@/lib/types';
 import type { PendingScreenshot } from '@/lib/attachments';
@@ -71,6 +71,7 @@ export function PublicPortalPage() {
   const [includeEnvironment, setIncludeEnvironment] = useState(true);
   const [includePage, setIncludePage] = useState(true);
   const [draftRestored, setDraftRestored] = useState(false);
+  const [emailUpdatesOptedIn, setEmailUpdatesOptedIn] = useState(false);
   const projectQuery = useQuery({
     queryKey: ['public-project', projectSlug],
     queryFn: () => getPublicProject(projectSlug),
@@ -309,6 +310,7 @@ export function PublicPortalPage() {
         viewportHeight: includeEnvironment ? environment.viewportHeight : undefined,
       });
       if (!submitted.success) throw new Error('The report was not accepted.');
+      setEmailUpdatesOptedIn(!!formValues.reporterEmail?.trim() && formValues.emailUpdatesEnabled === true);
       setResult(submitted);
       await discardFeedbackDraft(projectSlug);
     } catch (err) {
@@ -357,8 +359,10 @@ export function PublicPortalPage() {
         <SubmissionConfirmation
           result={result}
           productUrl={project.productUrl}
+          emailUpdatesOptedIn={emailUpdatesOptedIn}
           onSubmitAnother={() => {
             setResult(null);
+            setEmailUpdatesOptedIn(false);
             setScreenshots([]);
             setType(firstEnabledType(enabledTypes));
             setSubmissionKey(crypto.randomUUID());
@@ -575,14 +579,20 @@ export function PublicPortalPage() {
           {project.collectReporterEmail !== false && (
             <details className="rounded-lg border border-line bg-surface">
               <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium">
-                <span>Contact details</span>
+                <span className="inline-flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-ink-muted" aria-hidden />
+                  Get updates by email
+                </span>
                 <span className="text-xs font-normal text-ink-faint">Optional</span>
               </summary>
               <div className="space-y-5 border-t border-line p-4">
+                <p className="text-sm leading-6 text-ink-muted">
+                  If you leave without saving the private tracking link, email is the only way to get status updates later.
+                </p>
                 <Field
                   label="Email"
                   htmlFor="reporterEmail"
-                  hint="Only used for updates"
+                  hint="Only used for updates you request"
                   error={errors.reporterEmail?.message}
                 >
                   <Input id="reporterEmail" type="email" autoComplete="email" {...register('reporterEmail')} />
@@ -592,8 +602,7 @@ export function PublicPortalPage() {
                   {...register('emailUpdatesEnabled')}
                 />
                 <p className="text-xs leading-5 text-ink-faint">
-                  Email is optional and is never used for marketing. Your private tracking link works without email
-                  consent.
+                  Never used for marketing. You can turn email updates off from the tracking page anytime.
                 </p>
               </div>
             </details>
@@ -626,14 +635,15 @@ export function PublicPortalPage() {
 function SubmissionConfirmation({
   result,
   productUrl,
+  emailUpdatesOptedIn,
   onSubmitAnother,
 }: {
   result: SubmitFeedbackResult;
   productUrl?: string | null;
+  emailUpdatesOptedIn: boolean;
   onSubmitAnother: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const [showFullLink, setShowFullLink] = useState(false);
   const trackingLink = result.trackingToken ? reporterTrackingUrl(result.trackingToken) : null;
 
   async function copyLink() {
@@ -658,15 +668,34 @@ function SubmissionConfirmation({
           Your feedback is in
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-ink-muted">
-          Save your private tracking link — it’s the only way to follow this report.
+          {emailUpdatesOptedIn
+            ? 'Copy or bookmark your private link now. We’ll also email updates because you opted in.'
+            : 'Copy or bookmark your private link now — without it, you cannot check this report again.'}
         </p>
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-xl border border-line bg-surface text-left shadow-sm">
+      {trackingLink ? (
+        <div
+          role="status"
+          className="mt-6 flex gap-3 rounded-lg border border-warning/35 bg-warning-soft p-4 text-left text-sm leading-6 text-ink"
+        >
+          <Bookmark className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
+          <div>
+            <p className="font-medium">Do this before you leave</p>
+            <p className="mt-1 text-ink-muted">
+              {emailUpdatesOptedIn
+                ? 'Save the link as a backup. Email updates still need a working inbox, and this page will not show the link again.'
+                : 'There is no account login and no “forgot link” recovery. If you did not opt into email, this link is your only path back.'}
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-6 overflow-hidden rounded-xl border border-line bg-surface text-left shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
           <span className="inline-flex items-center gap-2 text-sm font-medium">
             <Link2 className="h-4 w-4 text-ink-muted" aria-hidden />
-            Private tracking
+            Private tracking link
           </span>
           {result.publicCode && (
             <span className="fi-mono rounded bg-canvas px-2 py-1 text-[10px] uppercase tracking-wider text-ink-muted">
@@ -679,25 +708,15 @@ function SubmissionConfirmation({
           <div className="space-y-4 p-4 sm:p-5">
             <Button type="button" className="w-full min-h-12 sm:min-h-11" onClick={() => void copyLink()}>
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? 'Link copied' : 'Copy tracking link'}
+              {copied ? 'Link copied — keep it somewhere safe' : 'Copy tracking link'}
             </Button>
 
             <div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="fi-mono text-[9px] uppercase tracking-wider text-ink-faint">Your private link</p>
-                <button
-                  type="button"
-                  className="text-xs font-medium text-ink-muted hover:text-ink"
-                  onClick={() => setShowFullLink((value) => !value)}
-                >
-                  {showFullLink ? 'Hide full link' : 'Show full link'}
-                </button>
-              </div>
+              <p className="fi-mono text-[9px] uppercase tracking-wider text-ink-faint">Full private URL</p>
               <div className="mt-2 rounded-lg border border-line bg-canvas px-3 py-3">
-                <p className="fi-mono break-all text-[11px] leading-5 text-ink sm:text-xs">
-                  {showFullLink ? trackingLink : truncateTrackingLink(trackingLink)}
-                </p>
+                <p className="fi-mono break-all text-[11px] leading-5 text-ink sm:text-xs">{trackingLink}</p>
               </div>
+              <p className="mt-2 text-xs text-ink-faint">Select and copy manually if the button is blocked on this device.</p>
             </div>
 
             <a
@@ -710,7 +729,9 @@ function SubmissionConfirmation({
 
             <p className="flex items-start gap-2 text-xs leading-5 text-ink-faint">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-              This link is private. Bookmark it or copy it now — it will not appear in email unless you opted in.
+              {emailUpdatesOptedIn
+                ? 'This link stays private. Status emails will include a way back to this page.'
+                : 'This link stays private and is not emailed unless you opted in before submitting.'}
             </p>
           </div>
         ) : (
@@ -741,17 +762,6 @@ function SubmissionConfirmation({
       </div>
     </div>
   );
-}
-
-function truncateTrackingLink(url: string) {
-  try {
-    const parsed = new URL(url);
-    const token = parsed.pathname.split('/').filter(Boolean).pop() ?? '';
-    if (token.length <= 14) return url;
-    return `${parsed.origin}/track/${token.slice(0, 6)}…${token.slice(-4)}`;
-  } catch {
-    return url.length > 48 ? `${url.slice(0, 28)}…${url.slice(-8)}` : url;
-  }
 }
 
 function dimensions(width?: number, height?: number) {

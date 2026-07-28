@@ -39,6 +39,8 @@ test('immediate submission processing result shows tracking and public code', as
   expect(await screen.findByText('Your feedback is in')).toBeVisible();
   expect(screen.getByText('FI-1001')).toBeVisible();
   expect(screen.getByText(/\/track\/token-1/)).toBeVisible();
+  expect(screen.getByText(/Do this before you leave/i)).toBeVisible();
+  expect(screen.getByText(/no “forgot link” recovery|no "forgot link" recovery/i)).toBeVisible();
   expect(screen.getByRole('button', { name: 'Copy tracking link' })).toBeVisible();
   expect(screen.getByRole('link', { name: /open tracking page/i })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Submit another report' })).toBeVisible();
