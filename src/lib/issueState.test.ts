@@ -12,9 +12,11 @@ test('allows only approved owner workflow transitions', () => {
 });
 
 test('surfaces resolve as a selectable next step from open and in progress', () => {
-  expect(allowedTransitions('unreviewed')).not.toContain('resolved');
+  expect(allowedTransitions('unreviewed')).toContain('resolved');
   expect(allowedTransitions('open')).toContain('resolved');
   expect(allowedTransitions('in_progress')).toContain('resolved');
+  expect(canTransition('unreviewed','resolved')).toBe(false);
+  expect(canTransition('unreviewed','resolved',{directResolutionOverrideReason:'Already shipped'})).toBe(true);
   expect(allowedTransitions('testing')).toContain('resolved');
 });
 

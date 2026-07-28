@@ -268,6 +268,21 @@ export async function updateProjectSettings(
   } as Parameters<typeof base44.entities.Project.update>[1]);
 }
 
+export interface DeleteProjectResult {
+  success: boolean;
+  projectId: string;
+  projectName: string;
+  removedRecords: number;
+}
+
+export async function deleteProject(
+  projectId: string,
+  confirmationName: string,
+): Promise<DeleteProjectResult> {
+  const res = await stageFunctions.invoke('delete-project', { projectId, confirmationName });
+  return res.data as DeleteProjectResult;
+}
+
 export async function updateNotificationSettings(
   projectId: string,
   input: UpdateNotificationSettingsInput,

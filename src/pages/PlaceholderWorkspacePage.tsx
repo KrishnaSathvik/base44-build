@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Copy, Inbox, Plus } from 'lucide-react';
-import { Button, EmptyState, Field, InlineError, Input, Select, Skeleton, Textarea, Toast } from '@/components/ui';
+import { AlertTriangle, Copy, Inbox, Plus } from 'lucide-react';
+import {
+  Button,
+  Dialog,
+  EmptyState,
+  Field,
+  InlineError,
+  Input,
+  Skeleton,
+  Textarea,
+  Toast,
+} from '@/components/ui';
 import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
-import { updateProjectSettings } from '@/lib/api';
+import { apiErrorMessage, deleteProject, listMyProjects, updateProjectSettings } from '@/lib/api';
+import { clearStoredActiveProjectId } from '@/lib/activeProject';
 import { useActiveProject } from '@/lib/useActiveProject';
 import { publicBoardUrl } from '@/lib/appUrls';
 import type { FeedbackType } from '@/lib/types';
@@ -39,14 +50,18 @@ function InboxState() {
 }
 
 function ProjectSettings() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { projects, project, setActiveProjectId, isLoading } = useActiveProject();
+  const { project, setActiveProjectId, isLoading } = useActiveProject();
   const [name, setName] = useState('');
   const [productUrl, setProductUrl] = useState('');
   const [description, setDescription] = useState('');
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmationName, setConfirmationName] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!project) return;
@@ -75,6 +90,37 @@ function ProjectSettings() {
     onError: () => setError('Settings could not be saved. Try again in a moment.'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!project) throw new Error('No project');
+      return deleteProject(project.id, confirmationName);
+    },
+    onSuccess: async () => {
+      const deletedId = project?.id;
+      setDeleteOpen(false);
+      setConfirmationName('');
+      setDeleteError(null);
+      clearStoredActiveProjectId();
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      await queryClient.invalidateQueries({ queryKey: ['issues'] });
+      await queryClient.invalidateQueries({ queryKey: ['inbox'] });
+      await queryClient.invalidateQueries({ queryKey: ['notification-deliveries'] });
+      const remaining = (
+        await queryClient.fetchQuery({
+          queryKey: ['projects'],
+          queryFn: listMyProjects,
+        })
+      ).filter((item) => item.id !== deletedId);
+      if (remaining[0]) {
+        setActiveProjectId(remaining[0].id);
+        navigate('/app/overview');
+      } else {
+        navigate('/app/setup');
+      }
+    },
+    onError: (err) => setDeleteError(apiErrorMessage(err)),
+  });
+
   if (isLoading) {
     return (
       <SettingsFrame>
@@ -95,6 +141,7 @@ function ProjectSettings() {
   }
 
   const publicLink = publicBoardUrl(project.slug);
+  const confirmationMatches = confirmationName.trim() === project.name.trim();
 
   return (
     <SettingsFrame>
@@ -108,25 +155,13 @@ function ProjectSettings() {
         }}
       >
         <section className="border-t border-line py-8">
-          <p className="fi-eyebrow">Active project</p>
-          <h2 className="fi-display mt-2 text-2xl font-medium">Which board are you editing?</h2>
-          <p className="mt-3 text-sm text-ink-muted">
-            Overview, Inbox, Issues, and Resolved all follow this selection.
-          </p>
-          <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-            <Field label="Project" htmlFor="active-project">
-              <Select
-                id="active-project"
-                value={project.id}
-                onChange={(event) => setActiveProjectId(event.target.value)}
-              >
-                {projects.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <p className="fi-eyebrow">Project identity</p>
+              <p className="mt-2 text-sm text-ink-muted">
+                Editing <span className="font-medium text-ink">{project.name}</span>. Switch boards from the sidebar.
+              </p>
+            </div>
             <Link to="/app/setup" className="w-full sm:w-auto">
               <Button type="button" variant="secondary" className="w-full justify-center sm:w-auto">
                 <Plus className="h-4 w-4" />
@@ -134,15 +169,6 @@ function ProjectSettings() {
               </Button>
             </Link>
           </div>
-          {projects.length > 1 && (
-            <p className="mt-3 text-xs text-ink-faint">
-              {projects.length} projects in this workspace. Switch here to manage another board.
-            </p>
-          )}
-        </section>
-
-        <section className="border-t border-line py-8">
-          <p className="fi-eyebrow">Project identity</p>
           <div className="mt-6 grid gap-6">
             <Field label="Product name" htmlFor="settings-name">
               <Input
@@ -174,7 +200,7 @@ function ProjectSettings() {
           </div>
         </section>
 
-        <section className="border-y border-line py-8">
+        <section className="border-t border-line py-8">
           <p className="fi-eyebrow">Public feedback link</p>
           <p className="mt-3 text-sm text-ink-muted">
             Share this link so people can report bugs, request features, or leave general feedback.
@@ -206,6 +232,83 @@ function ProjectSettings() {
           </Button>
         </div>
       </form>
+
+      <section className="mt-4 max-w-3xl border-t border-critical/25 py-8">
+        <p className="fi-eyebrow text-critical">Danger zone</p>
+        <h2 className="fi-display mt-2 text-2xl font-medium">Delete this project</h2>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-ink-muted">
+          Permanently deletes <span className="font-medium text-ink">{project.name}</span> and all of its
+          issues, reports, messages, and attachments. Other projects are not affected. This cannot be undone.
+        </p>
+        <div className="mt-5">
+          <Button
+            type="button"
+            variant="danger"
+            onClick={() => {
+              setDeleteError(null);
+              setConfirmationName('');
+              setDeleteOpen(true);
+            }}
+          >
+            Delete project…
+          </Button>
+        </div>
+      </section>
+
+      <Dialog
+        open={deleteOpen}
+        title="Delete project"
+        onClose={() => {
+          if (deleteMutation.isPending) return;
+          setDeleteOpen(false);
+          setConfirmationName('');
+          setDeleteError(null);
+        }}
+      >
+        <div className="space-y-4">
+          <div className="flex gap-3 rounded-lg border border-critical/30 bg-critical-soft p-4 text-sm leading-6 text-ink">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-critical" aria-hidden />
+            <p>
+              This removes the board and every report tied to it. Type{' '}
+              <span className="font-medium">{project.name}</span> to confirm.
+            </p>
+          </div>
+          <Field label="Project name" htmlFor="delete-confirmation-name">
+            <Input
+              id="delete-confirmation-name"
+              value={confirmationName}
+              onChange={(event) => setConfirmationName(event.target.value)}
+              placeholder={project.name}
+              autoComplete="off"
+              disabled={deleteMutation.isPending}
+            />
+          </Field>
+          {deleteError && <InlineError>{deleteError}</InlineError>}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                setDeleteOpen(false);
+                setConfirmationName('');
+                setDeleteError(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              disabled={!confirmationMatches || deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate()}
+            >
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete project'}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
       {copied && <Toast>Feedback link copied</Toast>}
       {saved && <Toast>Settings saved</Toast>}
     </SettingsFrame>
@@ -218,7 +321,7 @@ function SettingsFrame({ children }: { children: React.ReactNode }) {
       <p className="fi-eyebrow">VensaOS workspace</p>
       <h1 className="fi-display mt-3 text-4xl font-medium">Settings</h1>
       <p className="mt-2 mb-10 text-sm text-ink-muted">
-        Choose a project, update how it appears, and copy its public feedback link.
+        Update how the active project appears and copy its public feedback link.
       </p>
       {children}
     </div>

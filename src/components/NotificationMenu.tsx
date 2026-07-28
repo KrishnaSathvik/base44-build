@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -49,6 +49,17 @@ function statusTone(status: NotificationDelivery['status']): string {
   }
 }
 
+/** Owner-facing alerts only — skipped email attempts are delivery logs, not notifications. */
+export function visibleOwnerNotifications(
+  deliveries: NotificationDelivery[],
+): NotificationDelivery[] {
+  return deliveries.filter((item) => {
+    if (item.status === 'skipped') return false;
+    if (item.recipient_type !== 'owner') return false;
+    return true;
+  });
+}
+
 /** Header notification menu — opens below the bell so it is not clipped by the fixed top bar. */
 export function NotificationMenu({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -76,8 +87,12 @@ export function NotificationMenu({ compact = false }: { compact?: boolean }) {
     };
   }, [open]);
 
-  const items = (deliveries.data ?? []).slice(0, 8);
-  const attentionCount = (deliveries.data ?? []).filter(
+  const visible = useMemo(
+    () => visibleOwnerNotifications(deliveries.data ?? []),
+    [deliveries.data],
+  );
+  const items = visible.slice(0, 8);
+  const attentionCount = visible.filter(
     (item) => item.status === 'failed' || item.status === 'dead_letter',
   ).length;
 
@@ -126,9 +141,9 @@ export function NotificationMenu({ compact = false }: { compact?: boolean }) {
               <p className="px-4 py-8 text-sm text-ink-muted">Loading notifications…</p>
             ) : !items.length ? (
               <div className="px-4 py-8 text-center">
-                <p className="text-sm font-medium">No notifications yet</p>
+                <p className="text-sm font-medium">No alerts right now</p>
                 <p className="mt-2 text-xs leading-5 text-ink-muted">
-                  Alerts appear here when something important happens on your boards.
+                  Email delivery is off, so skipped send attempts stay hidden. Check Inbox for work that needs a decision.
                 </p>
               </div>
             ) : (
@@ -142,7 +157,6 @@ export function NotificationMenu({ compact = false }: { compact?: boolean }) {
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-ink-muted">
-                      {item.recipient_type === 'owner' ? 'Owner' : 'Reporter'} ·{' '}
                       {formatTime(item.created_at ?? item.created_date)}
                     </p>
                     {item.last_error_message && (

@@ -8,7 +8,8 @@ import { useActiveProject } from '@/lib/useActiveProject';
 import { AuthPanel } from '@/app/AuthPanel';
 import { Brand } from '@/components/Brand';
 import { NotificationMenu } from '@/components/NotificationMenu';
-import { Select, Spinner, StatusBadge, cn } from '@/components/ui';
+import { ProjectSwitcher } from '@/components/ProjectSwitcher';
+import { Spinner, StatusBadge, cn } from '@/components/ui';
 import { useNetworkState } from '@/app/NetworkStateProvider';
 import { clearOwnerSnapshots, loadOwnerSnapshots, saveOwnerSnapshot, toOwnerIssueSummary } from '@/lib/ownerSnapshot';
 import type { OwnerSnapshot } from '@/lib/ownerSnapshot';
@@ -107,25 +108,7 @@ export function AppLayout() {
           </div>
           <div className="hidden flex-1 items-center justify-between px-6 md:flex">
             <div className="min-w-0">
-              {projects.length > 1 && project ? (
-                <label className="block min-w-0">
-                  <span className="sr-only">Active project</span>
-                  <Select
-                    aria-label="Active project"
-                    className="h-9 max-w-[240px] border-0 bg-transparent px-0 text-sm font-medium shadow-none"
-                    value={project.id}
-                    onChange={(event) => setActiveProjectId(event.target.value)}
-                  >
-                    {projects.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
-                </label>
-              ) : (
-                <p className="truncate text-sm font-medium">{project?.name ?? 'VensaOS workspace'}</p>
-              )}
+              <p className="truncate text-sm font-medium">{project?.name ?? 'VensaOS workspace'}</p>
               <p className="fi-mono mt-0.5 text-[9px] uppercase tracking-wider text-ink-faint">
                 Feedback operations
               </p>
@@ -141,6 +124,13 @@ export function AppLayout() {
       </header>
 
       <aside className="fixed bottom-0 left-0 top-16 z-20 hidden w-[228px] flex-col border-r border-line bg-surface md:flex">
+        <div className="border-b border-line py-3">
+          <ProjectSwitcher
+            projects={projects}
+            project={project}
+            onChange={setActiveProjectId}
+          />
+        </div>
         <nav className="space-y-1 p-3">
           {navigation.map((item) => (
             <NavItem key={item.to} {...item} />
@@ -182,6 +172,16 @@ export function AppLayout() {
           <OwnerOfflineSnapshot snapshots={offlineSnapshots} />
         ) : (
           <>
+            {projects.length > 1 && project ? (
+              <div className="border-b border-line px-4 py-2 md:hidden">
+                <ProjectSwitcher
+                  projects={projects}
+                  project={project}
+                  onChange={setActiveProjectId}
+                  className="px-0"
+                />
+              </div>
+            ) : null}
             <Outlet />
             {maintenance.warning && (
               <div

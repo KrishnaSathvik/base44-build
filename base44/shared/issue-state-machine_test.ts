@@ -23,11 +23,16 @@ Deno.test("direct resolution requires an explicit override from open or in progr
   assertEquals(canTransition("in_progress", "resolved", { directResolutionOverrideReason: "Verified outside testing" }), true);
 });
 
-Deno.test("allowedTransitions includes resolve for open and in_progress", () => {
-  assertEquals(allowedTransitions("unreviewed").includes("resolved"), false);
+Deno.test("allowedTransitions includes resolve for unreviewed, open and in_progress", () => {
+  assertEquals(allowedTransitions("unreviewed").includes("resolved"), true);
   assertEquals(allowedTransitions("open").includes("resolved"), true);
   assertEquals(allowedTransitions("in_progress").includes("resolved"), true);
   assertEquals(allowedTransitions("testing").includes("resolved"), true);
+});
+
+Deno.test("direct resolve from unreviewed requires override reason", () => {
+  assertEquals(canTransition("unreviewed", "resolved"), false);
+  assertEquals(canTransition("unreviewed", "resolved", { directResolutionOverrideReason: "Already fixed upstream" }), true);
 });
 
 Deno.test("first-start timestamps are preserved", () => {

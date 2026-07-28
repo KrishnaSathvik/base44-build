@@ -95,15 +95,19 @@ export function OwnerIssueDetailPage() {
   const mutation = useMutation({
     mutationFn: () => {
       const current = issueQuery.data as WorkflowIssue;
+      const nextStatus = targetStatus ?? current.status;
+      const publicNote = publicMessage.trim();
+      const ownerReason = reason.trim();
       return updateIssueStatus({
         issueId,
-        status: targetStatus ?? current.status,
-        publicMessage: publicMessage.trim() || undefined,
+        status: nextStatus,
+        publicMessage: publicNote || undefined,
         internalNote: internalNote.trim() || undefined,
-        reason: reason.trim() || undefined,
+        reason: ownerReason || undefined,
         directResolutionOverrideReason:
-          targetStatus === 'resolved' && ['open', 'in_progress'].includes(current.status)
-            ? reason.trim() || undefined
+          nextStatus === 'resolved' &&
+          ['unreviewed', 'open', 'in_progress'].includes(current.status)
+            ? publicNote || ownerReason || 'Resolved by owner'
             : undefined,
         duplicateOfIssueId: duplicateTarget || undefined,
       });
@@ -147,7 +151,7 @@ export function OwnerIssueDetailPage() {
 
   if (issueQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-3xl space-y-5 px-4 py-10 sm:px-7">
+      <div className="mx-auto max-w-[1180px] space-y-5 px-4 py-10 sm:px-7">
         <Skeleton className="h-8 w-32" />
         <Skeleton className="h-32" />
         <Skeleton className="h-96" />
@@ -157,7 +161,7 @@ export function OwnerIssueDetailPage() {
 
   if (issueQuery.isError || !issueQuery.data) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="mx-auto max-w-[1180px] px-4 py-10">
         <EmptyState
           title="Issue not found"
           description="This issue may have been removed or does not belong to your project."
@@ -189,9 +193,11 @@ export function OwnerIssueDetailPage() {
   const selectedStatus = targetStatus ?? issue.status;
   const primarySubmission = reports[0]?.submission as IntelligenceSubmission | undefined;
   const analysisMode = primarySubmission?.ai_analysis_mode;
+  const needsOwnerReason = selectedStatus === 'dismissed' || selectedStatus === 'reopened';
+  const needsPublicMessage = selectedStatus === 'resolved' || selectedStatus === 'needs_info';
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-7 md:py-8">
+    <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-7 md:py-8">
       <PageMetadata
         title={issue.public_code}
         description={issue.description || 'Evidence-backed issue in VensaOS.'}
@@ -210,10 +216,10 @@ export function OwnerIssueDetailPage() {
           <SeverityBadge severity={issue.severity ?? 'medium'} label={severityLabel(issue.severity)} />
           <StatusBadge status={issue.status} label={statusLabel(issue.status)} />
         </div>
-        <h1 className="fi-display mt-4 text-[1.75rem] font-medium leading-tight sm:text-3xl md:text-[40px]">
+        <h1 className="fi-display mt-4 max-w-4xl text-[1.75rem] font-medium leading-tight sm:text-3xl md:text-[40px]">
           {issue.title}
         </h1>
-        <p className="mt-4 max-w-2xl text-[15px] leading-7 text-ink-muted">
+        <p className="mt-4 max-w-3xl text-[15px] leading-7 text-ink-muted">
           {issue.description || 'A normalized issue created from the original report below.'}
         </p>
         <div className="mt-6 grid grid-cols-2 gap-4 border-t border-line pt-5 sm:grid-cols-4">
@@ -230,10 +236,26 @@ export function OwnerIssueDetailPage() {
           <h2 className="fi-display mt-2 text-xl font-medium sm:text-2xl">Update this issue</h2>
           <p className="mt-2 text-sm text-ink-muted">Only approved transitions are available.</p>
           <form
-            className="mt-5 space-y-3"
+            className="mt-5 space-y-4"
             onSubmit={(event) => {
               event.preventDefault();
               setWorkflowError(null);
+              if (needsPublicMessage && !publicMessage.trim()) {
+                setWorkflowError(
+                  selectedStatus === 'resolved'
+                    ? 'Add a public message explaining what changed for the reporter.'
+                    : 'Add a public question for the reporter.',
+                );
+                return;
+              }
+              if (needsOwnerReason && !reason.trim()) {
+                setWorkflowError(
+                  selectedStatus === 'dismissed'
+                    ? 'Add a private reason for dismissing this issue.'
+                    : 'Add a private reason for reopening this issue.',
+                );
+                return;
+              }
               mutation.mutate();
             }}
           >
@@ -253,11 +275,15 @@ export function OwnerIssueDetailPage() {
               ))}
             </Select>
             <p className="text-xs leading-5 text-ink-muted">
-              {issue.status === 'unreviewed'
-                ? 'Open the issue first. Then move it through Planned → In progress → Testing → Resolved, or resolve directly once it is Open.'
-                : selectedStatus === 'resolved' && ['open', 'in_progress'].includes(issue.status)
-                  ? 'Direct resolve needs a public resolution note and an owner reason.'
-                  : 'Only approved next steps for the current status are listed.'}
+              {selectedStatus === 'resolved'
+                ? 'To resolve, write a public message the reporter can read. No private owner reason is required.'
+                : selectedStatus === 'needs_info'
+                  ? 'Ask one clear public question. The reporter answers from their tracking link.'
+                  : selectedStatus === 'dismissed'
+                    ? 'Dismissing needs a private owner reason. Reporters do not see it.'
+                    : selectedStatus === 'reopened'
+                      ? 'Reopening needs a private owner reason for the audit trail.'
+                      : 'Only approved next steps for the current status are listed.'}
             </p>
             {selectedStatus === 'duplicate' && (
               <Select
@@ -280,43 +306,61 @@ export function OwnerIssueDetailPage() {
                   ))}
               </Select>
             )}
-            <label htmlFor="public-message" className="flex items-center gap-2 text-sm font-medium">
-              <MessageSquareText className="h-4 w-4" />
-              Public message
-            </label>
-            <Textarea
-              id="public-message"
-              value={publicMessage}
-              onChange={(event) => setPublicMessage(event.target.value)}
-              placeholder={
-                selectedStatus === 'needs_info'
-                  ? 'Ask the reporter a specific question…'
-                  : selectedStatus === 'resolved'
-                    ? 'Explain what changed…'
-                    : 'Optional reporter-visible update…'
-              }
-            />
-            <label htmlFor="internal-note" className="flex items-center gap-2 text-sm font-medium">
-              <LockKeyhole className="h-4 w-4" />
-              Internal note
-            </label>
-            <Textarea
-              id="internal-note"
-              className="min-h-20"
-              value={internalNote}
-              onChange={(event) => setInternalNote(event.target.value)}
-              placeholder="Visible only to the product team…"
-            />
-            <label htmlFor="status-reason" className="text-sm font-medium">
-              Owner reason
-            </label>
-            <Textarea
-              id="status-reason"
-              className="min-h-20"
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              placeholder="Required for dismissing, reopening, or direct resolution override…"
-            />
+            <div>
+              <label htmlFor="public-message" className="flex items-center gap-2 text-sm font-medium">
+                <MessageSquareText className="h-4 w-4" />
+                Public message{needsPublicMessage ? '' : ' (optional)'}
+              </label>
+              <p className="mt-1 text-xs text-ink-muted">Shown to the reporter on their tracking page.</p>
+              <Textarea
+                id="public-message"
+                className="mt-2"
+                value={publicMessage}
+                onChange={(event) => setPublicMessage(event.target.value)}
+                placeholder={
+                  selectedStatus === 'needs_info'
+                    ? 'Ask the reporter a specific question…'
+                    : selectedStatus === 'resolved'
+                      ? 'Explain what changed…'
+                      : 'Optional update the reporter can see…'
+                }
+              />
+            </div>
+            <div>
+              <label htmlFor="internal-note" className="flex items-center gap-2 text-sm font-medium">
+                <LockKeyhole className="h-4 w-4" />
+                Internal note (optional)
+              </label>
+              <p className="mt-1 text-xs text-ink-muted">Private team note — never shown to reporters.</p>
+              <Textarea
+                id="internal-note"
+                className="mt-2 min-h-20"
+                value={internalNote}
+                onChange={(event) => setInternalNote(event.target.value)}
+                placeholder="Visible only to the product team…"
+              />
+            </div>
+            {needsOwnerReason ? (
+              <div>
+                <label htmlFor="status-reason" className="text-sm font-medium">
+                  {selectedStatus === 'dismissed' ? 'Why dismiss?' : 'Why reopen?'}
+                </label>
+                <p className="mt-1 text-xs text-ink-muted">
+                  Private audit reason for your team. Reporters do not see this.
+                </p>
+                <Textarea
+                  id="status-reason"
+                  className="mt-2 min-h-20"
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                  placeholder={
+                    selectedStatus === 'dismissed'
+                      ? 'e.g. Not reproducible / out of scope / spam…'
+                      : 'e.g. Reporter said not fixed / regression found…'
+                  }
+                />
+              </div>
+            ) : null}
             {workflowError && <InlineError>{workflowError}</InlineError>}
             <Button
               className="w-full sm:w-auto"

@@ -76,7 +76,15 @@ export function OwnerIssuesPage() {
         </div>
       </div>
 
-      <div className="mt-7 grid grid-cols-[minmax(0,1fr)_auto] border-b border-line pb-3">
+      <div className="mt-7 hidden border-b border-line pb-3 lg:grid lg:grid-cols-[7.5rem_minmax(0,1fr)_4.5rem_4.5rem_7.5rem_7rem] lg:gap-4 lg:px-3">
+        <span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Issue</span>
+        <span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Title</span>
+        <span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Reports</span>
+        <span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Affected</span>
+        <span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Last seen</span>
+        <span className="fi-mono text-right text-[10px] uppercase tracking-wider text-ink-faint">Status</span>
+      </div>
+      <div className="mt-7 flex items-center justify-between border-b border-line pb-3 lg:hidden">
         <span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Issue</span>
         <span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Status</span>
       </div>
@@ -109,27 +117,37 @@ export function OwnerIssuesPage() {
             <Link
               key={issue.id}
               to={`/app/issues/${issue.id}`}
-              className="group relative block min-h-[124px] border-b border-line px-1 py-5 transition hover:bg-surface/65 sm:grid sm:min-h-[104px] sm:grid-cols-[110px_minmax(220px,1fr)_110px_140px_90px_auto] sm:items-center sm:gap-4 sm:px-3"
+              className="group block border-b border-line px-1 py-5 transition hover:bg-surface/65 sm:px-3 lg:grid lg:grid-cols-[7.5rem_minmax(0,1fr)_4.5rem_4.5rem_7.5rem_7rem] lg:items-center lg:gap-4 lg:py-4"
             >
-              <div className="flex items-center gap-3 pr-20 sm:flex-col sm:items-start sm:gap-2 sm:pr-0">
-                <span className="fi-mono text-[10px] text-ink-faint">{issue.public_code}</span>
-                <SeverityBadge severity={issue.severity ?? 'medium'} label={severityLabel(issue.severity)} />
+              <div className="flex items-start justify-between gap-3 lg:block">
+                <div className="min-w-0">
+                  <span className="fi-mono text-[10px] text-ink-faint">{issue.public_code}</span>
+                  <div className="mt-2">
+                    <SeverityBadge severity={issue.severity ?? 'medium'} label={severityLabel(issue.severity)} />
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2 lg:hidden">
+                  <StatusBadge status={issue.status} label={statusLabel(issue.status)} />
+                  <ArrowRight className="h-4 w-4 text-ink-faint transition-transform group-hover:translate-x-1" />
+                </div>
               </div>
-              <div className="mt-4 min-w-0 sm:mt-0">
-                <p className="line-clamp-2 text-[15px] font-medium sm:truncate">{issue.title}</p>
-                <p className="fi-mono mt-2 text-[9px] uppercase text-ink-faint sm:hidden">
-                  {issue.report_count ?? 0} reports · {issue.affected_user_count ?? 0} affected
-                </p>
+
+              <div className="mt-4 min-w-0 lg:mt-0">
+                <p className="line-clamp-2 text-[15px] font-medium leading-snug">{issue.title}</p>
+                <div className="mt-3 grid grid-cols-3 gap-3 lg:hidden">
+                  <Stat value={String(issue.report_count ?? 0)} label="reports" />
+                  <Stat value={String(issue.affected_user_count ?? 0)} label="affected" />
+                  <Stat value={formatTime(issue.last_seen_at)} label="last seen" compact />
+                </div>
               </div>
-              <Stat value={String(issue.report_count ?? 0)} label="reports" />
-              <Stat value={String(issue.affected_user_count ?? 0)} label="affected" />
-              <div className="hidden sm:block">
-                <p className="text-xs text-ink-muted">{formatTime(issue.last_seen_at)}</p>
-                <p className="fi-mono mt-1 text-[9px] uppercase text-ink-faint">last seen</p>
-              </div>
-              <div className="absolute right-1 top-5 flex items-center gap-3 sm:static">
+
+              <Stat value={String(issue.report_count ?? 0)} label="reports" className="hidden lg:block" />
+              <Stat value={String(issue.affected_user_count ?? 0)} label="affected" className="hidden lg:block" />
+              <Stat value={formatTime(issue.last_seen_at)} label="last seen" compact className="hidden lg:block" />
+
+              <div className="hidden items-center justify-end gap-3 lg:flex">
                 <StatusBadge status={issue.status} label={statusLabel(issue.status)} />
-                <ArrowRight className="hidden h-4 w-4 text-ink-faint transition-transform group-hover:translate-x-1 sm:block" />
+                <ArrowRight className="h-4 w-4 text-ink-faint transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
           ))}
@@ -139,11 +157,23 @@ export function OwnerIssuesPage() {
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({
+  value,
+  label,
+  compact = false,
+  className,
+}: {
+  value: string;
+  label: string;
+  compact?: boolean;
+  className?: string;
+}) {
   return (
-    <div className="hidden sm:block">
-      <p className="fi-display text-lg font-medium">{value}</p>
-      <p className="fi-mono text-[9px] uppercase text-ink-faint">{label}</p>
+    <div className={className}>
+      <p className={compact ? 'text-xs leading-5 text-ink-muted' : 'fi-display text-lg font-medium leading-none'}>
+        {value}
+      </p>
+      <p className="fi-mono mt-1 text-[9px] uppercase tracking-wider text-ink-faint">{label}</p>
     </div>
   );
 }

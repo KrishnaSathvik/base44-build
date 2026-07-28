@@ -25,7 +25,7 @@ export function isIssueStatus(value: unknown): value is IssueStatus {
 }
 
 export function canTransition(from: IssueStatus, to: IssueStatus, options: TransitionOptions = {}): boolean {
-  if ((from === "open" || from === "in_progress") && to === "resolved") {
+  if ((from === "unreviewed" || from === "open" || from === "in_progress") && to === "resolved") {
     return !!options.directResolutionOverrideReason?.trim();
   }
   return ALLOWED[from].includes(to);
@@ -33,9 +33,9 @@ export function canTransition(from: IssueStatus, to: IssueStatus, options: Trans
 
 export function allowedTransitions(from: IssueStatus): readonly IssueStatus[] {
   const next = [...ALLOWED[from]];
-  // Direct resolve is allowed from open/in_progress when an owner override reason
+  // Direct resolve is allowed from triage/active states when an owner override reason
   // is supplied (see canTransition). Surface it in the owner UI so resolve is reachable.
-  if ((from === "open" || from === "in_progress") && !next.includes("resolved")) {
+  if ((from === "unreviewed" || from === "open" || from === "in_progress") && !next.includes("resolved")) {
     next.push("resolved");
   }
   return next;

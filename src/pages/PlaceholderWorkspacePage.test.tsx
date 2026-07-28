@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { PlaceholderWorkspacePage } from '@/pages/PlaceholderWorkspacePage';
-import { listMyProjects, updateProjectSettings } from '@/lib/api';
+import { listMyProjects, updateProjectSettings, deleteProject } from '@/lib/api';
 
 vi.mock('@/lib/appUrls', () => ({
   publicBoardUrl: vi.fn((slug: string) => `https://vensaos.com/f/${slug}`),
@@ -33,6 +33,8 @@ vi.mock('@/lib/api', () => ({
     },
   ]),
   updateProjectSettings: vi.fn(),
+  deleteProject: vi.fn(),
+  apiErrorMessage: vi.fn((err: unknown) => (err instanceof Error ? err.message : 'Something went wrong')),
 }));
 
 function renderSettings() {
@@ -47,27 +49,15 @@ function renderSettings() {
   );
 }
 
-test('renders editable project identity and hides operational clutter', async () => {
+test('renders editable project identity without a settings project switcher', async () => {
   renderSettings();
   expect(await screen.findByLabelText('Product name')).toHaveValue('Acme');
   expect(screen.getByRole('button', { name: 'Save settings' })).toBeEnabled();
   expect(screen.getByText('https://vensaos.com/f/acme')).toBeVisible();
-  expect(screen.getByLabelText('Project')).toBeVisible();
-  expect(screen.getByRole('option', { name: 'Groceries' })).toBeInTheDocument();
+  expect(screen.getByText(/Editing/i)).toBeVisible();
+  expect(screen.getByText(/Switch boards from the sidebar/i)).toBeVisible();
+  expect(screen.queryByLabelText('Project')).not.toBeInTheDocument();
   expect(screen.queryByText(/Email delivery/i)).not.toBeInTheDocument();
-  expect(screen.queryByText(/Feedback types/i)).not.toBeInTheDocument();
-  expect(screen.queryByLabelText(/Allow anonymous/i)).not.toBeInTheDocument();
-  expect(screen.queryByText(/Free-runtime maintenance/i)).not.toBeInTheDocument();
-  expect(screen.queryByText(/Orphan evidence/i)).not.toBeInTheDocument();
-  expect(screen.queryByText(/Delivery history/i)).not.toBeInTheDocument();
-});
-
-test('switches the active project and loads its settings', async () => {
-  renderSettings();
-  await screen.findByLabelText('Product name');
-  fireEvent.change(screen.getByLabelText('Project'), { target: { value: 'p2' } });
-  await waitFor(() => expect(screen.getByLabelText('Product name')).toHaveValue('Groceries'));
-  expect(screen.getByText('https://vensaos.com/f/groceries')).toBeVisible();
 });
 
 test('saves identity fields for the active project', async () => {
@@ -88,4 +78,35 @@ test('shows onboarding when no projects exist', async () => {
   vi.mocked(listMyProjects).mockResolvedValueOnce([]);
   renderSettings();
   expect(await screen.findByRole('heading', { name: 'Create your first feedback board' })).toBeVisible();
+});
+
+test('requires typing the project name before deleting the active board', async () => {
+  vi.mocked(deleteProject).mockResolvedValue({
+    success: true,
+    projectId: 'p1',
+    projectName: 'Acme',
+    removedRecords: 3,
+  });
+  renderSettings();
+  fireEvent.click(await screen.findByRole('button', { name: 'Delete project…' }));
+  expect(await screen.findByRole('dialog', { name: 'Delete project' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Delete project' })).toBeDisabled();
+
+  vi.mocked(listMyProjects).mockResolvedValue([
+    {
+      id: 'p2',
+      name: 'Groceries',
+      slug: 'groceries',
+      product_url: 'https://groceries.test',
+      description: 'Shopping lists',
+      allow_anonymous: true,
+      feedback_types_enabled: ['bug', 'feature', 'general'],
+      collect_reporter_email: true,
+    },
+  ] as never);
+
+  fireEvent.change(screen.getByLabelText('Project name'), { target: { value: 'Acme' } });
+  expect(screen.getByRole('button', { name: 'Delete project' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Delete project' }));
+  await waitFor(() => expect(deleteProject).toHaveBeenCalledWith('p1', 'Acme'));
 });

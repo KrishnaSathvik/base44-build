@@ -16,6 +16,14 @@ export function writeStoredActiveProjectId(projectId: string): void {
   }
 }
 
+export function clearStoredActiveProjectId(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Ignore private-mode failures.
+  }
+}
+
 export function resolveActiveProjectId<T extends { id: string }>(
   projects: T[],
   preferredId: string | null,

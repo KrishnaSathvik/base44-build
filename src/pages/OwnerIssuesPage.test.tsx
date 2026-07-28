@@ -54,7 +54,7 @@ test('does not expose a non-functional filter control on the issues header', asy
   expect(screen.getByRole('button', { name: 'New project' })).toBeVisible();
 });
 
-test('allows long issue titles to wrap on mobile rows', async () => {
+test('allows long issue titles to wrap instead of truncating into empty space', async () => {
   vi.mocked(listMyIssues).mockResolvedValueOnce([
     {
       id: 'issue-1',
@@ -79,4 +79,6 @@ test('allows long issue titles to wrap on mobile rows', async () => {
   const title = await screen.findByText(/A very long issue title/);
   expect(title).toHaveClass('line-clamp-2');
   expect(title).not.toHaveClass('truncate');
+  expect(screen.getAllByText('reports').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('affected').length).toBeGreaterThan(0);
 });
