@@ -24,6 +24,7 @@ import { formatTime, statusLabel, typeLabel } from '@/lib/format';
 import { BrandMark } from '@/components/Brand';
 import { SiteFooter } from '@/components/SiteFooter';
 import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
+import type { AttachmentAccessScope } from '@/lib/attachmentAccess';
 import { ScreenshotUploader } from '@/components/ScreenshotUploader';
 import { Button, InlineError, Skeleton, Spinner, StatusBadge, Textarea } from '@/components/ui';
 import type { PendingScreenshot } from '@/lib/attachments';
@@ -61,10 +62,26 @@ export function TrackingPage() {
         : false,
     refetchOnWindowFocus: true,
   });
-  const access = useCallback(
-    (attachment: GalleryAttachment) => getReporterAttachmentAccess(token, attachment.accessKey ?? ''),
+  const attachmentScopeFor = useCallback(
+    (attachment: GalleryAttachment): AttachmentAccessScope => ({
+      kind: 'reporter',
+      token,
+      attachmentKey: attachment.accessKey ?? '',
+    }),
     [token],
   );
+  const fetchAttachmentAccess = useCallback(async (scope: AttachmentAccessScope) => {
+    switch (scope.kind) {
+      case 'reporter':
+        return getReporterAttachmentAccess(scope.token, scope.attachmentKey);
+      case 'owner':
+        throw new Error('Reporter attachment scope required');
+      default: {
+        const _exhaustive: never = scope;
+        throw new Error(`Unhandled attachment scope: ${JSON.stringify(_exhaustive)}`);
+      }
+    }
+  }, []);
   const [body, setBody] = useState('');
   const [screenshots, setScreenshots] = useState<PendingScreenshot[]>([]);
   const [followUpKind, setFollowUpKind] = useState<'general' | 'not_fixed'>('general');
@@ -328,7 +345,11 @@ export function TrackingPage() {
         <section>
           <p className="fi-eyebrow">Your screenshots</p>
           <h2 className="fi-display mb-4 mt-2 text-2xl font-medium">Private evidence</h2>
-          <AttachmentGallery attachments={data.ownAttachments} getAccess={access} />
+          <AttachmentGallery
+            attachments={data.ownAttachments}
+            scopeFor={attachmentScopeFor}
+            fetchAccess={fetchAttachmentAccess}
+          />
         </section>
 
         <section>
@@ -387,7 +408,11 @@ export function TrackingPage() {
                   <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{message.body}</p>
                   {message.ownAttachments.length > 0 && (
                     <div className="mt-4">
-                      <AttachmentGallery attachments={message.ownAttachments} getAccess={access} />
+                      <AttachmentGallery
+                        attachments={message.ownAttachments}
+                        scopeFor={attachmentScopeFor}
+                        fetchAccess={fetchAttachmentAccess}
+                      />
                     </div>
                   )}
                 </article>

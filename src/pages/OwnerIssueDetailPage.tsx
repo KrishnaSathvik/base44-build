@@ -43,6 +43,7 @@ import {
   Textarea,
 } from '@/components/ui';
 import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
+import type { AttachmentAccessScope } from '@/lib/attachmentAccess';
 import { aggregateEvidence } from '@/lib/evidence';
 import type { IntelligenceSubmission, IssueStatus, ReporterMessage, WorkflowIssue } from '@/lib/types';
 import { allowedTransitions } from '../../base44/shared/issue-state-machine';
@@ -127,10 +128,22 @@ export function OwnerIssueDetailPage() {
       ),
   });
 
-  const attachmentAccess = useCallback(
-    (item: GalleryAttachment) => getAttachmentAccess(item.id ?? ''),
+  const attachmentScopeFor = useCallback(
+    (item: GalleryAttachment): AttachmentAccessScope => ({ kind: 'owner', attachmentId: item.id ?? '' }),
     [],
   );
+  const fetchAttachmentAccess = useCallback(async (scope: AttachmentAccessScope) => {
+    switch (scope.kind) {
+      case 'owner':
+        return getAttachmentAccess(scope.attachmentId);
+      case 'reporter':
+        throw new Error('Owner attachment scope required');
+      default: {
+        const _exhaustive: never = scope;
+        throw new Error(`Unhandled attachment scope: ${JSON.stringify(_exhaustive)}`);
+      }
+    }
+  }, []);
 
   if (issueQuery.isLoading) {
     return (
@@ -363,7 +376,11 @@ export function OwnerIssueDetailPage() {
                     )}
                     <div className="mt-5">
                       {attachments.length ? (
-                        <AttachmentGallery attachments={attachments} getAccess={attachmentAccess} />
+                        <AttachmentGallery
+                          attachments={attachments}
+                          scopeFor={attachmentScopeFor}
+                          fetchAccess={fetchAttachmentAccess}
+                        />
                       ) : (
                         <p className="text-sm text-ink-muted">No screenshots — text evidence only.</p>
                       )}

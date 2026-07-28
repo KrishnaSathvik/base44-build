@@ -1,7 +1,11 @@
 import { assertEquals } from "jsr:@std/assert";
 import {
-  canAssociateAttachment,
+  ATTACHMENT_ACCESS_STALE_MARGIN_MS,
+  SIGNED_URL_TTL_SECONDS,
   accessGrantIsExpired,
+  attachmentAccessRemainingFreshMs,
+  canAssociateAttachment,
+  isAttachmentAccessStale,
   ownerCanAccessAttachment,
   reporterCanAccessAttachment,
   validateAttachmentFile,
@@ -41,4 +45,21 @@ Deno.test("file validation rejects MIME and size violations", () => {
 Deno.test("expired signed-access grant behavior is deterministic", () => {
   assertEquals(accessGrantIsExpired("2026-01-01T00:00:00.000Z", new Date("2026-01-02T00:00:00.000Z").getTime()), true);
   assertEquals(accessGrantIsExpired("2026-01-03T00:00:00.000Z", new Date("2026-01-02T00:00:00.000Z").getTime()), false);
+});
+
+Deno.test("private signed URL TTL follows the 45-minute application policy", () => {
+  assertEquals(SIGNED_URL_TTL_SECONDS, 45 * 60);
+  assertEquals(ATTACHMENT_ACCESS_STALE_MARGIN_MS, 60_000);
+});
+
+Deno.test("near-expiry signed access is treated as stale before wall-clock expiry", () => {
+  const now = new Date("2026-01-02T00:00:00.000Z").getTime();
+  const near = new Date(now + ATTACHMENT_ACCESS_STALE_MARGIN_MS / 2).toISOString();
+  const fresh = new Date(now + ATTACHMENT_ACCESS_STALE_MARGIN_MS * 2).toISOString();
+  const expired = new Date(now - 1_000).toISOString();
+  assertEquals(isAttachmentAccessStale(near, now), true);
+  assertEquals(isAttachmentAccessStale(fresh, now), false);
+  assertEquals(isAttachmentAccessStale(expired, now), true);
+  assertEquals(attachmentAccessRemainingFreshMs(near, now), 0);
+  assertEquals(attachmentAccessRemainingFreshMs(fresh, now) > 0, true);
 });

@@ -1,7 +1,20 @@
 export const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 export const MAX_ATTACHMENTS = 5;
-export const SIGNED_URL_TTL_SECONDS = 300;
+
+/**
+ * Private signed URLs remain valid for 45 minutes.
+ *
+ * This is long enough to reuse one access grant during a normal owner or
+ * reporter session while keeping private-file access temporary.
+ *
+ * Backend functions return expiresAt using this same value, and clients refresh
+ * the cached grant shortly before that timestamp.
+ */
+export const SIGNED_URL_TTL_SECONDS = 45 * 60;
+
+/** Refresh cached signed URLs this far before wall-clock expiry. */
+export const ATTACHMENT_ACCESS_STALE_MARGIN_MS = 60_000;
 
 export interface AttachmentLike {
   id?: string;
@@ -51,4 +64,12 @@ export function canAssociateAttachment(
 
 export function accessGrantIsExpired(expiresAt: string | null | undefined, now = Date.now()): boolean {
   return !!expiresAt && new Date(expiresAt).getTime() < now;
+}
+
+export function attachmentAccessRemainingFreshMs(expiresAt: string, now = Date.now()): number {
+  return Math.max(0, new Date(expiresAt).getTime() - ATTACHMENT_ACCESS_STALE_MARGIN_MS - now);
+}
+
+export function isAttachmentAccessStale(expiresAt: string, now = Date.now()): boolean {
+  return attachmentAccessRemainingFreshMs(expiresAt, now) <= 0;
 }

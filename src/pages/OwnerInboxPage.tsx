@@ -11,6 +11,7 @@ import {
 } from '@/lib/api';
 import type { DuplicateSuggestion, FeedbackAttachment, IntelligenceIssue, IntelligenceIssueReport, IntelligenceSubmission, ReporterMessage } from '@/lib/types';
 import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
+import type { AttachmentAccessScope } from '@/lib/attachmentAccess';
 
 type Filter = 'all' | 'duplicates' | 'failed' | 'needs_info' | 'reporter_replied';
 const FILTERS: Array<{ value: Filter; label: string }> = [
@@ -201,7 +202,22 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
   const queryClient = useQueryClient();
   const attachments = data.attachments.filter((item) => item.submission_id === submission.id && item.upload_status === 'completed');
   const unreadMessages = data.messages.filter((item) => item.submission_id === submission.id && item.sender_type === 'reporter' && !item.is_read_by_owner);
-  const attachmentAccess = useCallback((item: GalleryAttachment) => getAttachmentAccess(item.id ?? ''), []);
+  const attachmentScopeFor = useCallback(
+    (item: GalleryAttachment): AttachmentAccessScope => ({ kind: 'owner', attachmentId: item.id ?? '' }),
+    [],
+  );
+  const fetchAttachmentAccess = useCallback(async (scope: AttachmentAccessScope) => {
+    switch (scope.kind) {
+      case 'owner':
+        return getAttachmentAccess(scope.attachmentId);
+      case 'reporter':
+        throw new Error('Owner attachment scope required');
+      default: {
+        const _exhaustive: never = scope;
+        throw new Error(`Unhandled attachment scope: ${JSON.stringify(_exhaustive)}`);
+      }
+    }
+  }, []);
   const mutation = useMutation({
     mutationFn: async (action: Parameters<typeof reviewGrouping>[0] | { action: 'retry' }) => {
       if (action.action === 'retry') return processFeedback(submission.id, true);
@@ -292,7 +308,11 @@ function ReportDetail({ submission, data }: { submission: IntelligenceSubmission
         <p className="fi-eyebrow">Evidence</p>
         {attachments.length ? (
           <div className="mt-4">
-            <AttachmentGallery attachments={attachments} getAccess={attachmentAccess} />
+            <AttachmentGallery
+              attachments={attachments}
+              scopeFor={attachmentScopeFor}
+              fetchAccess={fetchAttachmentAccess}
+            />
           </div>
         ) : (
           <p className="mt-3 text-sm text-ink-muted">No screenshots — text evidence only.</p>
