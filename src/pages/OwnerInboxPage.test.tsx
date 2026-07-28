@@ -12,6 +12,7 @@ vi.mock('@/api/base44Client', () => ({
   } },
 }));
 vi.mock('@/lib/api', () => ({
+  listMyProjects: vi.fn().mockResolvedValue([{ id: 'p1', name: 'TrailVerse', slug: 'trailverse' }]),
   listMySubmissions: vi.fn(), listMyIssues: vi.fn(), listMyIssueReports: vi.fn(), listMyDuplicateSuggestions: vi.fn(),
   listMyAttachments: vi.fn(), getAttachmentAccess: vi.fn(), processFeedback: vi.fn(), reviewGrouping: vi.fn(),
   listMyReporterMessages: vi.fn(), markOwnerMessagesRead: vi.fn(),

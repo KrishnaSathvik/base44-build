@@ -4,9 +4,10 @@ import { AlertTriangle, ArrowLeft, ArrowRightLeft, Check, Inbox, Monitor, Refres
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge, Button, EmptyState, InlineError, Select, Skeleton } from '@/components/ui';
+import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
 import { analysisModeLabel, formatTime, severityLabel, typeLabel } from '@/lib/format';
 import {
-  listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMySubmissions,
+  listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMyProjects, listMySubmissions,
   getAttachmentAccess, listMyAttachments, listMyNotificationDeliveries, listMyReporterMessages, markOwnerMessagesRead, processFeedback, reviewGrouping,
 } from '@/lib/api';
 import type { DuplicateSuggestion, FeedbackAttachment, IntelligenceIssue, IntelligenceIssueReport, IntelligenceSubmission, ReporterMessage } from '@/lib/types';
@@ -41,8 +42,9 @@ export function OwnerInboxPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
   const [isMobileLayout, setIsMobileLayout] = useState(false);
-  const query = useQuery({ queryKey: ['inbox'], queryFn: loadInbox });
-  const deliveries=useQuery({queryKey:['notification-deliveries'],queryFn:listMyNotificationDeliveries});
+  const projects = useQuery({ queryKey: ['projects'], queryFn: listMyProjects });
+  const query = useQuery({ queryKey: ['inbox'], queryFn: loadInbox, enabled: !!projects.data?.length });
+  const deliveries=useQuery({queryKey:['notification-deliveries'],queryFn:listMyNotificationDeliveries,enabled:!!projects.data?.length});
   const deliveryFailures=deliveries.data?.filter(item=>item.status==='failed'||item.status==='dead_letter').length??0;
 
   useEffect(() => {
@@ -90,11 +92,30 @@ export function OwnerInboxPage() {
   const showList = !isMobileLayout || !mobileShowDetail;
   const showDetail = !isMobileLayout || mobileShowDetail;
 
+  if (projects.isLoading) {
+    return (
+      <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-7 md:py-10">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="mt-10 h-80 w-full" />
+      </div>
+    );
+  }
+
+  if (!projects.data?.length) {
+    return (
+      <NoProjectOnboarding
+        eyebrow="Report queue"
+        title="Create your first feedback board"
+        description="Inbox fills with reports after you create a board and share the public feedback link."
+      />
+    );
+  }
+
   return <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-7 md:py-10">
     <header className="border-b border-line pb-7"><p className="fi-eyebrow">Report queue</p><h1 className="fi-display mt-3 text-3xl font-medium sm:text-4xl">Inbox</h1><p className="mt-2 text-sm text-ink-muted">Review intelligence, grouping evidence, and reports that still need a decision.</p></header>
     {deliveryFailures>0&&<div role="status" className="mt-5 flex flex-col gap-3 rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4"><span>{deliveryFailures} notification {deliveryFailures===1?'delivery needs':'deliveries need'} operational attention.</span><Link className="font-medium" to="/app/settings#notifications">Review notifications</Link></div>}
     <div className="flex gap-2 overflow-x-auto border-b border-line py-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Inbox filters">{FILTERS.map((item) => <button key={item.value} type="button" onClick={() => setFilter(item.value)} className={`min-h-10 shrink-0 rounded-md px-3 text-xs ${filter === item.value ? 'bg-ink text-white' : 'text-ink-muted hover:bg-surface'}`}>{item.label}</button>)}</div>
-    {query.isLoading ? <div className="grid gap-6 py-6 lg:grid-cols-[380px_1fr]"><Skeleton className="h-[520px]"/><Skeleton className="h-[520px]"/></div> : query.isError ? <div className="py-8"><InlineError>Inbox data could not be loaded. Check your connection and retry.</InlineError></div> : !filtered.length ? <EmptyState icon={<Inbox className="h-5 w-5"/>} title="No reports in this view" description="New, failed, and reviewable reports will appear here without exposing them outside your project."/> : <div className="grid min-h-0 lg:min-h-[620px] lg:grid-cols-[380px_minmax(0,1fr)]">
+    {query.isLoading ? <div className="grid gap-6 py-6 lg:grid-cols-[380px_1fr]"><Skeleton className="h-[520px]"/><Skeleton className="h-[520px]"/></div> : query.isError ? <div className="py-8"><InlineError>Inbox data could not be loaded. Check your connection and retry.</InlineError></div> : !filtered.length ? <div className="mt-6"><EmptyState icon={<Inbox className="h-5 w-5"/>} title="No reports in this view" description="New, failed, and reviewable reports will appear here without exposing them outside your project." action={<Link to="/app/settings"><Button variant="secondary">Open settings & copy link</Button></Link>}/></div> : <div className="grid min-h-0 lg:min-h-[620px] lg:grid-cols-[380px_minmax(0,1fr)]">
       <div className={`border-line lg:border-r ${showList ? '' : 'hidden'}`}>{filtered.map((submission) => <ReportRow key={submission.id} submission={submission} data={query.data!} selected={submission.id === selectedId} onSelect={() => { setSelectedId(submission.id); setMobileShowDetail(true); }}/>)}</div>
       {selectedSubmission && showDetail ? <div><button type="button" onClick={() => setMobileShowDetail(false)} className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-ink-muted hover:text-ink lg:hidden"><ArrowLeft className="h-4 w-4"/>Back to inbox</button><ReportDetail submission={selectedSubmission} data={query.data!}/></div> : null}
     </div>}

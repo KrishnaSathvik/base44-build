@@ -20,7 +20,7 @@ beforeEach(() => {
 async function fillAndSubmit() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/f/acme']}><Routes><Route path="/f/:projectSlug" element={<PublicPortalPage />} /></Routes></MemoryRouter></QueryClientProvider>);
-  fireEvent.click(await screen.findByRole('button', { name: /report a problem/i }));
+  await screen.findByRole('heading', { name: 'What happened?' });
   fireEvent.change(screen.getByLabelText('Describe the problem'), { target: { value: 'Checkout overflows on mobile' } });
   fireEvent.click(screen.getByRole('button', { name: /send feedback/i }));
 }

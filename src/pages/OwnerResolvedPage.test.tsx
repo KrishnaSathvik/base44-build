@@ -6,7 +6,10 @@ import { OwnerResolvedPage } from '@/pages/OwnerResolvedPage';
 import { listMyIssues } from '@/lib/api';
 
 vi.mock('@/api/base44Client',()=>({base44:{entities:{Issue:{subscribe:vi.fn(()=>()=>undefined)}}}}));
-vi.mock('@/lib/api',()=>({listMyIssues:vi.fn()}));
+vi.mock('@/lib/api',()=>({
+  listMyIssues:vi.fn(),
+  listMyProjects:vi.fn().mockResolvedValue([{id:'p1',name:'TrailVerse',slug:'trailverse'}]),
+}));
 
 test('filters resolved confirmation outcomes and keeps reopened explicit',async()=>{
  vi.mocked(listMyIssues).mockResolvedValue([

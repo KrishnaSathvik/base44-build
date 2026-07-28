@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Bug, Check, MessageSquareText, ScanSearch } from 'lucide-react';
+import { ArrowRight, Check, ScanSearch } from 'lucide-react';
 import { Brand, BrandMark } from '@/components/Brand';
 import { ConvergenceVisual } from '@/components/ConvergenceVisual';
 
@@ -133,10 +133,22 @@ export function LandingPage() {
                   <p className="text-xs text-ink-faint">Usually less than a minute</p>
                 </div>
               </div>
-              <div className="mt-5 space-y-3">
-                <PreviewChoice icon={<Bug />} title="Report a problem" />
-                <PreviewChoice icon={<MessageSquareText />} title="Suggest an improvement" />
-                <PreviewChoice icon={<MessageSquareText />} title="Share general feedback" />
+              <div className="mt-5 space-y-4" aria-hidden="true">
+                <div>
+                  <p className="text-xs text-ink-faint">Feedback type</p>
+                  <div className="mt-1.5 flex min-h-11 items-center rounded-md border border-line px-3.5 text-sm">
+                    Report a problem
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-ink-faint">Describe the problem</p>
+                  <div className="mt-1.5 min-h-[88px] rounded-md border border-line px-3.5 py-3 text-sm text-ink-muted">
+                    Tell us what you were doing and where things went wrong…
+                  </div>
+                </div>
+                <div className="inline-flex min-h-11 items-center gap-2 rounded-md bg-ink px-4 text-sm font-medium text-white">
+                  Send feedback <ArrowRight className="h-4 w-4" />
+                </div>
               </div>
             </div>
           </div>
@@ -236,16 +248,6 @@ function Metric({ value, label }: { value: string; label: string }) {
     <div>
       <p className="fi-display text-lg font-medium">{value}</p>
       <p className="fi-mono mt-1 text-[9px] uppercase text-ink-faint">{label}</p>
-    </div>
-  );
-}
-
-function PreviewChoice({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return (
-    <div className="flex min-h-14 items-center gap-3 rounded-lg border border-line px-4 text-sm">
-      <span className="text-ink-muted [&>svg]:h-4 [&>svg]:w-4">{icon}</span>
-      <span>{title}</span>
-      <ArrowRight className="ml-auto h-4 w-4 text-ink-faint" />
     </div>
   );
 }

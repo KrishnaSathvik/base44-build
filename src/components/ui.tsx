@@ -53,8 +53,31 @@ export function Badge({ children, tone = 'neutral' }: { children: ReactNode; ton
 export function StatusBadge({ status, label }: { status: string; label: string }) { return <Badge tone={status === 'resolved' ? 'success' : status === 'needs_info' || status === 'processing' ? 'warning' : status === 'dismissed' || status === 'duplicate' ? 'neutral' : 'info'}>{label}</Badge>; }
 export function SeverityBadge({ severity, label }: { severity: string; label: string }) { return <span className="inline-flex items-center gap-2"><span className={cn('h-2 w-2 rounded-full', severity === 'critical' ? 'bg-critical' : severity === 'high' ? 'bg-warning' : severity === 'low' ? 'bg-ink-faint' : 'bg-info')} /><span className="fi-mono text-[10px] uppercase tracking-[.08em] text-ink-muted">{label}</span></span>; }
 
-export function Tooltip({ label, children }: { label: string; children: ReactNode }) { return <span className="group relative inline-flex">{children}<span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-2 py-1 text-[11px] text-white opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">{label}</span></span>; }
-export function Dropdown({ label, children }: { label: ReactNode; children: ReactNode }) { return <details className="relative"><summary className="list-none cursor-pointer">{label}</summary><div className="absolute right-0 top-full z-30 mt-2 min-w-48 rounded-lg border border-line bg-surface p-1 shadow-sheet">{children}</div></details>; }
+export function Tooltip({
+  label,
+  children,
+  side = 'top',
+}: {
+  label: string;
+  children: ReactNode;
+  side?: 'top' | 'bottom';
+}) {
+  return (
+    <span className="group relative inline-flex">
+      {children}
+      <span
+        role="tooltip"
+        className={cn(
+          'pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-2 py-1 text-[11px] text-white opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100',
+          side === 'bottom' ? 'top-full mt-2' : 'bottom-full mb-2',
+        )}
+      >
+        {label}
+      </span>
+    </span>
+  );
+}
+export function Dropdown({ label, children }: { label: ReactNode; children: ReactNode }) { return <details className="relative"><summary className="list-none cursor-pointer">{label}</summary><div className="absolute right-0 top-full z-50 mt-2 min-w-48 rounded-lg border border-line bg-surface p-1 shadow-sheet">{children}</div></details>; }
 function useFocusTrap<T extends HTMLElement>(open:boolean,onClose:()=>void){const ref=useRef<T>(null);useEffect(()=>{if(!open)return;const previous=document.activeElement as HTMLElement|null;const node=ref.current;const focusable=()=>Array.from(node?.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')??[]);focusable()[0]?.focus();const keydown=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();onClose();return;}if(event.key!=='Tab')return;const items=focusable();if(!items.length)return;const first=items[0];const last=items[items.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}};document.addEventListener('keydown',keydown);return()=>{document.removeEventListener('keydown',keydown);previous?.focus();};},[onClose,open]);return ref;}
 export function Dialog({ open, title, children, onClose }: { open: boolean; title: string; children: ReactNode; onClose: () => void }) { const ref=useFocusTrap<HTMLDivElement>(open,onClose); if (!open) return null; return <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/35 p-0 sm:items-center sm:p-4" onMouseDown={onClose}><div ref={ref} role="dialog" aria-modal="true" aria-label={title} className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-xl border border-line bg-surface p-5 shadow-sheet sm:rounded-xl sm:p-6" onMouseDown={(e) => e.stopPropagation()}><div className="mb-5 flex items-center justify-between gap-3"><h2 className="fi-display text-xl font-semibold">{title}</h2><IconButton label="Close" onClick={onClose}><X className="h-4 w-4" /></IconButton></div>{children}</div></div>; }
 export function Sheet({ open, title, children, onClose }: { open: boolean; title: string; children: ReactNode; onClose: () => void }) { const ref=useFocusTrap<HTMLElement>(open,onClose); if (!open) return null; return <div className="fixed inset-0 z-50 bg-ink/25" onMouseDown={onClose}><aside ref={ref} role="dialog" aria-modal="true" aria-label={title} className="absolute inset-y-0 right-0 w-full max-w-md overflow-y-auto border-l border-line bg-surface p-5 shadow-sheet sm:p-6" onMouseDown={(e) => e.stopPropagation()}>{children}</aside></div>; }
@@ -63,5 +86,17 @@ export function Skeleton({ className }: { className?: string }) { return <div ar
 export function Spinner({ className }: { className?: string }) { return <div className={cn('h-5 w-5 animate-spin rounded-full border-2 border-line border-t-ink', className)} role="status" aria-label="Loading" />; }
 export function Panel({ className, children }: { className?: string; children: ReactNode }) { return <div className={cn('rounded-lg border border-line bg-surface', className)}>{children}</div>; }
 export function InlineError({ children }: { children: ReactNode }) { return <p role="alert" className="flex items-center gap-1.5 text-xs text-critical"><AlertCircle className="h-3.5 w-3.5" />{children}</p>; }
-export function EmptyState({ title, description, action, icon }: { title: string; description: string; action?: ReactNode; icon?: ReactNode }) { return <div className="border-y border-line py-16 text-center"><div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted">{icon}</div><h2 className="fi-display text-xl font-medium">{title}</h2><p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-muted">{description}</p>{action && <div className="mt-5">{action}</div>}</div>; }
+export function EmptyState({ title, description, action, icon }: { title: string; description: string; action?: ReactNode; icon?: ReactNode }) {
+  return (
+    <div className="rounded-xl border border-line bg-surface px-6 py-14 text-center sm:px-10 sm:py-16">
+      <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-lg border border-line bg-canvas text-ink-muted">
+        {icon}
+      </div>
+      <h2 className="fi-display text-2xl font-medium">{title}</h2>
+      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-muted">{description}</p>
+      {action && <div className="mt-6 flex justify-center">{action}</div>}
+    </div>
+  );
+}
+
 export function FileDropPlaceholder() { return <div aria-disabled="true" className="rounded-lg border border-dashed border-line-strong bg-surface-subtle/50 px-4 py-5 text-center"><Upload className="mx-auto h-5 w-5 text-ink-muted" /><p className="mt-2 text-sm text-ink">Add a screenshot</p><p className="mt-1 text-xs text-ink-faint">Available in the next stage</p></div>; }
