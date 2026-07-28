@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Check, ImagePlus, ScanSearch } from 'lucide-react';
 import { Brand, BrandMark } from '@/components/Brand';
 import { ConvergenceVisual } from '@/components/ConvergenceVisual';
+import { SiteFooter } from '@/components/SiteFooter';
 import {
   DEMO_ISSUE,
   DEMO_PRODUCT,
@@ -10,7 +11,7 @@ import {
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen overflow-hidden bg-canvas">
+    <div className="flex min-h-screen flex-col overflow-hidden bg-canvas">
       <header className="border-b border-line">
         <div className="fi-container flex h-16 items-center">
           <Brand />
@@ -112,17 +113,17 @@ export function LandingPage() {
         </section>
 
         <section className="border-y border-line bg-surface-subtle">
-          <div className="fi-container grid items-center gap-10 py-16 sm:gap-16 sm:py-24 lg:grid-cols-[1fr_.9fr]">
-            <div className="max-w-lg min-w-0">
+          <div className="fi-container grid items-start gap-10 py-16 sm:gap-12 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16">
+            <div className="max-w-lg min-w-0 lg:pt-2">
               <p className="fi-eyebrow">Simple on purpose</p>
               <h2 className="fi-display mt-4 text-3xl font-medium leading-tight sm:text-4xl">A feedback form people will actually finish.</h2>
               <p className="mt-5 text-[15px] leading-7 text-ink-muted">
                 Reporters choose what they want to share, answer only relevant questions, and receive a private link to follow the result.
               </p>
-              <ul className="mt-7 space-y-3 text-sm">
+              <ul className="mt-8 space-y-3.5 text-sm">
                 {['No account required', 'Clear, progressive questions', 'Private status tracking'].map((x) => (
                   <li key={x} className="flex items-center gap-3">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink text-white">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink text-white">
                       <Check className="h-3 w-3" />
                     </span>
                     {x}
@@ -144,60 +145,51 @@ export function LandingPage() {
           </Link>
         </section>
       </main>
-      <footer className="border-t border-line">
-        <div className="fi-container flex flex-col gap-4 py-7 text-sm text-ink-muted sm:flex-row sm:items-center sm:justify-between">
-          <Brand />
-          <p>Built for clear product decisions.</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
 
 function FormPreview() {
   return (
-    <div className="mx-auto w-full max-w-md rounded-xl border border-line bg-surface p-6 shadow-sheet">
-      <div className="flex items-center gap-3 border-b border-line pb-5">
-        <BrandMark className="h-9 w-9" />
+    <div className="w-full rounded-xl border border-line bg-surface p-5 shadow-sheet sm:p-6">
+      <div className="flex items-center gap-3 border-b border-line pb-4">
+        <BrandMark className="h-8 w-8" />
         <div>
-          <p className="font-medium">Share feedback</p>
+          <p className="text-sm font-medium">Share feedback</p>
           <p className="text-xs text-ink-faint">Usually less than a minute</p>
         </div>
       </div>
-      <div className="mt-5 space-y-4" aria-hidden="true">
+      <div className="mt-4 space-y-3.5" aria-hidden="true">
         <div>
           <p className="text-xs text-ink-faint">Feedback type</p>
-          <div className="mt-1.5 flex min-h-11 items-center rounded-md border border-line px-3.5 text-sm">
+          <div className="mt-1.5 flex min-h-10 items-center rounded-md border border-line px-3 text-sm">
             Report a problem
           </div>
         </div>
         <div>
           <p className="text-xs text-ink-faint">Describe the problem</p>
-          <div className="mt-1.5 min-h-[72px] rounded-md border border-line px-3.5 py-3 text-sm text-ink-muted">
+          <div className="mt-1.5 min-h-[64px] rounded-md border border-line px-3 py-2.5 text-sm leading-5 text-ink-muted">
             Tell us what you were doing and where things went wrong…
           </div>
         </div>
         <div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-xs text-ink-faint">What did you expect?</p>
             <p className="text-xs text-ink-faint">Optional</p>
           </div>
-          <div className="mt-1.5 min-h-11 rounded-md border border-line px-3.5 py-3 text-sm text-ink-muted">
+          <div className="mt-1.5 flex min-h-10 items-center rounded-md border border-line px-3 text-sm text-ink-muted">
             Newest message remains visible.
           </div>
         </div>
-        <div>
-          <p className="text-xs text-ink-faint">Screenshots</p>
-          <div className="mt-1.5 flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-md border border-dashed border-line px-3 py-4 text-center">
-            <ImagePlus className="h-4 w-4 text-ink-faint" />
-            <p className="text-xs text-ink-muted">PNG, JPEG, or WebP · up to 5</p>
-          </div>
+        <div className="flex min-h-10 items-center gap-2 rounded-md border border-dashed border-line px-3 text-xs text-ink-muted">
+          <ImagePlus className="h-3.5 w-3.5 shrink-0 text-ink-faint" />
+          Screenshots · PNG, JPEG, or WebP
         </div>
-        <div className="rounded-md border border-line bg-canvas px-3 py-3">
-          <p className="fi-mono text-[9px] uppercase tracking-wider text-ink-faint">Device context</p>
-          <p className="mt-2 text-[11px] leading-5 text-ink-muted">Safari · iPhone · 390×844 · no fingerprinting</p>
-        </div>
-        <div className="inline-flex min-h-11 items-center gap-2 rounded-md bg-ink px-4 text-sm font-medium text-white">
+        <p className="fi-mono text-[9px] uppercase tracking-wider text-ink-faint">
+          Device context · Safari · iPhone · no fingerprinting
+        </p>
+        <div className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-ink px-4 text-sm font-medium text-white">
           Send feedback <ArrowRight className="h-4 w-4" />
         </div>
       </div>

@@ -11,6 +11,7 @@ test('interactive demo is honestly labeled and exposes the workspace walkthrough
   expect(screen.getByRole('link', { name: /Open workspace/i })).toHaveAttribute('href', '/app');
   expect(screen.getByText(/1 issue needs attention/i)).toBeVisible();
   expect(screen.getByText('Live snapshot')).toBeVisible();
+  expect(screen.getByText('Built for clear product decisions.')).toBeVisible();
 
   fireEvent.click(screen.getAllByRole('button', { name: /Open the grouped issue/i })[0]!);
   expect(screen.getByText(/Base44 managed InvokeLLM/i)).toBeVisible();

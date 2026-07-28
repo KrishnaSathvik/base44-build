@@ -1,17 +1,18 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Brand } from '@/components/Brand';
+import { SiteFooter } from '@/components/SiteFooter';
 import { InteractiveDemoWorkspace } from '@/pages/demo/InteractiveDemoWorkspace';
 
 export function DemoPage() {
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="flex min-h-screen flex-col bg-canvas">
       <header className="border-b border-line">
         <div className="fi-container flex h-16 items-center">
           <Brand />
         </div>
       </header>
-      <main className="fi-container py-12 sm:py-16">
+      <main className="fi-container flex-1 py-12 sm:py-16">
         <p className="fi-eyebrow">Interactive product demo</p>
         <h1 className="fi-display mt-4 max-w-3xl text-3xl font-medium leading-tight sm:text-4xl md:text-5xl">
           Explore the real VensaOS interface using representative data.
@@ -30,6 +31,7 @@ export function DemoPage() {
           </Link>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

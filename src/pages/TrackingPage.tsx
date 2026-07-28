@@ -22,6 +22,7 @@ import {
 } from '@/lib/api';
 import { formatTime, statusLabel, typeLabel } from '@/lib/format';
 import { BrandMark } from '@/components/Brand';
+import { SiteFooter } from '@/components/SiteFooter';
 import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
 import { ScreenshotUploader } from '@/components/ScreenshotUploader';
 import { Button, InlineError, Skeleton, Spinner, StatusBadge, Textarea } from '@/components/ui';
@@ -532,7 +533,7 @@ function Context({ label, value, wide }: { label: string; value: string; wide?: 
 
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-[100dvh] bg-canvas pb-[env(safe-area-inset-bottom)]">
+    <div className="flex min-h-[100dvh] flex-col bg-canvas pb-[env(safe-area-inset-bottom)]">
       <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/90">
         <div className="mx-auto flex min-h-14 max-w-3xl items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:min-h-16 sm:px-6">
           <div className="min-w-0">
@@ -546,7 +547,8 @@ function Frame({ children }: { children: React.ReactNode }) {
           </span>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">{children}</main>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-12">{children}</main>
+      <SiteFooter />
     </div>
   );
 }

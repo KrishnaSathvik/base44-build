@@ -22,5 +22,6 @@ test('routes public CTAs through /app and /demo with consistent wording', () => 
   expect(screen.getAllByText('FI-DEMO01').length).toBeGreaterThan(0);
   expect(screen.queryByText(/Coupon action freezes checkout/i)).not.toBeInTheDocument();
   expect(screen.queryByText('FI-7K2M9A')).not.toBeInTheDocument();
-  expect(screen.getByText('Device context')).toBeVisible();
+  expect(screen.getByText(/Device context/i)).toBeVisible();
+  expect(screen.getByText('Built for clear product decisions.')).toBeVisible();
 });

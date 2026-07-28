@@ -16,6 +16,7 @@ import { validateScreenshotSelection } from '@/lib/attachments';
 import { useNetworkState } from '@/app/NetworkStateProvider';
 import { PageMetadata } from '@/app/PageMetadata';
 import { BrandMark } from '@/components/Brand';
+import { SiteFooter } from '@/components/SiteFooter';
 import { ScreenshotUploader } from '@/components/ScreenshotUploader';
 import { Button, Checkbox, Field, InlineError, Input, Select, Skeleton, Textarea } from '@/components/ui';
 import { reporterTrackingUrl } from '@/lib/appUrls';
@@ -768,7 +769,7 @@ function ContextLine({ label, value }: { label: string; value?: string }) {
 
 function PortalFrame({ children, productName }: { children: ReactNode; productName?: string }) {
   return (
-    <div className="min-h-[100dvh] bg-canvas pb-[env(safe-area-inset-bottom)]">
+    <div className="flex min-h-[100dvh] flex-col bg-canvas pb-[env(safe-area-inset-bottom)]">
       <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/90">
         <div className="mx-auto flex min-h-14 max-w-4xl items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:min-h-16 sm:gap-4 sm:px-6">
           <div className="min-w-0 flex-1">
@@ -782,7 +783,8 @@ function PortalFrame({ children, productName }: { children: ReactNode; productNa
           </span>
         </div>
       </header>
-      <main className="px-4 pb-10 sm:px-6 sm:pb-16">{children}</main>
+      <main className="flex-1 px-4 pb-10 sm:px-6 sm:pb-16">{children}</main>
+      <SiteFooter />
     </div>
   );
 }
