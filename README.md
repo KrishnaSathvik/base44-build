@@ -16,15 +16,19 @@ Three people can describe the same bug differently; VensaOS classifies the repor
 | Interactive demo | https://vensaos.com/demo |
 | Public feedback board (TrailVerse Demo) | https://vensaos.com/f/trailverse-demo |
 | Owner workspace | https://vensaos.com/app |
+| Privacy | https://vensaos.com/privacy |
+| Terms | https://vensaos.com/terms |
+| Security | https://vensaos.com/security |
 
-`www.vensaos.com` permanently redirects to the apex domain.
+`www.vensaos.com` permanently redirects to the apex domain. Site footer links: Demo · Security · Privacy · Terms.
 
 ## What to try (judge walkthrough)
 
 1. **Landing** — Brand story, workspace preview, and the live-demo CTA.
-2. **`/demo`** — Representative TrailVerse walkthrough (read-only mocks): Overview briefing → exceptions Inbox → grouped Issues → resolve → reporter tracking / “Not fixed” reopen. Nothing here mutates a live board.
+2. **`/demo`** — Real owner chrome with representative TrailVerse fixture data and a guided walkthrough: Overview briefing → exceptions Inbox → grouped Issues → resolve → reporter tracking / “Not fixed” reopen. Interactive locally in the browser; nothing is saved to a live board.
 3. **Public portal** — Open `/f/trailverse-demo`, submit a bug with optional screenshots and device context. Save the **private tracking link** (or opt into email updates) on the confirmation screen — without that link (and without email consent), reporters cannot recover the report later.
 4. **Owner workspace** — Sign in at `/app`, open Overview / Inbox / Issues, review grouping and priority, resolve with a public note, then confirm the tracking page updates for the reporter.
+5. **Trust pages** — Skim `/security`, `/privacy`, and `/terms` for data handling, collection notices, and service terms.
 
 ## Product loop
 
