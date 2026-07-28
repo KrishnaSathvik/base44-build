@@ -1,8 +1,4 @@
-const reports = [
-  ['BUG REPORT', 'Checkout freezes after I add a coupon.'],
-  ['GENERAL', 'The discount box stopped responding on mobile.'],
-  ['BUG REPORT', 'Apply code does nothing in Safari.'],
-] as const;
+import { DEMO_CONVERGENCE_REPORTS, DEMO_ISSUE } from '@/pages/demo/demoData';
 
 export function ConvergenceVisual({ compact = false }: { compact?: boolean }) {
   if (compact) {
@@ -15,7 +11,7 @@ export function ConvergenceVisual({ compact = false }: { compact?: boolean }) {
         <div className="relative grid gap-4 p-5 lg:grid-cols-[1fr_.95fr] lg:gap-6">
           <div className="pointer-events-none absolute inset-y-5 left-1/2 hidden w-px border-l border-dashed border-line-strong lg:block" />
           <div className="space-y-3">
-            {reports.map(([type, body]) => (
+            {DEMO_CONVERGENCE_REPORTS.map(([type, body]) => (
               <div key={body} className="rounded-lg border border-line bg-canvas p-3.5">
                 <p className="fi-mono text-[9px] text-ink-faint">{type}</p>
                 <p className="mt-2 text-sm leading-5">{body}</p>
@@ -24,9 +20,11 @@ export function ConvergenceVisual({ compact = false }: { compact?: boolean }) {
           </div>
           <div className="self-center rounded-lg border border-ink bg-ink p-4 text-white">
             <p className="fi-mono text-[9px] text-white/55">GROUPED ISSUE</p>
-            <p className="fi-display mt-3 text-lg font-medium leading-tight">Coupon action freezes checkout</p>
+            <p className="fi-display mt-3 text-lg font-medium leading-tight">{DEMO_ISSUE.title}</p>
             <div className="mt-6 border-t border-white/20 pt-4">
-              <p className="fi-mono text-[9px] text-white/55">3 REPORTS · 3 AFFECTED</p>
+              <p className="fi-mono text-[9px] text-white/55">
+                {DEMO_ISSUE.reportCount} REPORTS · {DEMO_ISSUE.affectedUserCount} AFFECTED
+              </p>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/20">
                 <div className="h-full w-4/5 bg-critical" />
               </div>
@@ -36,7 +34,7 @@ export function ConvergenceVisual({ compact = false }: { compact?: boolean }) {
         </div>
         <div className="flex items-center justify-between border-t border-line px-5 py-3">
           <span className="fi-mono text-[9px] text-ink-faint">SOURCE PRESERVED</span>
-          <span className="fi-mono text-[9px] text-ink-faint">ISSUE FI-7K2M9A</span>
+          <span className="fi-mono text-[9px] text-ink-faint">ISSUE {DEMO_ISSUE.publicCode}</span>
         </div>
       </div>
     );
@@ -48,7 +46,7 @@ export function ConvergenceVisual({ compact = false }: { compact?: boolean }) {
       <p className="fi-eyebrow">Incoming reports</p>
       <div className="relative mt-8 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-[1fr_.88fr] sm:gap-8">
         <div className="space-y-3 sm:space-y-4">
-          {reports.map(([type, body]) => (
+          {DEMO_CONVERGENCE_REPORTS.map(([type, body]) => (
             <div key={body} className="report-slip rounded-lg border border-line bg-canvas p-3.5 sm:p-4">
               <p className="fi-mono text-[9px] text-ink-faint">{type}</p>
               <p className="mt-2 text-sm leading-5 sm:mt-3">{body}</p>
@@ -57,9 +55,11 @@ export function ConvergenceVisual({ compact = false }: { compact?: boolean }) {
         </div>
         <div className="issue-result self-center rounded-lg border border-ink bg-ink p-4 text-white sm:p-5">
           <p className="fi-mono text-[9px] text-white/55">GROUPED ISSUE</p>
-          <p className="fi-display mt-3 text-lg font-medium leading-tight sm:text-xl">Coupon action freezes checkout</p>
+          <p className="fi-display mt-3 text-lg font-medium leading-tight sm:text-xl">{DEMO_ISSUE.title}</p>
           <div className="mt-6 border-t border-white/20 pt-4 sm:mt-8">
-            <p className="fi-mono text-[9px] text-white/55">3 REPORTS · 3 AFFECTED</p>
+            <p className="fi-mono text-[9px] text-white/55">
+              {DEMO_ISSUE.reportCount} REPORTS · {DEMO_ISSUE.affectedUserCount} AFFECTED
+            </p>
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/20">
               <div className="h-full w-4/5 bg-critical" />
             </div>
@@ -69,7 +69,7 @@ export function ConvergenceVisual({ compact = false }: { compact?: boolean }) {
       </div>
       <div className="absolute bottom-4 left-4 right-4 flex justify-between gap-3 sm:bottom-8 sm:left-8 sm:right-8">
         <span className="fi-mono text-[9px] text-ink-faint">SOURCE PRESERVED</span>
-        <span className="fi-mono shrink-0 text-[9px] text-ink-faint">ISSUE FI-7K2M9A</span>
+        <span className="fi-mono shrink-0 text-[9px] text-ink-faint">ISSUE {DEMO_ISSUE.publicCode}</span>
       </div>
     </div>
   );

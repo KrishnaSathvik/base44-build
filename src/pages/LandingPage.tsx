@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Check, ScanSearch } from 'lucide-react';
+import { ArrowRight, Check, ImagePlus, ScanSearch } from 'lucide-react';
 import { Brand, BrandMark } from '@/components/Brand';
 import { ConvergenceVisual } from '@/components/ConvergenceVisual';
+import {
+  DEMO_ISSUE,
+  DEMO_PRODUCT,
+  DEMO_REPORTS,
+} from '@/pages/demo/demoData';
 
 export function LandingPage() {
   return (
@@ -40,7 +45,7 @@ export function LandingPage() {
             <p className="fi-eyebrow">Owner workspace</p>
             <h2 className="fi-display mt-4 max-w-2xl text-3xl font-medium leading-tight sm:text-4xl">See what your team receives</h2>
             <p className="mt-4 max-w-xl text-[15px] leading-7 text-ink-muted">
-              Inbox on the left, grouped issue in the center, AI understanding, priority explanation, source evidence, and reporter activity—together in one working surface.
+              Overview briefing, exceptions Inbox, and Issues with AI understanding, priority explanation, source evidence, and reporter activity—together in one working surface.
             </p>
             <WorkspacePreview />
           </div>
@@ -83,19 +88,19 @@ export function LandingPage() {
             <div className="border-y border-line bg-surface">
               <div className="flex items-center justify-between border-b border-line px-6 py-4">
                 <div>
-                  <p className="fi-mono text-[10px] text-ink-faint">FI-7K2M9A</p>
-                  <p className="mt-1 font-medium">Coupon action freezes checkout</p>
+                  <p className="fi-mono text-[10px] text-ink-faint">{DEMO_ISSUE.publicCode}</p>
+                  <p className="mt-1 font-medium">{DEMO_ISSUE.title}</p>
                 </div>
                 <span className="fi-mono rounded bg-warning-soft px-2 py-1 text-[10px] text-warning">HIGH</span>
               </div>
               <div className="p-6">
                 <p className="fi-eyebrow">Original evidence</p>
                 <blockquote className="mt-4 border-l-2 border-critical pl-4 text-lg leading-7">
-                  “Apply code does nothing in Safari. I had to restart checkout.”
+                  “{DEMO_REPORTS[0].body}”
                 </blockquote>
                 <div className="mt-8 grid grid-cols-3 gap-2 border-y border-line py-4">
-                  <Metric value="3" label="Reports" />
-                  <Metric value="3" label="Affected" />
+                  <Metric value={String(DEMO_ISSUE.reportCount)} label="Reports" />
+                  <Metric value={String(DEMO_ISSUE.affectedUserCount)} label="Affected" />
                   <Metric value="Today" label="Last seen" />
                 </div>
                 <div className="mt-6 flex items-center gap-3 text-sm text-ink-muted">
@@ -125,32 +130,7 @@ export function LandingPage() {
                 ))}
               </ul>
             </div>
-            <div className="mx-auto w-full max-w-md rounded-xl border border-line bg-surface p-6 shadow-sheet">
-              <div className="flex items-center gap-3 border-b border-line pb-5">
-                <BrandMark className="h-9 w-9" />
-                <div>
-                  <p className="font-medium">Share feedback</p>
-                  <p className="text-xs text-ink-faint">Usually less than a minute</p>
-                </div>
-              </div>
-              <div className="mt-5 space-y-4" aria-hidden="true">
-                <div>
-                  <p className="text-xs text-ink-faint">Feedback type</p>
-                  <div className="mt-1.5 flex min-h-11 items-center rounded-md border border-line px-3.5 text-sm">
-                    Report a problem
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-ink-faint">Describe the problem</p>
-                  <div className="mt-1.5 min-h-[88px] rounded-md border border-line px-3.5 py-3 text-sm text-ink-muted">
-                    Tell us what you were doing and where things went wrong…
-                  </div>
-                </div>
-                <div className="inline-flex min-h-11 items-center gap-2 rounded-md bg-ink px-4 text-sm font-medium text-white">
-                  Send feedback <ArrowRight className="h-4 w-4" />
-                </div>
-              </div>
-            </div>
+            <FormPreview />
           </div>
         </section>
 
@@ -174,11 +154,62 @@ export function LandingPage() {
   );
 }
 
+function FormPreview() {
+  return (
+    <div className="mx-auto w-full max-w-md rounded-xl border border-line bg-surface p-6 shadow-sheet">
+      <div className="flex items-center gap-3 border-b border-line pb-5">
+        <BrandMark className="h-9 w-9" />
+        <div>
+          <p className="font-medium">Share feedback</p>
+          <p className="text-xs text-ink-faint">Usually less than a minute</p>
+        </div>
+      </div>
+      <div className="mt-5 space-y-4" aria-hidden="true">
+        <div>
+          <p className="text-xs text-ink-faint">Feedback type</p>
+          <div className="mt-1.5 flex min-h-11 items-center rounded-md border border-line px-3.5 text-sm">
+            Report a problem
+          </div>
+        </div>
+        <div>
+          <p className="text-xs text-ink-faint">Describe the problem</p>
+          <div className="mt-1.5 min-h-[72px] rounded-md border border-line px-3.5 py-3 text-sm text-ink-muted">
+            Tell us what you were doing and where things went wrong…
+          </div>
+        </div>
+        <div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-ink-faint">What did you expect?</p>
+            <p className="text-xs text-ink-faint">Optional</p>
+          </div>
+          <div className="mt-1.5 min-h-11 rounded-md border border-line px-3.5 py-3 text-sm text-ink-muted">
+            Newest message remains visible.
+          </div>
+        </div>
+        <div>
+          <p className="text-xs text-ink-faint">Screenshots</p>
+          <div className="mt-1.5 flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-md border border-dashed border-line px-3 py-4 text-center">
+            <ImagePlus className="h-4 w-4 text-ink-faint" />
+            <p className="text-xs text-ink-muted">PNG, JPEG, or WebP · up to 5</p>
+          </div>
+        </div>
+        <div className="rounded-md border border-line bg-canvas px-3 py-3">
+          <p className="fi-mono text-[9px] uppercase tracking-wider text-ink-faint">Device context</p>
+          <p className="mt-2 text-[11px] leading-5 text-ink-muted">Safari · iPhone · 390×844 · no fingerprinting</p>
+        </div>
+        <div className="inline-flex min-h-11 items-center gap-2 rounded-md bg-ink px-4 text-sm font-medium text-white">
+          Send feedback <ArrowRight className="h-4 w-4" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function WorkspacePreview() {
   return (
     <div className="mt-10 overflow-hidden rounded-xl border border-line bg-canvas shadow-sheet" aria-hidden="true">
       <div className="flex h-11 items-center border-b border-line bg-surface px-4">
-        <span className="fi-mono text-[10px] text-ink-faint">VensaOS workspace · TrailVerse</span>
+        <span className="fi-mono text-[10px] text-ink-faint">VensaOS workspace · {DEMO_PRODUCT}</span>
       </div>
       <div className="grid lg:grid-cols-[200px_240px_minmax(0,1fr)]">
         <aside className="hidden border-r border-line bg-surface p-3 lg:block">
@@ -192,46 +223,42 @@ function WorkspacePreview() {
           ))}
         </aside>
         <div className="hidden border-r border-line bg-surface sm:block">
-          <p className="border-b border-line px-4 py-3 fi-eyebrow">Inbox</p>
-          {[
-            ['BUG', 'Composer covers newest message'],
-            ['BUG', 'Keyboard scrolls above reply'],
-            ['BUG', 'Bubble hidden behind composer'],
-          ].map(([type, title], index) => (
-            <div key={title} className={`border-b border-line px-4 py-3 ${index === 0 ? 'bg-canvas' : ''}`}>
-              <p className="fi-mono text-[9px] text-ink-faint">{type} · GROUPED</p>
-              <p className="mt-1 text-xs leading-5">{title}</p>
+          <p className="border-b border-line px-4 py-3 fi-eyebrow">Related reports</p>
+          {DEMO_REPORTS.map((report, index) => (
+            <div key={report.id} className={`border-b border-line px-4 py-3 ${index === 0 ? 'bg-canvas' : ''}`}>
+              <p className="fi-mono text-[9px] text-ink-faint">BUG · GROUPED</p>
+              <p className="mt-1 text-xs leading-5">{report.body}</p>
             </div>
           ))}
         </div>
         <div className="min-w-0 bg-canvas p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="fi-mono text-[10px] text-ink-faint">FI-DEMO01</span>
+            <span className="fi-mono text-[10px] text-ink-faint">{DEMO_ISSUE.publicCode}</span>
             <span className="fi-mono rounded bg-warning-soft px-2 py-0.5 text-[9px] text-warning">HIGH</span>
             <span className="fi-mono rounded bg-info-soft px-2 py-0.5 text-[9px] text-info">TESTING</span>
           </div>
-          <h3 className="fi-display mt-3 text-2xl font-medium leading-tight">Mobile chat composer obscures new messages</h3>
+          <h3 className="fi-display mt-3 text-2xl font-medium leading-tight">{DEMO_ISSUE.title}</h3>
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
             <div className="rounded-lg border border-line bg-surface p-4">
               <p className="fi-eyebrow">How VensaOS understood this</p>
               <ul className="mt-3 space-y-1 text-xs leading-5 text-ink-muted">
-                <li>Category: UI UX · Product area: Mobile chat</li>
-                <li>Reproducibility: confirmed · Core workflow: blocked</li>
-                <li>3 related reports connected automatically</li>
+                <li>Category: {DEMO_ISSUE.category} · Product area: {DEMO_ISSUE.productArea}</li>
+                <li>Reproducibility: {DEMO_ISSUE.reproducibility} · Core workflow: blocked</li>
+                <li>{DEMO_ISSUE.reportCount} related reports connected automatically</li>
               </ul>
             </div>
             <div className="rounded-lg border border-line bg-surface p-4">
               <p className="fi-eyebrow">Why this priority</p>
-              <p className="fi-display mt-2 text-2xl font-medium">82</p>
-              <p className="mt-2 text-xs leading-5 text-ink-muted">Core conversation workflow blocked · Three related reports · Repeated recent activity</p>
+              <p className="fi-display mt-2 text-2xl font-medium">{DEMO_ISSUE.priorityScore}</p>
+              <p className="mt-2 text-xs leading-5 text-ink-muted">{DEMO_ISSUE.priorityReasons.join(' · ')}</p>
             </div>
           </div>
           <div className="mt-4 rounded-lg border border-line bg-surface p-4">
             <p className="fi-eyebrow">Source evidence</p>
             <blockquote className="mt-3 border-l-2 border-critical pl-3 text-sm leading-6">
-              “Chat composer covers the newest message on iPhone.”
+              “{DEMO_REPORTS[0].body}”
             </blockquote>
-            <p className="fi-mono mt-3 text-[9px] text-ink-faint">iPhone · Safari · Screenshot attached</p>
+            <p className="fi-mono mt-3 text-[9px] text-ink-faint">{DEMO_REPORTS[0].device} · Screenshot attached</p>
           </div>
           <div className="mt-4 rounded-lg border border-line bg-surface p-4">
             <p className="fi-eyebrow">Reporter activity</p>

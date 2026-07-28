@@ -9,12 +9,19 @@ test('interactive demo is honestly labeled and exposes the workspace walkthrough
   expect(screen.getByRole('heading', { name: /Explore the real VensaOS interface/i })).toBeVisible();
   expect(screen.getByText(/Nothing you do here affects a live workspace/i)).toBeVisible();
   expect(screen.getByRole('link', { name: /Open workspace/i })).toHaveAttribute('href', '/app');
-  expect(screen.getByText('How VensaOS understood this')).toBeVisible();
+  expect(screen.getByText(/1 issue needs attention/i)).toBeVisible();
+  expect(screen.getByText('Live snapshot')).toBeVisible();
 
   fireEvent.click(screen.getAllByRole('button', { name: /Open the grouped issue/i })[0]!);
   expect(screen.getByText(/Base44 managed InvokeLLM/i)).toBeVisible();
+  expect(screen.getByText('How VensaOS understood this')).toBeVisible();
 
-  fireEvent.click(screen.getByRole('button', { name: /Review the possible duplicate/i }));
+  fireEvent.click(screen.getByRole('button', { name: /^Review the possible duplicate$/i }));
+  expect(screen.getByRole('heading', { name: 'Inbox' })).toBeVisible();
+  expect(screen.getByText(/Everyday unreviewed work lives in Issues/i)).toBeVisible();
+  expect(screen.getAllByText('Possible duplicate').length).toBeGreaterThan(0);
+
+  fireEvent.click(screen.getByRole('button', { name: /Review suggestion/i }));
   expect(screen.getByText(/Owner review required/i)).toBeVisible();
 
   fireEvent.click(screen.getByRole('button', { name: /See how .Not fixed. reopens it/i }));

@@ -17,4 +17,10 @@ test('routes public CTAs through /app and /demo with consistent wording', () => 
   for (const step of ['Collect', 'Understand', 'Group', 'Prioritize', 'Resolve', 'Close the loop']) {
     expect(screen.getByRole('heading', { name: step })).toBeVisible();
   }
+  expect(screen.getAllByText('Mobile chat composer obscures new messages').length).toBeGreaterThan(0);
+  expect(screen.getAllByText(/Chat composer covers the newest message on iPhone/i).length).toBeGreaterThan(0);
+  expect(screen.getAllByText('FI-DEMO01').length).toBeGreaterThan(0);
+  expect(screen.queryByText(/Coupon action freezes checkout/i)).not.toBeInTheDocument();
+  expect(screen.queryByText('FI-7K2M9A')).not.toBeInTheDocument();
+  expect(screen.getByText('Device context')).toBeVisible();
 });

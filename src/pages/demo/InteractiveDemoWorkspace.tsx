@@ -1,16 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   Archive,
+  CheckCircle2,
   Inbox,
   LayoutGrid,
+  Lock,
+  Radio,
   SquareKanban,
+  TriangleAlert,
 } from 'lucide-react';
 import { Badge, Button, SeverityBadge, StatusBadge, cn } from '@/components/ui';
 import {
   DEMO_ACTIVITY,
   DEMO_DUPLICATE,
+  DEMO_ENVIRONMENT,
   DEMO_ISSUE,
   DEMO_MESSAGES,
+  DEMO_PRODUCT,
   DEMO_REPORTS,
   DEMO_STEPS,
   type DemoView,
@@ -23,8 +29,10 @@ const NAV = [
   { id: 'reporter' as const, label: 'Resolved', icon: Archive },
 ];
 
+const INBOX_FILTERS = ['All attention', 'Possible duplicates', 'Processing failed', 'Needs information', 'Reporter replied'] as const;
+
 export function InteractiveDemoWorkspace() {
-  const [view, setView] = useState<DemoView>('inbox');
+  const [view, setView] = useState<DemoView>('overview');
   const [step, setStep] = useState(1);
   const [resolved, setResolved] = useState(false);
   const [notFixed, setNotFixed] = useState(false);
@@ -63,8 +71,8 @@ export function InteractiveDemoWorkspace() {
   const nextStep = stepIndex < DEMO_STEPS.length - 1 ? DEMO_STEPS[stepIndex + 1] : null;
 
   const jumpActions = [
-    { label: 'Open the grouped issue', run: () => go('issue', 2) },
-    { label: 'Review the possible duplicate', run: () => go('duplicate', 3) },
+    { label: 'Open the grouped issue', run: () => go('issue', 3) },
+    { label: 'Review the possible duplicate', run: () => go('inbox', 2) },
     { label: 'See the reporter’s view', run: () => go('reporter', 5) },
     { label: 'See why this priority is high', run: () => go('priority', 4) },
     { label: 'See how “Not fixed” reopens it', run: simulateNotFixed },
@@ -75,7 +83,6 @@ export function InteractiveDemoWorkspace() {
       <div className="rounded-xl border border-line bg-surface p-4 sm:p-5">
         <p className="fi-eyebrow">Guided walkthrough</p>
 
-        {/* Mobile: compact stepper */}
         <div className="mt-4 md:hidden">
           <div className="flex items-center justify-between gap-2" role="tablist" aria-label="Demo steps">
             {DEMO_STEPS.map((item) => (
@@ -139,7 +146,6 @@ export function InteractiveDemoWorkspace() {
           </label>
         </div>
 
-        {/* Tablet / desktop: full step cards + action buttons */}
         <div className="mt-4 hidden space-y-4 md:block">
           <ol className="grid gap-2 md:grid-cols-2 lg:grid-cols-5">
             {DEMO_STEPS.map((item) => (
@@ -180,7 +186,7 @@ export function InteractiveDemoWorkspace() {
         <div className="flex min-h-14 flex-col justify-center gap-1 border-b border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-0">
           <div>
             <p className="text-sm font-medium">VensaOS workspace</p>
-            <p className="fi-mono text-[9px] uppercase tracking-wider text-ink-faint">TrailVerse Demo · read-only</p>
+            <p className="fi-mono text-[9px] uppercase tracking-wider text-ink-faint">{DEMO_PRODUCT} · read-only</p>
           </div>
           {toast ? <p role="status" className="max-w-full text-xs text-ink-muted sm:max-w-sm sm:text-right">{toast}</p> : null}
         </div>
@@ -188,15 +194,20 @@ export function InteractiveDemoWorkspace() {
           <aside className="hidden border-r border-line bg-surface p-3 lg:block">
             {NAV.map(({ id, label, icon: Icon }) => {
               const active =
-                (id === 'issue' && (view === 'issue' || view === 'duplicate' || view === 'priority')) ||
+                (id === 'issue' && (view === 'issue' || view === 'priority')) ||
                 (id === 'overview' && view === 'overview') ||
-                (id === 'inbox' && view === 'inbox') ||
+                (id === 'inbox' && (view === 'inbox' || view === 'duplicate')) ||
                 (id === 'reporter' && (view === 'reporter' || view === 'reopen'));
               return (
                 <button
                   key={id}
                   type="button"
-                  onClick={() => go(id === 'reporter' ? 'reporter' : id, id === 'inbox' ? 1 : id === 'issue' ? 2 : id === 'reporter' ? 5 : undefined)}
+                  onClick={() =>
+                    go(
+                      id === 'reporter' ? 'reporter' : id,
+                      id === 'overview' ? 1 : id === 'inbox' ? 2 : id === 'issue' ? 3 : id === 'reporter' ? 5 : undefined,
+                    )
+                  }
                   className={cn(
                     'mb-1 flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm transition-colors',
                     active ? 'bg-ink text-white' : 'text-ink-muted hover:bg-surface-subtle hover:text-ink',
@@ -216,27 +227,43 @@ export function InteractiveDemoWorkspace() {
                   key={id}
                   type="button"
                   onClick={() => go(id === 'reporter' ? 'reporter' : id)}
-                  className={cn('min-h-10 shrink-0 rounded-md px-3 text-xs', view === id || (id === 'issue' && ['issue', 'duplicate', 'priority'].includes(view)) ? 'bg-ink text-white' : 'text-ink-muted')}
+                  className={cn(
+                    'min-h-10 shrink-0 rounded-md px-3 text-xs',
+                    view === id ||
+                      (id === 'issue' && ['issue', 'priority'].includes(view)) ||
+                      (id === 'inbox' && ['inbox', 'duplicate'].includes(view))
+                      ? 'bg-ink text-white'
+                      : 'text-ink-muted',
+                  )}
                 >
                   {label}
                 </button>
               ))}
             </div>
-            {view === 'overview' ? <OverviewPane onOpenIssue={() => go('issue', 2)} /> : null}
-            {view === 'inbox' ? <InboxPane onOpenIssue={() => go('issue', 2)} /> : null}
+            {view === 'overview' ? <OverviewPane onOpenIssue={() => go('issue', 3)} /> : null}
+            {view === 'inbox' ? (
+              <InboxPane
+                onOpenIssue={() => go('issue', 3)}
+                onReviewDuplicate={() => go('duplicate', 2)}
+              />
+            ) : null}
             {view === 'issue' || view === 'priority' ? (
               <IssuePane
                 highlightPriority={view === 'priority'}
                 resolved={resolved}
                 notFixed={notFixed}
                 onResolve={simulateResolve}
-                onDuplicate={() => go('duplicate', 3)}
+                onDuplicate={() => go('duplicate', 2)}
                 onReporter={() => go('reporter', 5)}
               />
             ) : null}
-            {view === 'duplicate' ? <DuplicatePane onBack={() => go('issue', 3)} /> : null}
+            {view === 'duplicate' ? <DuplicatePane onBack={() => go('inbox', 2)} /> : null}
             {view === 'reporter' || view === 'reopen' ? (
-              <ReporterPane resolved={resolved && !notFixed} onNotFixed={simulateNotFixed} onConfirm={() => setToast('Reporter confirmed the fix (demo only).')} />
+              <ReporterPane
+                resolved={resolved && !notFixed}
+                onNotFixed={simulateNotFixed}
+                onConfirm={() => setToast('Reporter confirmed the fix (demo only).')}
+              />
             ) : null}
           </div>
         </div>
@@ -248,48 +275,132 @@ export function InteractiveDemoWorkspace() {
 function OverviewPane({ onOpenIssue }: { onOpenIssue: () => void }) {
   return (
     <div className="p-6 sm:p-8">
-      <p className="fi-eyebrow">Friday briefing</p>
-      <h2 className="fi-display mt-3 text-3xl font-medium">1 issue needs attention.</h2>
-      <p className="mt-2 text-sm text-ink-muted">Highest-impact work in TrailVerse Demo.</p>
-      <button type="button" onClick={onOpenIssue} className="mt-8 block w-full border-t border-line py-5 text-left hover:bg-surface/60 sm:px-2">
-        <div className="flex items-center gap-3">
-          <span className="fi-mono text-[10px] text-ink-faint">{DEMO_ISSUE.publicCode}</span>
-          <SeverityBadge severity={DEMO_ISSUE.severity} label="High" />
+      <div className="flex flex-col gap-4 border-b border-line pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="fi-eyebrow">Friday briefing</p>
+          <h2 className="fi-display mt-3 text-3xl font-medium">1 issue needs attention.</h2>
+          <p className="mt-2 text-sm text-ink-muted">The highest-impact work in {DEMO_PRODUCT}, ordered for review.</p>
         </div>
-        <p className="mt-2 text-[15px] font-medium">{DEMO_ISSUE.title}</p>
-        <p className="fi-mono mt-2 text-[9px] uppercase text-ink-faint">{DEMO_ISSUE.reportCount} reports · priority {DEMO_ISSUE.priorityScore}</p>
-      </button>
+        <Button type="button" variant="secondary" className="w-full shrink-0 sm:w-auto" disabled title="Demo only">
+          Copy feedback link
+        </Button>
+      </div>
+
+      <section className="border-b border-line py-8">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="fi-display text-xl font-medium">Needs attention</h3>
+          <button type="button" onClick={onOpenIssue} className="text-sm text-ink-muted hover:text-ink">
+            All issues →
+          </button>
+        </div>
+        <button type="button" onClick={onOpenIssue} className="mt-5 block w-full border-t border-line py-5 text-left hover:bg-surface/60 sm:px-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="fi-mono text-[10px] text-ink-faint">{DEMO_ISSUE.publicCode}</span>
+            <SeverityBadge severity={DEMO_ISSUE.severity} label="High" />
+          </div>
+          <p className="mt-2 text-[15px] font-medium">{DEMO_ISSUE.title}</p>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="fi-mono text-[9px] uppercase text-ink-faint">
+              {DEMO_ISSUE.reportCount} reports · {DEMO_ISSUE.affectedUserCount} affected · seen today
+            </p>
+            <span className="fi-display text-xl font-medium">
+              {DEMO_ISSUE.priorityScore}
+              <span className="ml-1 text-xs text-ink-faint">priority</span>
+            </span>
+          </div>
+        </button>
+      </section>
+
+      <section className="pt-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="fi-display text-xl font-medium">Live snapshot</h3>
+          <span className="inline-flex items-center gap-2 text-xs text-ink-muted">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/60 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+            </span>
+            Live
+          </span>
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <SnapshotCard icon={<Radio className="h-4 w-4" />} title="Connected" detail="New reports refresh automatically" />
+          <SnapshotCard icon={<TriangleAlert className="h-4 w-4" />} title="1 open" detail="Across your current project" />
+          <SnapshotCard icon={<CheckCircle2 className="h-4 w-4" />} title="0 resolved" detail="Closed with public notes" />
+        </div>
+      </section>
     </div>
   );
 }
 
-function InboxPane({ onOpenIssue }: { onOpenIssue: () => void }) {
+function SnapshotCard({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
   return (
-    <div className="grid min-h-[640px] lg:grid-cols-[300px_minmax(0,1fr)]">
-      <div className="border-b border-line lg:border-b-0 lg:border-r">
-        <p className="border-b border-line px-4 py-3 fi-eyebrow">Incoming reports</p>
-        {DEMO_REPORTS.map((report, index) => (
-          <button
-            key={report.id}
-            type="button"
-            onClick={onOpenIssue}
-            className={cn('block w-full border-b border-line px-4 py-4 text-left', index === 0 ? 'bg-canvas' : 'hover:bg-surface')}
+    <div className="rounded-lg border border-line bg-surface p-4">
+      <div className="flex items-center gap-2 text-ink-muted">{icon}<span className="text-sm font-medium text-ink">{title}</span></div>
+      <p className="mt-2 text-xs leading-5 text-ink-muted">{detail}</p>
+    </div>
+  );
+}
+
+function InboxPane({
+  onOpenIssue,
+  onReviewDuplicate,
+}: {
+  onOpenIssue: () => void;
+  onReviewDuplicate: () => void;
+}) {
+  return (
+    <div>
+      <header className="border-b border-line px-5 pb-6 pt-6 sm:px-7">
+        <p className="fi-eyebrow">Exceptions</p>
+        <h2 className="fi-display mt-3 text-3xl font-medium">Inbox</h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          Failed processing, duplicate matches, and reporter replies that need a decision. Everyday unreviewed work lives in Issues.
+        </p>
+      </header>
+      <div className="flex gap-2 overflow-x-auto border-b border-line px-5 py-4 sm:px-7" aria-label="Inbox filters">
+        {INBOX_FILTERS.map((label, index) => (
+          <span
+            key={label}
+            className={cn(
+              'inline-flex min-h-10 shrink-0 items-center rounded-md px-3 text-xs',
+              index === 0 ? 'bg-ink text-white' : 'text-ink-muted',
+            )}
           >
-            <p className="fi-mono text-[9px] text-ink-faint">{report.type} · {report.grouping}</p>
-            <p className="mt-2 text-sm leading-5">{report.body}</p>
-          </button>
+            {label}
+          </span>
         ))}
       </div>
-      <div className="p-6">
-        <p className="fi-eyebrow">Selected report</p>
-        <blockquote className="mt-4 border-l-2 border-critical pl-4 text-lg leading-7">{DEMO_REPORTS[0].body}</blockquote>
-        <div className="mt-6 rounded-lg bg-surface-subtle p-4">
-          <p className="fi-eyebrow">How VensaOS understood this</p>
-          <ul className="mt-3 space-y-1 text-xs leading-5 text-ink-muted">
-            {DEMO_ISSUE.understanding.map((line) => <li key={line}>{line}</li>)}
-          </ul>
+      <div className="grid min-h-[480px] lg:grid-cols-[300px_minmax(0,1fr)]">
+        <div className="border-b border-line lg:border-b-0 lg:border-r">
+          <button
+            type="button"
+            onClick={onReviewDuplicate}
+            className="block w-full border-b border-line bg-canvas px-4 py-4 text-left"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="fi-mono text-[9px] text-ink-faint">BUG · TODAY</p>
+              <Badge tone="warning">Possible duplicate</Badge>
+            </div>
+            <p className="mt-3 line-clamp-2 text-sm font-medium">{DEMO_DUPLICATE.title}</p>
+            <p className="fi-mono mt-3 text-[9px] text-ink-faint">{DEMO_DUPLICATE.publicCode}</p>
+          </button>
+          <p className="px-4 py-8 text-sm text-ink-muted">
+            Inbox is otherwise clear. New unreviewed issues appear in Issues.
+          </p>
         </div>
-        <Button type="button" className="mt-6" onClick={onOpenIssue}>Open the grouped issue</Button>
+        <div className="p-6 sm:p-7">
+          <Badge tone="warning">Possible duplicate</Badge>
+          <h3 className="fi-display mt-4 text-2xl font-medium leading-tight">{DEMO_DUPLICATE.title}</h3>
+          <blockquote className="mt-5 border-l-2 border-critical pl-4 text-base leading-7">{DEMO_DUPLICATE.body}</blockquote>
+          <p className="mt-4 text-sm leading-6 text-ink-muted">{DEMO_DUPLICATE.reason}</p>
+          <p className="fi-mono mt-3 text-[10px] text-ink-faint">{DEMO_DUPLICATE.confidence}% confidence · suggested against {DEMO_ISSUE.publicCode}</p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Button type="button" onClick={onReviewDuplicate}>Review suggestion</Button>
+            <Button type="button" variant="secondary" onClick={onOpenIssue}>
+              Review in Issues
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -427,7 +538,7 @@ function IssuePane({
 function DuplicatePane({ onBack }: { onBack: () => void }) {
   return (
     <div className="p-6 sm:p-8">
-      <p className="fi-eyebrow">Possible duplicate</p>
+      <p className="fi-eyebrow">Exceptions · Possible duplicate</p>
       <h2 className="fi-display mt-3 text-3xl font-medium">Owner review required</h2>
       <p className="mt-3 max-w-xl text-sm leading-6 text-ink-muted">
         Medium-confidence relationships stay as suggestions. Automatic grouping only happens when evidence is strong.
@@ -447,7 +558,7 @@ function DuplicatePane({ onBack }: { onBack: () => void }) {
       <div className="mt-6 flex flex-wrap gap-2">
         <Button type="button" disabled title="Disabled in demo">Merge as duplicate</Button>
         <Button type="button" variant="secondary" disabled title="Disabled in demo">Keep separate</Button>
-        <Button type="button" variant="ghost" onClick={onBack}>Back to grouped issue</Button>
+        <Button type="button" variant="ghost" onClick={onBack}>Back to Inbox</Button>
       </div>
     </div>
   );
@@ -463,24 +574,62 @@ function ReporterPane({
   onConfirm: () => void;
 }) {
   return (
-    <div className="mx-auto max-w-lg p-6 sm:p-10">
-      <p className="fi-eyebrow">Reporter tracking</p>
-      <h2 className="fi-display mt-3 text-3xl font-medium">
-        {resolved ? 'We believe this is fixed' : 'Your report is being investigated'}
-      </h2>
-      <p className="mt-3 text-sm leading-6 text-ink-muted">
-        Private tracking page for the report linked to {DEMO_ISSUE.publicCode}. This demo view mirrors what reporters see after an owner update.
-      </p>
-      <div className="mt-8 rounded-xl border border-line bg-surface p-5">
-        <StatusBadge status={resolved ? 'resolved' : 'testing'} label={resolved ? 'Resolved' : 'Testing'} />
+    <div className="mx-auto max-w-2xl p-6 sm:p-10">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line pb-6">
+        <div>
+          <p className="text-sm font-medium">Track your feedback</p>
+          <p className="mt-1 text-xs text-ink-muted">Updates are securely provided through VensaOS.</p>
+        </div>
+        <p className="fi-mono text-[9px] uppercase tracking-wider text-ink-faint">Demo · read-only</p>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-line bg-surface p-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="fi-mono text-[10px] text-ink-faint">{DEMO_ISSUE.publicCode}</span>
+          <StatusBadge status={resolved ? 'resolved' : 'testing'} label={resolved ? 'Resolved' : 'Testing'} />
+        </div>
         <p className="mt-4 text-sm leading-6">
           {resolved
-            ? 'We raised the composer above the keyboard safe area so new messages stay visible.'
-            : 'The team is validating a fix for the mobile chat composer covering new messages.'}
+            ? 'We believe this is fixed. We raised the composer above the keyboard safe area so new messages stay visible.'
+            : 'Your feedback was received. The team is validating a fix for the mobile chat composer covering new messages.'}
         </p>
+        <div className="mt-5 border-t border-line pt-4">
+          <p className="fi-eyebrow">Public activity</p>
+          <p className="mt-2 text-sm text-ink-muted">
+            {resolved ? 'Owner published a resolution note · 35 min ago' : 'Your feedback was received · Yesterday'}
+          </p>
+        </div>
       </div>
+
+      <h2 className="fi-display mt-8 text-2xl font-medium leading-tight sm:text-3xl">{DEMO_ISSUE.title}</h2>
+      <p className="mt-3 flex items-center gap-2 text-xs text-ink-muted">
+        <Lock className="h-3.5 w-3.5" /> Only someone with this private link can view this report and its evidence.
+      </p>
+
+      <section className="mt-8">
+        <p className="fi-eyebrow">Original report</p>
+        <blockquote className="mt-3 rounded-lg border border-line bg-surface px-4 py-3 text-sm leading-6">
+          {DEMO_REPORTS[0].body}
+        </blockquote>
+        <p className="fi-mono mt-2 text-[9px] text-ink-faint">BUG · Yesterday</p>
+      </section>
+
+      <section className="mt-8">
+        <p className="fi-eyebrow">Environment</p>
+        <div className="mt-3 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
+          <EnvCell label="Browser" value={DEMO_ENVIRONMENT.browser} />
+          <EnvCell label="Device" value={DEMO_ENVIRONMENT.device} />
+          <EnvCell label="Screen" value={DEMO_ENVIRONMENT.screen} />
+          <EnvCell label="Viewport" value={DEMO_ENVIRONMENT.viewport} />
+          <div className="bg-surface p-3 sm:col-span-2">
+            <p className="fi-mono text-[9px] uppercase text-ink-faint">Page</p>
+            <p className="mt-1 text-xs text-ink-muted">{DEMO_ENVIRONMENT.page}</p>
+          </div>
+        </div>
+      </section>
+
       {resolved ? (
-        <div className="mt-6 space-y-3">
+        <div className="mt-8 space-y-3 border-t border-line pt-6">
           <p className="text-sm font-medium">Did this fix the problem?</p>
           <div className="flex flex-wrap gap-2">
             <Button type="button" onClick={onConfirm}>Yes, it’s fixed</Button>
@@ -488,10 +637,19 @@ function ReporterPane({
           </div>
         </div>
       ) : (
-        <Button type="button" className="mt-6" variant="secondary" onClick={onNotFixed}>
+        <Button type="button" className="mt-8" variant="secondary" onClick={onNotFixed}>
           Jump to “Not fixed” reopen
         </Button>
       )}
+    </div>
+  );
+}
+
+function EnvCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-surface p-3">
+      <p className="fi-mono text-[9px] uppercase text-ink-faint">{label}</p>
+      <p className="mt-1 text-xs text-ink-muted">{value}</p>
     </div>
   );
 }

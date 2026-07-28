@@ -14,7 +14,7 @@ export function ConvergenceDemo() {
       <section className="p-6">
         <p className="fi-eyebrow">1 normalized issue</p>
         <div className="mt-4 border-t-2 border-ink pt-5">
-          <p className="fi-mono text-[10px] text-ink-faint">FI-7K2M9A · HIGH</p>
+          <p className="fi-mono text-[10px] text-ink-faint">FI-DEMO01 · HIGH</p>
           <h2 className="fi-display mt-3 text-3xl font-medium">Mobile chat composer obscures new messages</h2>
           <p className="mt-4 leading-7 text-ink-muted">The on-screen keyboard and fixed composer can hide the latest conversation content on mobile viewports.</p>
           <div className="mt-6 rounded-lg bg-surface-subtle p-4">

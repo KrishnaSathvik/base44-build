@@ -1,11 +1,13 @@
 export type DemoView = 'overview' | 'inbox' | 'issue' | 'duplicate' | 'priority' | 'reporter' | 'reopen';
 
+export const DEMO_PRODUCT = 'TrailVerse Demo';
+
 export const DEMO_STEPS = [
-  { id: 1, label: 'Incoming reports', view: 'inbox' as const },
-  { id: 2, label: 'VensaOS understands them', view: 'issue' as const },
-  { id: 3, label: 'Related reports are connected', view: 'issue' as const },
-  { id: 4, label: 'The owner investigates', view: 'issue' as const },
-  { id: 5, label: 'The reporter confirms the result', view: 'reporter' as const },
+  { id: 1, label: 'Overview briefing', view: 'overview' as const },
+  { id: 2, label: 'Inbox exceptions', view: 'inbox' as const },
+  { id: 3, label: 'Grouped issue in Issues', view: 'issue' as const },
+  { id: 4, label: 'Owner resolves with a public note', view: 'issue' as const },
+  { id: 5, label: 'Reporter confirms the result', view: 'reporter' as const },
 ] as const;
 
 export const DEMO_ISSUE = {
@@ -34,6 +36,13 @@ export const DEMO_ISSUE = {
     'Matching reasons: same composer occlusion · mobile viewport',
   ],
 };
+
+/** Hero / convergence slips — same three reports that group into FI-DEMO01. */
+export const DEMO_CONVERGENCE_REPORTS = [
+  ['BUG REPORT', 'Chat composer covers the newest message on iPhone.'],
+  ['BUG REPORT', 'Keyboard leaves the conversation scrolled above the reply.'],
+  ['BUG REPORT', 'Latest chat bubble is hidden behind the mobile composer.'],
+] as const;
 
 export const DEMO_REPORTS = [
   {
@@ -70,6 +79,7 @@ export const DEMO_DUPLICATE = {
   title: 'Weather timeline is slow on older phones',
   confidence: 72,
   reason: 'Different product area and symptoms—kept as a suggestion for owner review, not auto-merged.',
+  body: 'Weather timeline is very slow on my older phone.',
 };
 
 export const DEMO_MESSAGES = [
@@ -84,3 +94,11 @@ export const DEMO_ACTIVITY = [
   { body: 'Reporter replied with viewport details', time: '1 hour ago' },
   { body: 'Status moved to testing', time: '35 min ago' },
 ];
+
+export const DEMO_ENVIRONMENT = {
+  browser: 'Safari 18 · iOS',
+  device: 'iPhone 14 · portrait',
+  screen: '390 × 844',
+  viewport: '390 × 664',
+  page: '/chat/thread/4821',
+} as const;
