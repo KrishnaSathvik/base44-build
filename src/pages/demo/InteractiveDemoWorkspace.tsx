@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   Archive,
+  ArrowLeft,
   CheckCircle2,
   Inbox,
   LayoutGrid,
@@ -66,9 +67,6 @@ export function InteractiveDemoWorkspace() {
   }
 
   const activeStep = DEMO_STEPS.find((item) => item.id === step) ?? DEMO_STEPS[0];
-  const stepIndex = DEMO_STEPS.findIndex((item) => item.id === step);
-  const previousStep = stepIndex > 0 ? DEMO_STEPS[stepIndex - 1] : null;
-  const nextStep = stepIndex < DEMO_STEPS.length - 1 ? DEMO_STEPS[stepIndex + 1] : null;
 
   const jumpActions = [
     { label: 'Open the grouped issue', run: () => go('issue', 3) },
@@ -103,25 +101,6 @@ export function InteractiveDemoWorkspace() {
             ))}
           </div>
           <p className="mt-4 text-sm font-medium leading-5 text-ink">{activeStep.label}</p>
-          <div className="mt-4 flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              className="flex-1"
-              disabled={!previousStep}
-              onClick={() => previousStep && go(previousStep.view, previousStep.id)}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              className="flex-1"
-              disabled={!nextStep}
-              onClick={() => nextStep && go(nextStep.view, nextStep.id)}
-            >
-              Next
-            </Button>
-          </div>
           <label className="mt-4 block">
             <span className="fi-mono text-[10px] uppercase tracking-wider text-ink-faint">Jump to</span>
             <select
@@ -348,6 +327,21 @@ function InboxPane({
   onOpenIssue: () => void;
   onReviewDuplicate: () => void;
 }) {
+  const [mobileShowDetail, setMobileShowDetail] = useState(false);
+  const [isMobileLayout, setIsMobileLayout] = useState(false);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const media = window.matchMedia('(max-width: 1023px)');
+    const sync = () => setIsMobileLayout(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
+  }, []);
+
+  const showList = !isMobileLayout || !mobileShowDetail;
+  const showDetail = !isMobileLayout || mobileShowDetail;
+
   return (
     <div>
       <header className="border-b border-line px-5 pb-6 pt-6 sm:px-7">
@@ -357,7 +351,10 @@ function InboxPane({
           Failed processing, duplicate matches, and reporter replies that need a decision. Everyday unreviewed work lives in Issues.
         </p>
       </header>
-      <div className="flex gap-2 overflow-x-auto border-b border-line px-5 py-4 sm:px-7" aria-label="Inbox filters">
+      <div
+        className="flex gap-2 overflow-x-auto border-b border-line px-5 py-4 sm:px-7 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="Inbox filters"
+      >
         {INBOX_FILTERS.map((label, index) => (
           <span
             key={label}
@@ -371,10 +368,13 @@ function InboxPane({
         ))}
       </div>
       <div className="grid min-h-[480px] lg:grid-cols-[300px_minmax(0,1fr)]">
-        <div className="border-b border-line lg:border-b-0 lg:border-r">
+        <div className={cn('border-b border-line lg:border-b-0 lg:border-r', showList ? '' : 'hidden')}>
           <button
             type="button"
-            onClick={onReviewDuplicate}
+            onClick={() => {
+              if (isMobileLayout) setMobileShowDetail(true);
+              else onReviewDuplicate();
+            }}
             className="block w-full border-b border-line bg-canvas px-4 py-4 text-left"
           >
             <div className="flex items-center justify-between gap-2">
@@ -388,19 +388,33 @@ function InboxPane({
             Inbox is otherwise clear. New unreviewed issues appear in Issues.
           </p>
         </div>
-        <div className="p-6 sm:p-7">
-          <Badge tone="warning">Possible duplicate</Badge>
-          <h3 className="fi-display mt-4 text-2xl font-medium leading-tight">{DEMO_DUPLICATE.title}</h3>
-          <blockquote className="mt-5 border-l-2 border-critical pl-4 text-base leading-7">{DEMO_DUPLICATE.body}</blockquote>
-          <p className="mt-4 text-sm leading-6 text-ink-muted">{DEMO_DUPLICATE.reason}</p>
-          <p className="fi-mono mt-3 text-[10px] text-ink-faint">{DEMO_DUPLICATE.confidence}% confidence · suggested against {DEMO_ISSUE.publicCode}</p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            <Button type="button" onClick={onReviewDuplicate}>Review suggestion</Button>
-            <Button type="button" variant="secondary" onClick={onOpenIssue}>
-              Review in Issues
-            </Button>
+        {showDetail ? (
+          <div className="p-6 sm:p-7">
+            <button
+              type="button"
+              onClick={() => setMobileShowDetail(false)}
+              className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-ink-muted hover:text-ink lg:hidden"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Inbox
+            </button>
+            <Badge tone="warning">Possible duplicate</Badge>
+            <h3 className="fi-display mt-4 text-2xl font-medium leading-tight">{DEMO_DUPLICATE.title}</h3>
+            <blockquote className="mt-5 border-l-2 border-critical pl-4 text-base leading-7">{DEMO_DUPLICATE.body}</blockquote>
+            <p className="mt-4 text-sm leading-6 text-ink-muted">{DEMO_DUPLICATE.reason}</p>
+            <p className="fi-mono mt-3 text-[10px] text-ink-faint">
+              {DEMO_DUPLICATE.confidence}% confidence · suggested against {DEMO_ISSUE.publicCode}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Button type="button" onClick={onReviewDuplicate}>
+                Review suggestion
+              </Button>
+              <Button type="button" variant="secondary" onClick={onOpenIssue}>
+                Review in Issues
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );
