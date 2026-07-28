@@ -32,7 +32,13 @@ export function canTransition(from: IssueStatus, to: IssueStatus, options: Trans
 }
 
 export function allowedTransitions(from: IssueStatus): readonly IssueStatus[] {
-  return ALLOWED[from];
+  const next = [...ALLOWED[from]];
+  // Direct resolve is allowed from open/in_progress when an owner override reason
+  // is supplied (see canTransition). Surface it in the owner UI so resolve is reachable.
+  if ((from === "open" || from === "in_progress") && !next.includes("resolved")) {
+    next.push("resolved");
+  }
+  return next;
 }
 
 export function assertTransition(from: unknown, to: unknown, options: TransitionOptions = {}): asserts to is IssueStatus {

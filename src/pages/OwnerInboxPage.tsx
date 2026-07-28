@@ -6,9 +6,10 @@ import { Badge, Button, EmptyState, InlineError, Select, Skeleton } from '@/comp
 import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
 import { analysisModeLabel, formatTime, severityLabel, typeLabel } from '@/lib/format';
 import {
-  listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMyProjects, listMySubmissions,
-  getAttachmentAccess, listMyAttachments, listMyNotificationDeliveries, listMyReporterMessages, markOwnerMessagesRead, processFeedback, reviewGrouping,
+  listMyDuplicateSuggestions, listMyIssueReports, listMyIssues, listMySubmissions,
+  getAttachmentAccess, listMyAttachments, listMyReporterMessages, markOwnerMessagesRead, processFeedback, reviewGrouping,
 } from '@/lib/api';
+import { useActiveProject } from '@/lib/useActiveProject';
 import type { DuplicateSuggestion, FeedbackAttachment, IntelligenceIssue, IntelligenceIssueReport, IntelligenceSubmission, ReporterMessage } from '@/lib/types';
 import { AttachmentGallery, type GalleryAttachment } from '@/components/AttachmentGallery';
 import type { AttachmentAccessScope } from '@/lib/attachmentAccess';
@@ -66,10 +67,8 @@ export function OwnerInboxPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
   const [isMobileLayout, setIsMobileLayout] = useState(false);
-  const projects = useQuery({ queryKey: ['projects'], queryFn: listMyProjects });
-  const query = useQuery({ queryKey: ['inbox'], queryFn: loadInbox, enabled: !!projects.data?.length });
-  const deliveries=useQuery({queryKey:['notification-deliveries'],queryFn:listMyNotificationDeliveries,enabled:!!projects.data?.length});
-  const deliveryFailures=deliveries.data?.filter(item=>item.status==='failed'||item.status==='dead_letter').length??0;
+  const { project, isLoading: projectsLoading } = useActiveProject();
+  const query = useQuery({ queryKey: ['inbox'], queryFn: loadInbox, enabled: !!project });
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return;
@@ -81,8 +80,9 @@ export function OwnerInboxPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!query.data) return [];
+    if (!query.data || !project) return [];
     return query.data.submissions.filter((submission) => {
+      if (submission.project_id !== project.id) return false;
       const reason = attentionForSubmission(submission, query.data);
       if (!reason) return false;
       switch (filter) {
@@ -102,7 +102,7 @@ export function OwnerInboxPage() {
         }
       }
     });
-  }, [filter, query.data]);
+  }, [filter, project, query.data]);
 
   useEffect(() => {
     if (!selectedId || !filtered.some((item) => item.id === selectedId)) {
@@ -117,7 +117,7 @@ export function OwnerInboxPage() {
   const showList = !isMobileLayout || !mobileShowDetail;
   const showDetail = !isMobileLayout || mobileShowDetail;
 
-  if (projects.isLoading) {
+  if (projectsLoading) {
     return (
       <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-7 md:py-10">
         <Skeleton className="h-10 w-64" />
@@ -126,7 +126,7 @@ export function OwnerInboxPage() {
     );
   }
 
-  if (!projects.data?.length) {
+  if (!project) {
     return (
       <NoProjectOnboarding
         eyebrow="Exceptions"
@@ -138,7 +138,6 @@ export function OwnerInboxPage() {
 
   return <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-7 md:py-10">
     <header className="border-b border-line pb-7"><p className="fi-eyebrow">Exceptions</p><h1 className="fi-display mt-3 text-3xl font-medium sm:text-4xl">Inbox</h1><p className="mt-2 text-sm text-ink-muted">Failed processing, duplicate matches, and reporter replies that need a decision. Everyday unreviewed work lives in Issues.</p></header>
-    {deliveryFailures>0&&<div role="status" className="mt-5 flex flex-col gap-3 rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4"><span>{deliveryFailures} notification {deliveryFailures===1?'delivery needs':'deliveries need'} operational attention.</span><Link className="font-medium" to="/app/settings#notifications">Review notifications</Link></div>}
     <div className="flex gap-2 overflow-x-auto border-b border-line py-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Inbox filters">{FILTERS.map((item) => <button key={item.value} type="button" onClick={() => setFilter(item.value)} className={`min-h-10 shrink-0 rounded-md px-3 text-xs ${filter === item.value ? 'bg-ink text-white' : 'text-ink-muted hover:bg-surface'}`}>{item.label}</button>)}</div>
     {query.isLoading ? <div className="grid gap-6 py-6 lg:grid-cols-[380px_1fr]"><Skeleton className="h-[520px]"/><Skeleton className="h-[520px]"/></div> : query.isError ? <div className="py-8"><InlineError>Inbox data could not be loaded. Check your connection and retry.</InlineError></div> : !filtered.length ? <div className="mt-6"><EmptyState icon={<Inbox className="h-5 w-5"/>} title={filter === 'all' ? 'Inbox is clear' : 'No reports in this view'} description={filter === 'all' ? 'No exceptions need attention. New unreviewed issues are in Issues.' : 'Nothing matches this filter right now.'}/></div> : <div className="grid min-h-0 lg:min-h-[620px] lg:grid-cols-[380px_minmax(0,1fr)]">
       <div className={`border-line lg:border-r ${showList ? '' : 'hidden'}`}>{filtered.map((submission) => <ReportRow key={submission.id} submission={submission} data={query.data!} selected={submission.id === selectedId} onSelect={() => { setSelectedId(submission.id); setMobileShowDetail(true); }}/>)}</div>

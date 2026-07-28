@@ -29,10 +29,7 @@ test('opens the notification panel below the bell instead of clipping above the 
   expect(dialog).toBeVisible();
   expect(dialog.className).toContain('top-[calc(100%+0.5rem)]');
   expect(await screen.findByText('No notifications yet')).toBeVisible();
-  expect(screen.getByRole('link', { name: 'Open notification settings' })).toHaveAttribute(
-    'href',
-    '/app/settings#notifications',
-  );
+  expect(screen.getByRole('link', { name: 'Open inbox' })).toHaveAttribute('href', '/app/inbox');
 });
 
 test('lists recent delivery activity when available', async () => {

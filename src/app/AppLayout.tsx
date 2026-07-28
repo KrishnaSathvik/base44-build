@@ -4,15 +4,16 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useFreeMaintenance } from '@/lib/useFreeMaintenance';
 import { useOwnerRealtime } from '@/lib/useOwnerRealtime';
+import { useActiveProject } from '@/lib/useActiveProject';
 import { AuthPanel } from '@/app/AuthPanel';
 import { Brand } from '@/components/Brand';
 import { NotificationMenu } from '@/components/NotificationMenu';
-import { Spinner, StatusBadge, cn } from '@/components/ui';
+import { Select, Spinner, StatusBadge, cn } from '@/components/ui';
 import { useNetworkState } from '@/app/NetworkStateProvider';
 import { clearOwnerSnapshots, loadOwnerSnapshots, saveOwnerSnapshot, toOwnerIssueSummary } from '@/lib/ownerSnapshot';
 import type { OwnerSnapshot } from '@/lib/ownerSnapshot';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { listMyIssues, listMyProjects } from '@/lib/api';
+import { listMyIssues } from '@/lib/api';
 import { useEffect, useRef, useState } from 'react';
 import { statusLabel } from '@/lib/format';
 
@@ -31,10 +32,8 @@ export function AppLayout() {
   const { user, isLoading, isAuthenticated } = useCurrentUser();
   const maintenance = useFreeMaintenance(!!user && isAuthenticated && networkState !== 'offline');
   useOwnerRealtime(!!user && isAuthenticated && networkState !== 'offline');
-  const projects = useQuery({
-    queryKey: ['projects'],
-    queryFn: listMyProjects,
-    enabled: !!user && networkState !== 'offline',
+  const { projects, project, setActiveProjectId } = useActiveProject({
+    enabled: !!user && isAuthenticated && networkState !== 'offline',
   });
   const issues = useQuery({
     queryKey: ['issues'],
@@ -46,8 +45,12 @@ export function AppLayout() {
   const previousOpenCount = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!issues.data) return;
-    const openCount = issues.data.filter((issue) => !['resolved', 'dismissed', 'duplicate'].includes(issue.status)).length;
+    if (!issues.data || !project) return;
+    const openCount = issues.data.filter(
+      (issue) =>
+        issue.project_id === project.id &&
+        !['resolved', 'dismissed', 'duplicate'].includes(issue.status),
+    ).length;
     if (previousOpenCount.current !== null && openCount > previousOpenCount.current) {
       const added = openCount - previousOpenCount.current;
       setLiveAnnouncement(
@@ -55,22 +58,22 @@ export function AppLayout() {
       );
     }
     previousOpenCount.current = openCount;
-  }, [issues.data]);
+  }, [issues.data, project]);
 
   useEffect(() => {
-    if (networkState === 'online' && user && projects.data && issues.data) {
-      for (const project of projects.data) {
+    if (networkState === 'online' && user && projects.length && issues.data) {
+      for (const item of projects) {
         void saveOwnerSnapshot({
           userId: user.email,
-          projectId: project.id,
+          projectId: item.id,
           savedAt: Date.now(),
           issues: issues.data
-            .filter((issue) => issue.project_id === project.id)
+            .filter((issue) => issue.project_id === item.id)
             .map(toOwnerIssueSummary),
         }).catch(() => undefined);
       }
     }
-  }, [issues.data, networkState, projects.data, user]);
+  }, [issues.data, networkState, projects, user]);
 
   useEffect(() => {
     if (networkState === 'offline' && user) {
@@ -103,8 +106,26 @@ export function AppLayout() {
             </div>
           </div>
           <div className="hidden flex-1 items-center justify-between px-6 md:flex">
-            <div>
-              <p className="text-sm font-medium">VensaOS workspace</p>
+            <div className="min-w-0">
+              {projects.length > 1 && project ? (
+                <label className="block min-w-0">
+                  <span className="sr-only">Active project</span>
+                  <Select
+                    aria-label="Active project"
+                    className="h-9 max-w-[240px] border-0 bg-transparent px-0 text-sm font-medium shadow-none"
+                    value={project.id}
+                    onChange={(event) => setActiveProjectId(event.target.value)}
+                  >
+                    {projects.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+              ) : (
+                <p className="truncate text-sm font-medium">{project?.name ?? 'VensaOS workspace'}</p>
+              )}
               <p className="fi-mono mt-0.5 text-[9px] uppercase tracking-wider text-ink-faint">
                 Feedback operations
               </p>

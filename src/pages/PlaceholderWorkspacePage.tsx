@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Copy, Inbox, RotateCcw } from 'lucide-react';
-import { Button, Checkbox, EmptyState, Field, InlineError, Input, Skeleton, Switch, Textarea, Toast } from '@/components/ui';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Copy, Inbox, Plus } from 'lucide-react';
+import { Button, EmptyState, Field, InlineError, Input, Select, Skeleton, Textarea, Toast } from '@/components/ui';
 import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
-import { listMyAttachments, listMyNotificationDeliveries, listMyProjects, listMySubmissions, retryNotification, runFreeMaintenance, updateNotificationSettings, updateProjectSettings, type FreeMaintenanceResult } from '@/lib/api';
-import type { FeedbackType, NotificationProject } from '@/lib/types';
-import { formatTime } from '@/lib/format';
+import { updateProjectSettings } from '@/lib/api';
+import { useActiveProject } from '@/lib/useActiveProject';
 import { publicBoardUrl } from '@/lib/appUrls';
+import type { FeedbackType } from '@/lib/types';
 
-export function isValidTimezone(value:string){try{new Intl.DateTimeFormat('en-US',{timeZone:value}).format();return true;}catch{return false;}}
+const DEFAULT_TYPES: FeedbackType[] = ['bug', 'feature', 'general'];
 
 export function PlaceholderWorkspacePage() {
   const settings = useLocation().pathname.includes('settings');
@@ -17,57 +17,210 @@ export function PlaceholderWorkspacePage() {
 }
 
 function InboxState() {
-  return <div className="mx-auto max-w-[1100px] px-4 py-8 sm:px-7 md:py-10"><p className="fi-eyebrow">Report queue</p><h1 className="fi-display mt-3 text-4xl font-medium">Inbox</h1><p className="mt-2 text-sm text-ink-muted">Reports that still need a decision.</p><div className="mt-10"><EmptyState icon={<Inbox className="h-5 w-5" />} title="No unreviewed reports" description="New submissions and grouping suggestions will appear here." action={<Link to="/app/issues"><Button variant="secondary">View current issues</Button></Link>} /></div></div>;
+  return (
+    <div className="mx-auto max-w-[1100px] px-4 py-8 sm:px-7 md:py-10">
+      <p className="fi-eyebrow">Report queue</p>
+      <h1 className="fi-display mt-3 text-4xl font-medium">Inbox</h1>
+      <p className="mt-2 text-sm text-ink-muted">Reports that still need a decision.</p>
+      <div className="mt-10">
+        <EmptyState
+          icon={<Inbox className="h-5 w-5" />}
+          title="No unreviewed reports"
+          description="New submissions and grouping suggestions will appear here."
+          action={
+            <Link to="/app/issues">
+              <Button variant="secondary">View current issues</Button>
+            </Link>
+          }
+        />
+      </div>
+    </div>
+  );
 }
 
 function ProjectSettings() {
   const queryClient = useQueryClient();
-  const projects = useQuery({ queryKey: ['projects'], queryFn: listMyProjects });
-  const project = projects.data?.[0] as NotificationProject|undefined;
-  const deliveries = useQuery({ queryKey:['notification-deliveries'], queryFn:listMyNotificationDeliveries, enabled:!!project });
-  const attachments = useQuery({queryKey:['attachments'],queryFn:listMyAttachments,enabled:!!project});
-  const submissions = useQuery({queryKey:['submissions'],queryFn:listMySubmissions,enabled:!!project});
-  const [name,setName]=useState(''); const [productUrl,setProductUrl]=useState(''); const [description,setDescription]=useState('');
-  const [types,setTypes]=useState<FeedbackType[]>(['bug','feature','general']); const [allowAnonymous,setAllowAnonymous]=useState(true); const [collectEmail,setCollectEmail]=useState(true);
-  const [deliveryEnabled,setDeliveryEnabled]=useState(false); const [criticalAlerts,setCriticalAlerts]=useState(true); const [replyAlerts,setReplyAlerts]=useState(true); const [reporterEmails,setReporterEmails]=useState(true); const [dailyDigest,setDailyDigest]=useState(false); const [includeEmpty,setIncludeEmpty]=useState(false); const [digestTimezone,setDigestTimezone]=useState('UTC'); const [digestHour,setDigestHour]=useState(9);
-  const [copied,setCopied]=useState(false); const [saved,setSaved]=useState(false); const [error,setError]=useState<string|null>(null);
+  const { projects, project, setActiveProjectId, isLoading } = useActiveProject();
+  const [name, setName] = useState('');
+  const [productUrl, setProductUrl] = useState('');
+  const [description, setDescription] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(()=>{ if(!project)return; setName(project.name); setProductUrl(project.product_url ?? ''); setDescription(project.description ?? ''); setTypes(project.feedback_types_enabled ?? ['bug','feature','general']); setAllowAnonymous(project.allow_anonymous !== false); setCollectEmail(project.collect_reporter_email !== false); setDeliveryEnabled(project.notification_delivery_enabled===true); setCriticalAlerts(project.critical_alerts_enabled!==false); setReplyAlerts(project.owner_reply_alerts_enabled!==false); setReporterEmails(project.reporter_status_emails_enabled!==false); setDailyDigest(project.daily_digest_enabled===true); setIncludeEmpty(project.daily_digest_include_empty===true); setDigestTimezone(project.digest_timezone??'UTC'); setDigestHour(project.digest_hour_local??9); },[project]);
-  const mutation=useMutation({mutationFn:async()=>{if(!project)throw new Error('No project');if(!isValidTimezone(digestTimezone)||!Number.isInteger(digestHour)||digestHour<0||digestHour>23)throw new Error('Invalid digest settings');const input={name:name.trim(),productUrl:productUrl.trim()||undefined,description:description.trim()||undefined,feedbackTypesEnabled:types,allowAnonymous,collectReporterEmail:collectEmail,notificationDeliveryEnabled:deliveryEnabled,criticalAlertsEnabled:criticalAlerts,ownerReplyAlertsEnabled:replyAlerts,reporterStatusEmailsEnabled:reporterEmails,dailyDigestEnabled:dailyDigest,dailyDigestIncludeEmpty:includeEmpty,digestTimezone,digestHourLocal:digestHour};await updateNotificationSettings(project.id,input);return updateProjectSettings(project.id,input);},onSuccess:async()=>{setSaved(true);setError(null);await queryClient.invalidateQueries({queryKey:['projects']});},onError:()=>setError('Settings could not be saved. Check the digest timezone and delivery hour, then try again.')});
-  const retry=useMutation({mutationFn:(deliveryId:string)=>retryNotification(deliveryId),onSuccess:()=>queryClient.invalidateQueries({queryKey:['notification-deliveries']})});
+  useEffect(() => {
+    if (!project) return;
+    setName(project.name);
+    setProductUrl(project.product_url ?? '');
+    setDescription(project.description ?? '');
+  }, [project]);
 
-  if(projects.isLoading)return <SettingsFrame><Skeleton className="h-12 w-full"/><Skeleton className="mt-8 h-80 w-full"/></SettingsFrame>;
-  if(!project)return <NoProjectOnboarding eyebrow="VensaOS workspace" title="Create your first feedback board" description="Project settings become available after your first feedback board is created." />;
-  const publicLink=publicBoardUrl(project.slug);
-  const submissionIds=new Set((submissions.data??[]).map(item=>item.id));
-  const orphanCount=(attachments.data??[]).filter(item=>item.project_id===project.id&&item.upload_status!=='deleted'&&!submissionIds.has(item.submission_id)&&Date.parse(item.created_at??item.created_date??'')<Date.now()-24*60*60_000).length;
-  const toggleType=(type:FeedbackType,checked:boolean)=>setTypes(current=>checked?[...current,type]:current.filter(item=>item!==type));
-  return <SettingsFrame><form className="max-w-3xl" onSubmit={event=>{event.preventDefault();setSaved(false);setError(null);mutation.mutate();}}><section className="border-t border-line py-8"><p className="fi-eyebrow">Project identity</p><div className="mt-6 grid gap-6"><Field label="Product name" htmlFor="settings-name"><Input id="settings-name" value={name} onChange={event=>setName(event.target.value)} required maxLength={80}/></Field><Field label="Product URL" htmlFor="settings-url" hint="Optional"><Input id="settings-url" type="url" value={productUrl} onChange={event=>setProductUrl(event.target.value)} placeholder="https://example.com"/></Field><Field label="Description" htmlFor="settings-description" hint="Optional"><Textarea id="settings-description" className="min-h-24" value={description} onChange={event=>setDescription(event.target.value)} maxLength={500}/></Field></div></section>
-    <section className="border-t border-line py-8"><p className="fi-eyebrow">Public feedback link</p><div className="mt-5 flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 sm:flex-row sm:items-center"><code className="fi-mono min-w-0 flex-1 break-all text-xs">{publicLink}</code><Button type="button" variant="secondary" onClick={async()=>{await navigator.clipboard.writeText(publicLink);setCopied(true);}}><Copy className="h-4 w-4"/>Copy link</Button></div></section>
-    <section className="border-t border-line py-8"><p className="fi-eyebrow">Feedback types</p><div className="mt-5 grid gap-4 sm:grid-cols-3"><Checkbox label="Bug reports" checked={types.includes('bug')} onChange={event=>toggleType('bug',event.target.checked)}/><Checkbox label="Feature requests" checked={types.includes('feature')} onChange={event=>toggleType('feature',event.target.checked)}/><Checkbox label="General feedback" checked={types.includes('general')} onChange={event=>toggleType('general',event.target.checked)}/></div>{types.length===0&&<div className="mt-4"><InlineError>Enable at least one feedback type.</InlineError></div>}</section>
-    <section className="border-y border-line py-8"><div className="flex items-start justify-between gap-5"><div><h2 className="text-sm font-medium">Allow anonymous submissions</h2><p className="mt-1 max-w-lg text-xs leading-5 text-ink-muted">When disabled, the public portal stops accepting unauthenticated reports.</p></div><Switch label="Allow anonymous submissions" checked={allowAnonymous} onChange={setAllowAnonymous}/></div><div className="mt-7 flex items-start justify-between gap-5 border-t border-line pt-7"><div><h2 className="text-sm font-medium">Collect optional reporter email</h2><p className="mt-1 max-w-lg text-xs leading-5 text-ink-muted">Offer an optional email field so reporters can request status updates.</p></div><Switch label="Collect optional reporter email" checked={collectEmail} onChange={setCollectEmail}/></div></section>
-    <section id="notifications" className="border-b border-line py-8"><p className="fi-eyebrow">Notifications</p><h2 className="fi-display mt-2 text-2xl font-medium">Email delivery</h2><p className="mt-3 text-sm text-ink-muted">VensaOS records notification intent for owners and opted-in reporters. Real email stays disabled until you enable delivery and the runtime gate allows it.</p>{!deliveryEnabled&&<div role="alert" className="mt-5 flex gap-3 rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm"><AlertTriangle className="h-4 w-4 shrink-0"/><span>Email delivery is currently disabled. Notifications will be recorded but not sent.</span></div>}<div className="mt-6 space-y-6"><NotificationToggle title="Enable email delivery" description="Master safety switch for all external email." checked={deliveryEnabled} onChange={setDeliveryEnabled}/><NotificationToggle title="Critical issue alerts" description="VensaOS can alert owners when severity becomes critical, priority crosses 80, or a resolved critical issue reopens." checked={criticalAlerts} onChange={setCriticalAlerts}/><NotificationToggle title="Reporter reply alerts" description="Notify the owner when a reporter follows up." checked={replyAlerts} onChange={setReplyAlerts}/><NotificationToggle title="Reporter status emails" description="VensaOS can send reporters status updates when they opt in." checked={reporterEmails} onChange={setReporterEmails}/><NotificationToggle title="Daily digest" description="On the free runtime, digests are prepared when the workspace next becomes active after the configured local hour. They do not run while nobody is using the workspace." checked={dailyDigest} onChange={setDailyDigest}/><NotificationToggle title="Include an empty daily digest" description="Prepare a digest even when there is no activity requiring attention." checked={includeEmpty} onChange={setIncludeEmpty}/><div className="grid gap-5 sm:grid-cols-2"><Field label="Digest timezone" htmlFor="digest-timezone" error={digestTimezone&&!isValidTimezone(digestTimezone)?'Enter a valid IANA timezone, such as America/Chicago.':undefined}><Input id="digest-timezone" value={digestTimezone} onChange={event=>setDigestTimezone(event.target.value)} placeholder="UTC"/></Field><Field label="Digest delivery hour" htmlFor="digest-hour" hint="0 through 23 — prepared on the next owner activity after this local hour"><Input id="digest-hour" type="number" min={0} max={23} step={1} value={digestHour} onChange={event=>setDigestHour(Number(event.target.value))}/></Field></div></div></section>
-    <MaintenanceOperations project={project} />
-    <section className="border-b border-line py-8"><p className="fi-eyebrow">Delivery history</p><h2 className="fi-display mt-2 text-2xl font-medium">Recent notifications</h2><div className="mt-5 overflow-x-auto"><table className="w-full min-w-[680px] text-left text-xs"><thead className="border-b border-line text-ink-faint"><tr><th className="py-3">Template</th><th>Recipient</th><th>Status</th><th>Attempts</th><th>Created</th><th>Sent</th><th></th></tr></thead><tbody>{deliveries.data?.map(item=><tr key={item.id} className="border-b border-line"><td className="py-4 pr-4">{item.template_key.replaceAll('_',' ')}</td><td>{item.recipient_type==='owner'?'Project owner':'Reporter (address hidden)'}</td><td><span className={item.status==='failed'||item.status==='dead_letter'?'text-critical':''}>{item.status.replace('_',' ')}</span>{item.last_error_message&&<p className="mt-1 max-w-48 truncate text-ink-faint">{item.last_error_message}</p>}</td><td>{item.attempt_count??0}</td><td>{formatTime(item.created_at??item.created_date)}</td><td>{formatTime(item.sent_at)}</td><td>{['failed','dead_letter'].includes(item.status)&&<Button type="button" variant="ghost" disabled={retry.isPending} onClick={()=>retry.mutate(item.id)}><RotateCcw className="h-3.5 w-3.5"/>Retry</Button>}</td></tr>)}</tbody></table>{!deliveries.isLoading&&!deliveries.data?.length&&<p className="rounded-lg border border-dashed border-line p-6 text-sm text-ink-muted">No notification deliveries have been recorded.</p>}</div></section>
-    <section className="border-b border-line py-8"><p className="fi-eyebrow">Private storage operations</p><h2 className="fi-display mt-2 text-2xl font-medium">Orphan evidence</h2><p className="mt-3 text-sm text-ink-muted">{orphanCount} attachment{orphanCount===1?'':'s'} older than 24 hours are not linked to a completed submission.</p><p className="mt-3 max-w-2xl text-xs leading-5 text-ink-faint">VensaOS can logically delete evidence and deny access. Base44 does not currently document a physical private-file deletion API, so physical storage cleanup remains an operational limitation.</p></section>
-    {error&&<div className="mt-5"><InlineError>{error}</InlineError></div>}<div className="sticky bottom-[72px] -mx-4 mt-8 flex border-t border-line bg-canvas/95 px-4 py-4 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0"><Button type="submit" disabled={mutation.isPending||!name.trim()||types.length===0}>{mutation.isPending?'Saving…':'Save settings'}</Button></div></form>{copied&&<Toast>Feedback link copied</Toast>}{saved&&<Toast>Settings saved</Toast>}</SettingsFrame>;
-}
-
-function NotificationToggle({title,description,checked,onChange}:{title:string;description:string;checked:boolean;onChange:(checked:boolean)=>void}){return <div className="flex items-start justify-between gap-5 border-t border-line pt-5 first:border-0 first:pt-0"><div><h3 className="text-sm font-medium">{title}</h3><p className="mt-1 max-w-lg text-xs leading-5 text-ink-muted">{description}</p></div><Switch label={title} checked={checked} onChange={onChange}/></div>}
-
-function MaintenanceOperations({project}:{project:NotificationProject}){
-  const queryClient=useQueryClient();
-  const [result,setResult]=useState<FreeMaintenanceResult|null>(null);
-  const [error,setError]=useState<string|null>(null);
-  const mutation=useMutation({
-    mutationFn:()=>runFreeMaintenance({projectId:project.id,bypassThrottle:true}),
-    onSuccess:async(value)=>{setResult(value);setError(null);await queryClient.invalidateQueries({queryKey:['projects']});await queryClient.invalidateQueries({queryKey:['notification-deliveries']});},
-    onError:()=>setError('Maintenance could not run. Try again in a moment.'),
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!project) throw new Error('No project');
+      return updateProjectSettings(project.id, {
+        name: name.trim(),
+        productUrl: productUrl.trim() || undefined,
+        description: description.trim() || undefined,
+        feedbackTypesEnabled: (project.feedback_types_enabled as FeedbackType[] | undefined) ?? DEFAULT_TYPES,
+        allowAnonymous: project.allow_anonymous !== false,
+        collectReporterEmail: project.collect_reporter_email !== false,
+      });
+    },
+    onSuccess: async () => {
+      setSaved(true);
+      setError(null);
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: () => setError('Settings could not be saved. Try again in a moment.'),
   });
-  const summary=result??project.maintenance_last_summary;
-  const lastAttempt=result?.lastAttemptAt??project.maintenance_last_attempt_at;
-  const lastSuccess=result?.lastSuccessAt??project.maintenance_last_success_at;
-  return <section id="operations" className="border-b border-line py-8"><p className="fi-eyebrow">Operations</p><h2 className="fi-display mt-2 text-2xl font-medium">Free-runtime maintenance</h2><p className="mt-3 max-w-2xl text-sm text-ink-muted">Replaces scheduled Workflows. Owner activity runs bounded queue, reconciliation, and digest preparation work with a five-minute lease.</p><div className="mt-5 grid gap-2 text-xs text-ink-muted"><p>Last attempted: {lastAttempt?formatTime(lastAttempt):'Never'}</p><p>Last successful: {lastSuccess?formatTime(lastSuccess):'Never'}</p><p>Records processed: {summary?.processed??0} · Failures: {summary?.failed??0} · Skipped: {summary?.skipped??0} · Digests queued: {summary?.digestsQueued??0}</p><p>{(result?.emailDeliveryDisabled??project.notification_delivery_enabled!==true)?'Email delivery is disabled — maintenance will not contact SendEmail.':'Email delivery is enabled for this project; the runtime gate must also allow sending.'}</p></div><div className="mt-5"><Button type="button" variant="secondary" disabled={mutation.isPending} onClick={()=>mutation.mutate()}>{mutation.isPending?'Running…':'Run maintenance now'}</Button></div>{error&&<div className="mt-4"><InlineError>{error}</InlineError></div>}{result&&<p className="mt-4 text-xs text-ink-faint">Status: {result.status.replaceAll('_',' ')}</p>}</section>;
+
+  if (isLoading) {
+    return (
+      <SettingsFrame>
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="mt-8 h-80 w-full" />
+      </SettingsFrame>
+    );
+  }
+
+  if (!project) {
+    return (
+      <NoProjectOnboarding
+        eyebrow="VensaOS workspace"
+        title="Create your first feedback board"
+        description="Project settings become available after your first feedback board is created."
+      />
+    );
+  }
+
+  const publicLink = publicBoardUrl(project.slug);
+
+  return (
+    <SettingsFrame>
+      <form
+        className="max-w-3xl"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSaved(false);
+          setError(null);
+          mutation.mutate();
+        }}
+      >
+        <section className="border-t border-line py-8">
+          <p className="fi-eyebrow">Active project</p>
+          <h2 className="fi-display mt-2 text-2xl font-medium">Which board are you editing?</h2>
+          <p className="mt-3 text-sm text-ink-muted">
+            Overview, Inbox, Issues, and Resolved all follow this selection.
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+            <Field label="Project" htmlFor="active-project">
+              <Select
+                id="active-project"
+                value={project.id}
+                onChange={(event) => setActiveProjectId(event.target.value)}
+              >
+                {projects.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Link to="/app/setup" className="w-full sm:w-auto">
+              <Button type="button" variant="secondary" className="w-full justify-center sm:w-auto">
+                <Plus className="h-4 w-4" />
+                New project
+              </Button>
+            </Link>
+          </div>
+          {projects.length > 1 && (
+            <p className="mt-3 text-xs text-ink-faint">
+              {projects.length} projects in this workspace. Switch here to manage another board.
+            </p>
+          )}
+        </section>
+
+        <section className="border-t border-line py-8">
+          <p className="fi-eyebrow">Project identity</p>
+          <div className="mt-6 grid gap-6">
+            <Field label="Product name" htmlFor="settings-name">
+              <Input
+                id="settings-name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+                maxLength={80}
+              />
+            </Field>
+            <Field label="Product URL" htmlFor="settings-url" hint="Optional">
+              <Input
+                id="settings-url"
+                type="url"
+                value={productUrl}
+                onChange={(event) => setProductUrl(event.target.value)}
+                placeholder="https://example.com"
+              />
+            </Field>
+            <Field label="Description" htmlFor="settings-description" hint="Optional">
+              <Textarea
+                id="settings-description"
+                className="min-h-24"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                maxLength={500}
+              />
+            </Field>
+          </div>
+        </section>
+
+        <section className="border-y border-line py-8">
+          <p className="fi-eyebrow">Public feedback link</p>
+          <p className="mt-3 text-sm text-ink-muted">
+            Share this link so people can report bugs, request features, or leave general feedback.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 sm:flex-row sm:items-center">
+            <code className="fi-mono min-w-0 flex-1 break-all text-xs">{publicLink}</code>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={async () => {
+                await navigator.clipboard.writeText(publicLink);
+                setCopied(true);
+              }}
+            >
+              <Copy className="h-4 w-4" />
+              Copy link
+            </Button>
+          </div>
+        </section>
+
+        {error && (
+          <div className="mt-5">
+            <InlineError>{error}</InlineError>
+          </div>
+        )}
+        <div className="sticky bottom-[72px] -mx-4 mt-8 flex border-t border-line bg-canvas/95 px-4 py-4 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0">
+          <Button type="submit" disabled={mutation.isPending || !name.trim()}>
+            {mutation.isPending ? 'Saving…' : 'Save settings'}
+          </Button>
+        </div>
+      </form>
+      {copied && <Toast>Feedback link copied</Toast>}
+      {saved && <Toast>Settings saved</Toast>}
+    </SettingsFrame>
+  );
 }
 
-function SettingsFrame({children}:{children:React.ReactNode}) { return <div className="mx-auto max-w-[1100px] px-4 py-8 sm:px-7 md:py-10"><p className="fi-eyebrow">VensaOS workspace</p><h1 className="fi-display mt-3 text-4xl font-medium">Settings</h1><p className="mt-2 mb-10 text-sm text-ink-muted">Control how your project appears and what reporters can submit.</p>{children}</div>; }
+function SettingsFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto max-w-[1100px] px-4 py-8 sm:px-7 md:py-10">
+      <p className="fi-eyebrow">VensaOS workspace</p>
+      <h1 className="fi-display mt-3 text-4xl font-medium">Settings</h1>
+      <p className="mt-2 mb-10 text-sm text-ink-muted">
+        Choose a project, update how it appears, and copy its public feedback link.
+      </p>
+      {children}
+    </div>
+  );
+}

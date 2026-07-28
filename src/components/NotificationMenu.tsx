@@ -110,7 +110,9 @@ export function NotificationMenu({ compact = false }: { compact?: boolean }) {
           <div className="flex flex-col gap-2 border-b border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="text-sm font-medium">Notifications</p>
-              <p className="mt-0.5 text-xs text-ink-muted">Delivery activity for this workspace</p>
+              <p className="mt-0.5 text-xs text-ink-muted">
+                Quick alerts. Work that needs a decision is in Inbox.
+              </p>
             </div>
             {attentionCount > 0 && (
               <span className="fi-mono w-fit rounded bg-critical-soft px-2 py-1 text-[10px] uppercase tracking-wider text-critical">
@@ -126,7 +128,7 @@ export function NotificationMenu({ compact = false }: { compact?: boolean }) {
               <div className="px-4 py-8 text-center">
                 <p className="text-sm font-medium">No notifications yet</p>
                 <p className="mt-2 text-xs leading-5 text-ink-muted">
-                  Alerts and digests appear here when delivery activity is recorded.
+                  Alerts appear here when something important happens on your boards.
                 </p>
               </div>
             ) : (
@@ -154,11 +156,11 @@ export function NotificationMenu({ compact = false }: { compact?: boolean }) {
 
           <div className="border-t border-line bg-canvas/50 px-4 py-3">
             <Link
-              to="/app/settings#notifications"
+              to="/app/inbox"
               className="text-sm font-medium text-ink hover:underline"
               onClick={() => setOpen(false)}
             >
-              Open notification settings
+              Open inbox
             </Link>
           </div>
         </div>

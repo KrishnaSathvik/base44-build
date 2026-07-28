@@ -5,7 +5,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Bookmark, Check, CheckCircle2, Copy, ExternalLink, Link2, Mail, ShieldCheck, X } from 'lucide-react';
+import { ArrowRight, Bookmark, Check, Copy, ExternalLink, Link2, Mail, ShieldCheck, X } from 'lucide-react';
 import { apiErrorMessage, getPublicProject, submitFeedback, uploadFeedbackAttachment } from '@/lib/api';
 import type { FeedbackType, SubmitFeedbackResult } from '@/lib/types';
 import type { PendingScreenshot } from '@/lib/attachments';
@@ -27,19 +27,22 @@ const TYPES: { value: FeedbackType; title: string; hint: string }[] = [
   { value: 'general', title: 'Share general feedback', hint: 'A thought, question, or anything else.' },
 ];
 
-const COPY: Record<FeedbackType, { heading: string; descriptionLabel: string; descriptionPlaceholder: string }> = {
+const COPY: Record<FeedbackType, { heading: string; support: string; descriptionLabel: string; descriptionPlaceholder: string }> = {
   bug: {
     heading: 'What happened?',
+    support: 'Tell us what went wrong, what you expected, and anything that helps the team.',
     descriptionLabel: 'Describe the problem',
     descriptionPlaceholder: 'Tell us what you were doing and where things went wrong…',
   },
   feature: {
     heading: 'What would make this better?',
+    support: 'Share the idea clearly enough for the team to understand and prioritize it.',
     descriptionLabel: 'Your feedback',
     descriptionPlaceholder: 'Share enough detail for the team to understand the idea…',
   },
   general: {
     heading: 'What would you like us to know?',
+    support: 'Share a thought, question, or anything else for the team.',
     descriptionLabel: 'Your feedback',
     descriptionPlaceholder: 'Share enough detail for the team to understand the idea…',
   },
@@ -358,7 +361,6 @@ export function PublicPortalPage() {
         />
         <SubmissionConfirmation
           result={result}
-          productUrl={project.productUrl}
           emailUpdatesOptedIn={emailUpdatesOptedIn}
           onSubmitAnother={() => {
             setResult(null);
@@ -424,11 +426,9 @@ export function PublicPortalPage() {
           </div>
         )}
 
-        <p className="fi-eyebrow break-words">Feedback for {project.name}</p>
-        <h1 className="fi-display mt-3 text-[1.75rem] font-medium leading-tight sm:mt-4 sm:text-4xl">{copy.heading}</h1>
+        <h1 className="fi-display text-[1.75rem] font-medium leading-tight sm:text-4xl">{copy.heading}</h1>
         <p className="mt-3 max-w-xl text-[15px] leading-7 text-ink-muted sm:mt-4">
-          {project.description ? `${project.description} ` : ''}
-          Tell us what happened, what you expected, and anything else that may help the team.
+          {copy.support}
         </p>
         <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-ink-faint">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
@@ -634,12 +634,10 @@ export function PublicPortalPage() {
 
 function SubmissionConfirmation({
   result,
-  productUrl,
   emailUpdatesOptedIn,
   onSubmitAnother,
 }: {
   result: SubmitFeedbackResult;
-  productUrl?: string | null;
   emailUpdatesOptedIn: boolean;
   onSubmitAnother: () => void;
 }) {
@@ -660,17 +658,14 @@ function SubmissionConfirmation({
   return (
     <div className="confirm-in mx-auto max-w-lg py-8 sm:py-14">
       <div className="text-center">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-success/25 bg-success-soft text-success shadow-sm">
-          <CheckCircle2 className="h-6 w-6" aria-hidden />
-        </span>
-        <p className="fi-eyebrow mt-6">Received</p>
+        <p className="fi-eyebrow">Received</p>
         <h1 className="fi-display mt-3 text-[1.75rem] font-medium leading-tight sm:text-3xl">
-          Your feedback is in
+          Thanks — your feedback is in
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-ink-muted">
           {emailUpdatesOptedIn
-            ? 'Copy or bookmark your private link now. We’ll also email updates because you opted in.'
-            : 'Copy or bookmark your private link now — without it, you cannot check this report again.'}
+            ? 'Save your private tracking link below. We’ll also email updates because you opted in.'
+            : 'Save your private tracking link below. Without it, you cannot check this report again.'}
         </p>
       </div>
 
@@ -681,11 +676,11 @@ function SubmissionConfirmation({
         >
           <Bookmark className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
           <div>
-            <p className="font-medium">Do this before you leave</p>
+            <p className="font-medium">Save this link before you leave</p>
             <p className="mt-1 text-ink-muted">
               {emailUpdatesOptedIn
-                ? 'Save the link as a backup. Email updates still need a working inbox, and this page will not show the link again.'
-                : 'There is no account login and no “forgot link” recovery. If you did not opt into email, this link is your only path back.'}
+                ? 'Keep it as a backup. Email updates still need a working inbox, and this page will not show the link again.'
+                : 'There is no account login and no “forgot link” recovery. This link is your only path back.'}
             </p>
           </div>
         </div>
@@ -741,7 +736,7 @@ function SubmissionConfirmation({
         )}
       </div>
 
-      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+      <div className="mt-8 text-center">
         <Button
           type="button"
           variant="secondary"
@@ -750,15 +745,6 @@ function SubmissionConfirmation({
         >
           Submit another report
         </Button>
-        {productUrl ? (
-          <a
-            href={productUrl}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md px-4 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-subtle hover:text-ink sm:min-h-11 sm:w-auto"
-          >
-            Return to product
-            <ExternalLink className="h-4 w-4" />
-          </a>
-        ) : null}
       </div>
     </div>
   );

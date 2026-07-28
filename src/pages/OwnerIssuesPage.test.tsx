@@ -39,10 +39,26 @@ test('shows onboarding when no project exists', async () => {
   expect(await screen.findByRole('heading', { name: 'Create your first feedback board' })).toBeVisible();
 });
 
+test('does not expose a non-functional filter control on the issues header', async () => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={['/app/issues']}>
+        <OwnerIssuesPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  expect(await screen.findByRole('heading', { name: 'Issues' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Copy link' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'New project' })).toBeVisible();
+});
+
 test('allows long issue titles to wrap on mobile rows', async () => {
   vi.mocked(listMyIssues).mockResolvedValueOnce([
     {
       id: 'issue-1',
+      project_id: 'p1',
       public_code: 'FI-LONG01',
       title:
         'A very long issue title that must remain readable on a narrow mobile viewport without overlapping metadata',

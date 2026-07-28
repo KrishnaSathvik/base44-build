@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "jsr:@std/assert";
-import { ISSUE_STATUSES, assertTransition, canTransition, transitionRequirementError, transitionTimestamps } from "./issue-state-machine.ts";
+import { ISSUE_STATUSES, assertTransition, canTransition, transitionRequirementError, transitionTimestamps, allowedTransitions } from "./issue-state-machine.ts";
 
 Deno.test("approved issue transitions are allowed and arbitrary transitions are blocked", () => {
   assertEquals(canTransition("unreviewed", "open"), true);
@@ -21,6 +21,13 @@ Deno.test("direct resolution requires an explicit override from open or in progr
   assertEquals(canTransition("open", "resolved"), false);
   assertEquals(canTransition("open", "resolved", { directResolutionOverrideReason: "Emergency hotfix" }), true);
   assertEquals(canTransition("in_progress", "resolved", { directResolutionOverrideReason: "Verified outside testing" }), true);
+});
+
+Deno.test("allowedTransitions includes resolve for open and in_progress", () => {
+  assertEquals(allowedTransitions("unreviewed").includes("resolved"), false);
+  assertEquals(allowedTransitions("open").includes("resolved"), true);
+  assertEquals(allowedTransitions("in_progress").includes("resolved"), true);
+  assertEquals(allowedTransitions("testing").includes("resolved"), true);
 });
 
 Deno.test("first-start timestamps are preserved", () => {

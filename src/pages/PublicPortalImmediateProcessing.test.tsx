@@ -36,14 +36,15 @@ test('immediate submission processing result shows tracking and public code', as
     processingCompleted: true,
   });
   await fillAndSubmit();
-  expect(await screen.findByText('Your feedback is in')).toBeVisible();
+  expect(await screen.findByText('Thanks — your feedback is in')).toBeVisible();
   expect(screen.getByText('FI-1001')).toBeVisible();
   expect(screen.getByText(/\/track\/token-1/)).toBeVisible();
-  expect(screen.getByText(/Do this before you leave/i)).toBeVisible();
+  expect(screen.getByText(/Save this link before you leave/i)).toBeVisible();
   expect(screen.getByText(/no “forgot link” recovery|no "forgot link" recovery/i)).toBeVisible();
   expect(screen.getByRole('button', { name: 'Copy tracking link' })).toBeVisible();
   expect(screen.getByRole('link', { name: /open tracking page/i })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Submit another report' })).toBeVisible();
+  expect(screen.queryByText(/Return to product/i)).not.toBeInTheDocument();
 });
 
 test('safe accepted response when processing fails still returns tracking', async () => {
@@ -57,7 +58,7 @@ test('safe accepted response when processing fails still returns tracking', asyn
     processingCompleted: false,
   });
   await fillAndSubmit();
-  expect(await screen.findByText('Your feedback is in')).toBeVisible();
+  expect(await screen.findByText('Thanks — your feedback is in')).toBeVisible();
   expect(screen.getByText(/\/track\/token-2/)).toBeVisible();
   expect(screen.queryByText(/processing failed|InvokeLLM|\bAI\b/i)).toBeNull();
 });

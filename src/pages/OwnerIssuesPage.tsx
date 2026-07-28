@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowRight, Archive, Copy, ListFilter, Plus } from 'lucide-react';
+import { ArrowRight, Archive, Copy, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { listMyIssues, listMyProjects } from '@/lib/api';
+import { listMyIssues } from '@/lib/api';
+import { useActiveProject } from '@/lib/useActiveProject';
 import { formatTime, severityLabel, statusLabel } from '@/lib/format';
 import { Button, EmptyState, SeverityBadge, Skeleton, StatusBadge } from '@/components/ui';
 import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
@@ -9,17 +10,18 @@ import { publicBoardUrl } from '@/lib/appUrls';
 
 export function OwnerIssuesPage() {
   const resolvedOnly = useLocation().pathname.endsWith('/resolved');
-  const projects = useQuery({ queryKey: ['projects'], queryFn: listMyProjects });
+  const { project, isLoading: projectsLoading } = useActiveProject();
   const { data: allIssues, isLoading, isError } = useQuery({ queryKey: ['issues'], queryFn: listMyIssues });
 
-  const project = projects.data?.[0];
-  const issues = allIssues?.filter((issue) =>
-    resolvedOnly
-      ? issue.status === 'resolved'
-      : !['resolved', 'dismissed', 'duplicate'].includes(issue.status),
+  const issues = allIssues?.filter(
+    (issue) =>
+      issue.project_id === project?.id &&
+      (resolvedOnly
+        ? issue.status === 'resolved'
+        : !['resolved', 'dismissed', 'duplicate'].includes(issue.status)),
   );
 
-  if (projects.isLoading) {
+  if (projectsLoading) {
     return (
       <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-7 md:py-10">
         <Skeleton className="h-10 w-64" />
@@ -56,20 +58,17 @@ export function OwnerIssuesPage() {
               : 'Normalized problems, ordered by the work they demand.'}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost">
-            <ListFilter className="h-4 w-4" />
-            Filter
-          </Button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
           <Button
             variant="secondary"
+            className="w-full justify-center sm:w-auto"
             onClick={() => void navigator.clipboard.writeText(publicBoardUrl(project.slug))}
           >
             <Copy className="h-4 w-4" />
             Copy link
           </Button>
-          <Link to="/app/setup">
-            <Button variant="secondary">
+          <Link to="/app/setup" className="w-full sm:w-auto">
+            <Button variant="secondary" className="w-full justify-center sm:w-auto">
               <Plus className="h-4 w-4" />
               New project
             </Button>

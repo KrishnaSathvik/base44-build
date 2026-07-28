@@ -1,23 +1,24 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Copy, Radio, TriangleAlert } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { listMyIssues, listMyProjects } from '@/lib/api';
+import { listMyIssues } from '@/lib/api';
+import { useActiveProject } from '@/lib/useActiveProject';
 import { formatTime, severityLabel } from '@/lib/format';
 import { Button, SeverityBadge, Skeleton } from '@/components/ui';
 import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
 import { publicBoardUrl } from '@/lib/appUrls';
 
 export function OwnerOverviewPage() {
-  const projects = useQuery({ queryKey: ['projects'], queryFn: listMyProjects });
+  const { project, isLoading: projectsLoading } = useActiveProject();
   const issues = useQuery({ queryKey: ['issues'], queryFn: listMyIssues });
-  const project = projects.data?.[0];
-  const open = issues.data?.filter((x) => x.status !== 'resolved') ?? [];
-  const resolved = issues.data?.filter((x) => x.status === 'resolved') ?? [];
+  const projectIssues = (issues.data ?? []).filter((item) => item.project_id === project?.id);
+  const open = projectIssues.filter((x) => x.status !== 'resolved');
+  const resolved = projectIssues.filter((x) => x.status === 'resolved');
   const attention = [...open]
     .sort((a, b) => (b.priority_score ?? 0) - (a.priority_score ?? 0))
     .slice(0, 4);
 
-  if (projects.isLoading || issues.isLoading) {
+  if (projectsLoading || issues.isLoading) {
     return (
       <Workspace>
         <Skeleton className="h-10 w-72" />

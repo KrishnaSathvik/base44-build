@@ -241,6 +241,9 @@ export interface UpdateProjectSettingsInput {
   feedbackTypesEnabled: FeedbackType[];
   allowAnonymous: boolean;
   collectReporterEmail: boolean;
+}
+
+export interface UpdateNotificationSettingsInput {
   notificationDeliveryEnabled: boolean;
   criticalAlertsEnabled: boolean;
   ownerReplyAlertsEnabled: boolean;
@@ -265,8 +268,21 @@ export async function updateProjectSettings(
   } as Parameters<typeof base44.entities.Project.update>[1]);
 }
 
-export async function updateNotificationSettings(projectId:string,input:UpdateProjectSettingsInput):Promise<void>{
-  await stageFunctions.invoke('update-notification-settings',{projectId,notificationDeliveryEnabled:input.notificationDeliveryEnabled,criticalAlertsEnabled:input.criticalAlertsEnabled,ownerReplyAlertsEnabled:input.ownerReplyAlertsEnabled,reporterStatusEmailsEnabled:input.reporterStatusEmailsEnabled,dailyDigestEnabled:input.dailyDigestEnabled,dailyDigestIncludeEmpty:input.dailyDigestIncludeEmpty,digestTimezone:input.digestTimezone,digestHourLocal:input.digestHourLocal});
+export async function updateNotificationSettings(
+  projectId: string,
+  input: UpdateNotificationSettingsInput,
+): Promise<void> {
+  await stageFunctions.invoke('update-notification-settings', {
+    projectId,
+    notificationDeliveryEnabled: input.notificationDeliveryEnabled,
+    criticalAlertsEnabled: input.criticalAlertsEnabled,
+    ownerReplyAlertsEnabled: input.ownerReplyAlertsEnabled,
+    reporterStatusEmailsEnabled: input.reporterStatusEmailsEnabled,
+    dailyDigestEnabled: input.dailyDigestEnabled,
+    dailyDigestIncludeEmpty: input.dailyDigestIncludeEmpty,
+    digestTimezone: input.digestTimezone,
+    digestHourLocal: input.digestHourLocal,
+  });
 }
 
 export async function listMyProjects(): Promise<Project[]> {

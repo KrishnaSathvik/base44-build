@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Camera, Clipboard, ImagePlus, RefreshCw, Trash2, Upload } from 'lucide-react';
+import { ImagePlus, RefreshCw, Trash2, Upload } from 'lucide-react';
 import { Button, InlineError } from '@/components/ui';
 import {
   MAX_SCREENSHOTS,
@@ -96,36 +96,26 @@ export function ScreenshotUploader({ screenshots, onChange, onRetry, disabled }:
           setDragging(false);
           void addFiles(Array.from(event.dataTransfer.files), 'browse');
         }}
-        className={`group w-full rounded-xl border border-dashed px-4 py-6 text-left transition sm:px-6 sm:py-8 ${
+        className={`group w-full rounded-xl border border-dashed px-4 py-8 text-center transition sm:px-6 ${
           dragging
             ? 'border-ink bg-surface'
             : 'border-line-strong bg-canvas hover:border-ink/40 hover:bg-surface'
         } disabled:pointer-events-none disabled:opacity-50`}
       >
-        <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-center sm:gap-5 sm:text-left">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted transition group-hover:border-ink group-hover:text-ink">
-            <Upload className="h-5 w-5" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-medium text-ink sm:text-base">
-              {atLimit ? 'Screenshot limit reached' : dragging ? 'Drop screenshots here' : 'Add screenshots'}
-            </p>
-            <p className="mt-1 text-xs leading-5 text-ink-muted">
-              PNG, JPEG, or WebP · up to 10 MB each · {remaining} of {MAX_SCREENSHOTS} remaining
-            </p>
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-ink-faint sm:justify-start">
-              <span className="inline-flex min-h-8 items-center gap-1.5">
-                <Clipboard className="h-3.5 w-3.5" aria-hidden />
-                Paste
-              </span>
-              <span className="inline-flex min-h-8 items-center gap-1.5">
-                <Camera className="h-3.5 w-3.5" aria-hidden />
-                Camera or library
-              </span>
-              <span className="inline-flex min-h-8 items-center">Or browse files</span>
-            </div>
-          </div>
-        </div>
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted transition group-hover:border-ink group-hover:text-ink">
+          <Upload className="h-5 w-5" aria-hidden />
+        </span>
+        <p className="mt-4 text-[15px] font-medium text-ink sm:text-base">
+          {atLimit
+            ? 'Screenshot limit reached'
+            : dragging
+              ? 'Drop screenshots here'
+              : 'Drag and drop, or click to upload'}
+        </p>
+        <p className="mt-2 text-xs leading-5 text-ink-muted">
+          PNG, JPEG, or WebP · up to 10 MB each
+          {screenshots.length > 0 ? ` · ${remaining} of ${MAX_SCREENSHOTS} left` : ` · up to ${MAX_SCREENSHOTS}`}
+        </p>
       </button>
 
       {error && (
@@ -198,7 +188,7 @@ export function ScreenshotUploader({ screenshots, onChange, onRetry, disabled }:
       ) : (
         <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-ink-faint">
           <ImagePlus className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-          No screenshots yet — text-only feedback is fine.
+          Optional — text-only feedback is fine.
         </p>
       )}
     </section>

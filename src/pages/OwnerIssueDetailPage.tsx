@@ -252,6 +252,13 @@ export function OwnerIssueDetailPage() {
                 </option>
               ))}
             </Select>
+            <p className="text-xs leading-5 text-ink-muted">
+              {issue.status === 'unreviewed'
+                ? 'Open the issue first. Then move it through Planned → In progress → Testing → Resolved, or resolve directly once it is Open.'
+                : selectedStatus === 'resolved' && ['open', 'in_progress'].includes(issue.status)
+                  ? 'Direct resolve needs a public resolution note and an owner reason.'
+                  : 'Only approved next steps for the current status are listed.'}
+            </p>
             {selectedStatus === 'duplicate' && (
               <Select
                 aria-label="Canonical issue"
@@ -323,7 +330,9 @@ export function OwnerIssueDetailPage() {
                 ? 'Updating…'
                 : selectedStatus === 'needs_info'
                   ? 'Request more information'
-                  : 'Apply workflow update'}
+                  : selectedStatus === 'resolved'
+                    ? 'Resolve issue'
+                    : 'Apply workflow update'}
             </Button>
           </form>
           {issue.status === 'resolved' && (
@@ -385,20 +394,21 @@ export function OwnerIssueDetailPage() {
                         <p className="text-sm text-ink-muted">No screenshots — text evidence only.</p>
                       )}
                     </div>
-                    {(link.matching_reasons?.length || link.conflicting_evidence?.length) && (
+                    {((link.matching_reasons?.length ?? 0) > 0 ||
+                      (link.conflicting_evidence?.length ?? 0) > 0) && (
                       <div className="mt-5 rounded-md bg-surface-subtle p-4">
                         <p className="fi-eyebrow">
                           {groupingEvidenceLabel(link.grouping_method, item.ai_analysis_mode)} ·{' '}
                           {Math.round((link.similarity_score ?? 0) * 100)}%
                         </p>
-                        {link.matching_reasons?.length ? (
+                        {link.matching_reasons && link.matching_reasons.length > 0 ? (
                           <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-ink-muted">
                             {link.matching_reasons.map((itemReason) => (
                               <li key={itemReason}>{itemReason}</li>
                             ))}
                           </ul>
                         ) : null}
-                        {link.conflicting_evidence?.length ? (
+                        {link.conflicting_evidence && link.conflicting_evidence.length > 0 ? (
                           <div className="mt-3">
                             <p className="text-xs font-medium">Conflicting evidence</p>
                             <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-ink-muted">

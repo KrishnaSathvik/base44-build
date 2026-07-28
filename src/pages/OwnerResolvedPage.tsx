@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Archive, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { listMyIssues, listMyProjects } from '@/lib/api';
+import { listMyIssues } from '@/lib/api';
+import { useActiveProject } from '@/lib/useActiveProject';
 import { formatTime, statusLabel } from '@/lib/format';
 import { Badge, EmptyState, Skeleton, StatusBadge } from '@/components/ui';
 import { NoProjectOnboarding } from '@/components/NoProjectOnboarding';
@@ -18,20 +19,21 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
 
 export function OwnerResolvedPage() {
   const [filter, setFilter] = useState<Filter>('all');
-  const projects = useQuery({ queryKey: ['projects'], queryFn: listMyProjects });
+  const { project, isLoading: projectsLoading } = useActiveProject();
   const query = useQuery({ queryKey: ['issues'], queryFn: listMyIssues });
   const issues = useMemo(
     () =>
-      ((query.data ?? []) as WorkflowIssue[]).filter((issue) =>
-        filter === 'reopened'
+      ((query.data ?? []) as WorkflowIssue[]).filter((issue) => {
+        if (issue.project_id !== project?.id) return false;
+        return filter === 'reopened'
           ? issue.status === 'reopened'
           : issue.status === 'resolved' &&
-            (filter === 'all' || issue.resolution_confirmation_status === filter),
-      ),
-    [filter, query.data],
+              (filter === 'all' || issue.resolution_confirmation_status === filter);
+      }),
+    [filter, project?.id, query.data],
   );
 
-  if (projects.isLoading) {
+  if (projectsLoading) {
     return (
       <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-7 md:py-10">
         <Skeleton className="h-10 w-64" />
@@ -40,7 +42,7 @@ export function OwnerResolvedPage() {
     );
   }
 
-  if (!projects.data?.length) {
+  if (!project) {
     return (
       <NoProjectOnboarding
         eyebrow="Closed loop"
