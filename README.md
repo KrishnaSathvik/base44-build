@@ -1,22 +1,65 @@
 # VensaOS
 
+**Base44 Dev Build-Off submission**
+
 Feedback intelligence for product teams.
 
-VensaOS turns scattered user feedback into grouped, evidence-backed issues a product team can prioritize, resolve, and close with reporters. It is a React PWA backed by the existing Base44 application and its stable entities, functions, and API contracts.
+One public feedback link for users. One evidence-based workspace that shows product teams what to fix next.
+
+Three people can describe the same bug differently; VensaOS classifies the reports, groups related ones, recalculates priority from affected users and impact, and keeps the original evidence attached while the owner resolves and closes the loop with reporters.
+
+## Live product
+
+| Surface | URL |
+| --- | --- |
+| Landing | https://vensaos.com/ |
+| Interactive demo | https://vensaos.com/demo |
+| Public feedback board (TrailVerse Demo) | https://vensaos.com/f/trailverse-demo |
+| Owner workspace | https://vensaos.com/app |
+
+`www.vensaos.com` permanently redirects to the apex domain.
+
+## What to try (judge walkthrough)
+
+1. **Landing** — Brand story, workspace preview, and the live-demo CTA.
+2. **`/demo`** — Representative TrailVerse walkthrough (read-only mocks): Overview briefing → exceptions Inbox → grouped Issues → resolve → reporter tracking / “Not fixed” reopen. Nothing here mutates a live board.
+3. **Public portal** — Open `/f/trailverse-demo`, submit a bug with optional screenshots and device context. Save the **private tracking link** (or opt into email updates) on the confirmation screen — without that link (and without email consent), reporters cannot recover the report later.
+4. **Owner workspace** — Sign in at `/app`, open Overview / Inbox / Issues, review grouping and priority, resolve with a public note, then confirm the tracking page updates for the reporter.
+
+## Product loop
+
+```text
+Collect → Understand → Group → Prioritize → Resolve → Close the loop
+```
+
+- **Reporters** submit without an account; get a private tracking page; can follow up and confirm whether a fix worked.
+- **Owners** see Overview attention, an exceptions Inbox (failed processing, duplicates, reporter replies), Issues as the main work queue, and Resolved history.
+- **AI assist** classifies and suggests grouping with Zod-validated I/O and safe fallbacks when the model is unavailable. Owners stay in control of merges and status.
+
+## Stack
+
+- Base44 React/Vite app (TypeScript)
+- Tailwind + design tokens from `docs/02_design_references.md`
+- React Router, TanStack Query, React Hook Form + Zod
+- Base44 entities + hosted functions (project-isolated)
+- `vite-plugin-pwa` / Workbox
+- Vitest, React Testing Library, Playwright
+
+Stable Base44 entity names, function names, fields, and routes are intentional and unchanged by the VensaOS brand rename.
 
 ## Local development
 
 ```bash
 npm install
+cp .env.example .env.local   # fill Base44 app credentials as documented
 npm run dev
 ```
 
-Use `.env.example` as the configuration reference. Do not enable notification delivery for local tests.
+Do not enable notification delivery for local tests.
 
-## Verification
+### Verification
 
 ```bash
-npm run brand:check
 npm run typecheck
 npm test
 npm run build
@@ -24,21 +67,34 @@ npm run test:e2e
 npm run release:check
 ```
 
-The release check forces `NOTIFICATION_INTEGRATION_ENABLED=false`, so test runs do not send real email. Deployment and hosted verification are separate, explicitly authorized operations.
+`release:check` forces `NOTIFICATION_INTEGRATION_ENABLED=false` so automated runs do not send real email.
 
-## Branding decision
+### Demo fixture (Base44)
 
-VensaOS is the public product brand.
+```bash
+npm run demo:seed
+npm run demo:verify
+npm run demo:reset
+```
 
-“Feedback Inbox” may remain as a generic description of the feedback-inbox workflow or in historical records, but it is no longer the product name.
+## Specs
 
-Stable backend entities, functions, fields, and API contracts retain their existing technical names to avoid unnecessary schema and migration risk. This includes the linked Base44 application identity, entity names such as `FeedbackSubmission`, function names such as `submit-feedback`, and fields such as `feedback_submission_id`.
+Sources of truth for product, design, flows, and technical decisions:
 
-VensaOS is a feedback intelligence platform, not a literal computer operating system.
+1. `docs/01_product_backend.md`
+2. `docs/02_design_references.md`
+3. `docs/03_uiux_flows.md`
+4. `docs/04_technical_decisions.md`
+
+## Honest limitations
+
+- Real outbound email requires explicit delivery settings and the runtime gate; the demo does not claim email was delivered.
+- Private attachment records support logical access control; physical private-file deletion depends on Base44 platform APIs.
+- Automations that only run in the hosted Base44 environment should be verified after deploy — local free runtime prefers function-driven maintenance where documented.
 
 ## Base44 operations
 
-The repository remains linked to its existing Base44 application. Do not rename the application slug, entities, functions, fields, automation identifiers, routes, tracking tokens, repository, or remote for branding purposes.
+This repo stays linked to its existing Base44 application. Do not rename the app slug, entities, functions, fields, or tracking formats for branding.
 
 ```bash
 base44 login
@@ -46,4 +102,4 @@ base44 entities push
 base44 deploy
 ```
 
-The last command deploys and must only be run with explicit deployment approval.
+Deploy only with explicit approval.
