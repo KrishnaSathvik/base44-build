@@ -128,7 +128,7 @@ export function OwnerSetupPage() {
         <div className="border-t border-line pt-8 lg:border-t-0 lg:border-l lg:pl-10 lg:pt-0">
           <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
             <Field label="Product name" htmlFor="name" error={errors.name?.message}>
-              <Input id="name" placeholder="TrailVerse" {...register('name')} />
+              <Input id="name" placeholder="Name your product" {...register('name')} />
             </Field>
             <Field
               label="Product URL"
