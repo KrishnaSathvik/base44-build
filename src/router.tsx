@@ -4,7 +4,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { OwnerRouteSkeleton, PublicRouteSkeleton } from '@/app/RouteSkeleton';
 import { RouteError } from '@/app/RouteError';
 import { PageMetadata } from '@/app/PageMetadata';
-import { DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '@/lib/brand';
+import { getPublicRouteMetadata } from '@/lib/publicRouteMetadata';
 
 const AppLayout = lazy(() => import('@/app/AppLayout').then(module => ({ default: module.AppLayout })));
 const AppIndexRedirect = lazy(() => import('@/app/AppIndexRedirect').then(module => ({ default: module.AppIndexRedirect })));
@@ -23,15 +23,19 @@ const OwnerResolvedPage = lazy(() => import('@/pages/OwnerResolvedPage').then(mo
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 const TermsPage = lazy(() => import('@/pages/TermsPage').then(module => ({ default: module.TermsPage })));
 const SecurityPage = lazy(() => import('@/pages/SecurityPage').then(module => ({ default: module.SecurityPage })));
-const publicView = (element: ReactNode, title=DEFAULT_TITLE, description=DEFAULT_DESCRIPTION, canonicalPath?: string) => <Suspense fallback={<PublicRouteSkeleton />}><PageMetadata title={title} description={description} canonicalPath={canonicalPath} indexable={!!canonicalPath}/>{element}</Suspense>;
+const publicView = (element: ReactNode, title = 'VensaOS', description = 'VensaOS', canonicalPath?: string) => <Suspense fallback={<PublicRouteSkeleton />}><PageMetadata title={title} description={description} canonicalPath={canonicalPath} indexable={!!canonicalPath}/>{element}</Suspense>;
 const ownerView = (element: ReactNode, title='Overview') => <Suspense fallback={<OwnerRouteSkeleton />}><PageMetadata title={title} description="Private VensaOS owner workspace."/>{element}</Suspense>;
+const publicIndexed = (path: '/' | '/demo' | '/privacy' | '/terms' | '/security', element: ReactNode) => {
+  const meta = getPublicRouteMetadata(path)!;
+  return publicView(element, meta.title, meta.description, meta.path);
+};
 
 export const router = createBrowserRouter([
-  { path: '/', element: publicView(<LandingPage />,DEFAULT_TITLE,DEFAULT_DESCRIPTION,'/'), errorElement: <RouteError /> },
-  { path: '/demo', element: publicView(<DemoPage />,'Demo',DEFAULT_DESCRIPTION,'/demo'), errorElement: <RouteError /> },
-  { path: '/privacy', element: publicView(<PrivacyPage />,'Privacy Policy','How VensaOS collects, uses, and protects information.','/privacy'), errorElement: <RouteError /> },
-  { path: '/terms', element: publicView(<TermsPage />,'Terms of Service','Terms governing use of VensaOS.','/terms'), errorElement: <RouteError /> },
-  { path: '/security', element: publicView(<SecurityPage />,'Security & Data Handling','How VensaOS protects feedback, attachments, and account data.','/security'), errorElement: <RouteError /> },
+  { path: '/', element: publicIndexed('/', <LandingPage />), errorElement: <RouteError /> },
+  { path: '/demo', element: publicIndexed('/demo', <DemoPage />), errorElement: <RouteError /> },
+  { path: '/privacy', element: publicIndexed('/privacy', <PrivacyPage />), errorElement: <RouteError /> },
+  { path: '/terms', element: publicIndexed('/terms', <TermsPage />), errorElement: <RouteError /> },
+  { path: '/security', element: publicIndexed('/security', <SecurityPage />), errorElement: <RouteError /> },
   {
     path: '/app',
     element: ownerView(<AppLayout />), errorElement: <RouteError />,
